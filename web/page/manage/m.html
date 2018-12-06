@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>stock query</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.css"></link>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"></link>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-table.css"></link>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"></link>
+</head>
+<body>
+
+<div id="dcontainer" class="container" style="max-width: 9999px" >
+    <div id="div_tool" class="row" style="margin-top: 10px">
+
+        <div class="col-md-6">
+            <div class="btn-group">
+                <button id="button_select" type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{cmd.type}}
+                </button>
+                <div class="dropdown-menu" id="dropdown_script">
+                    <a class="dropdown-item" href="#" v-for="cmdtype in cmd.types" v-on:click="cmd_select(cmdtype)">
+                        {{cmdtype}}
+                    </a>
+                </div>
+            </div>
+
+            <input type="button" id="button_cmd" value="go" class="btn btn-primary" style="margin: 3px;" v-on:click="cmd_go()"/>
+
+        </div>
+    </div>
+
+    <div class="row hidee" style="margin-top: 10px">
+        <div class="col-md-12" style="border: 1px solid #f0f0f0; border-radius: 5px">
+            <pre id="editor" style="width: 100%; height: 100%; min-height: 250px;"><textarea></textarea></pre>
+        </div>
+    </div>
+
+    <div class="row hidee" style="margin-top: 5px" >
+        <div class="col-md-12">
+            <pre id="console" style="width: 100%; height: 100%; background-color: #eeeeee; border-radius: 5px; padding: 5px;">{{console.text}}</pre>
+        </div>
+    </div>
+
+
+
+</div>
+
+
+<!-- -->
+
+<script src="/js/ace/ace.js"></script>
+<script src="/js/axios/axios.min.js"></script>
+<script src="/js/jquery/jquery.js"></script>
+<script src="/js/bootstrap/popper.js"></script>
+<script src="/js/bootstrap/bootstrap.min.js" ></script>
+<script src="/js/bootstrap/bootstrap-table.js"></script>
+<script src="/js/bootstrap/bootstrap-common.js"></script>
+<script src="/js/vue/vue.js" ></script>
+
+<script src="m.js"></script>
+
+<script type="text/javascript">
+
+</script>
+</body>
+</html>

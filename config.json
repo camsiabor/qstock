@@ -1,0 +1,34 @@
+{
+  "database" : {
+    "redis" : {
+      "def" : {
+        "host": "127.0.0.1",
+        "port": 6379,
+        "db": 0
+      },
+      "history" : {
+        "host": "127.0.0.1",
+        "port": 6379,
+        "db": 1
+      }
+    }
+  },
+  "http" : {
+    "active" : true,
+    "port" : 8080
+  },
+  "api" : {
+    "showapi" : {
+      "appid" : 99999,
+      "appsecret" : "2f2ad80cda1442xxxxx6975c6d0b2788",
+      "domain" : "http://route.showapi.com",
+      "fetcheach" : 50,
+      "fetchlimit" : 5000,
+      "fetchdelay" : 300,
+      "fetchinterval" : 60
+    }
+  },
+  "global" : {
+    "timezone" : "Asia/Shanghai"
+  }
+}

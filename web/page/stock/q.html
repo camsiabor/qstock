@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>stock query</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-table.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
+    <style>
+        .gone {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="dcontainer" class="container"  style="max-width: 9999px"  >
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            {{ setting.mode == "query" ?"查询模式" : "组合模式"}}
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        显示
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="" >
+                        <a class="dropdown-item" href="#" v-on:click="toggle('script', 'view')">查询运行</a>
+                        <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'view')">自选组合</a>
+                        <a class="dropdown-item" href="#" v-on:click="toggle('editor', 'view')">脚本编辑</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        模式
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="" >
+                        <a class="dropdown-item" href="#" v-on:click="toggle('query', 'mode')">查询</a>
+                        <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'mode')">组合</a>
+                        <a class="dropdown-item" href="#" v-on:click="toggle('silent', 'mode')">静默</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        动作
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="" >
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sz')">同步深圳</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sh')">同步上海</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sz')">同步深圳历史</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sh')">同步上海历史</a>
+                        <a class="dropdown-item" href="#" v-on:click="clear_cache('local', 'mode')">清除记忆</a>
+                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'meta')">清除缓存META</a>
+                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'snapshot')">清除缓存映照</a>
+                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'khistory')">清除缓存历史</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'def', '')">刪除映照</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'history', '')">刪除历史</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!--
+
+    <div id="popover" class="formula-hint" title="提示" data-container="body" data-toggle="popover" data-placement="top" data-content="helloworld">
+    </div>
+    <div class="alert alert-success alert-dismissible fade" role="alert">
+        {{console.msg_success}}
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade" role="alert">
+        {{console.msg_error}}
+    </div>
+    -->
+
+
+    <div id="div_tool" class="row" style="margin-top: 10px">
+
+        <div v-bind:class="{'col-md-6' :true, gone: !setting.display.script}" style="margin-top: 3px;">
+            <div class="input-group-prepend">
+
+                <input type="button" value="查询" class="btn btn-info "  v-on:click="script_query()"/>
+                <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <div class="dropdown-menu" id="dropdown_script">
+                    <a class="dropdown-item" href="#" v-for="name in script_names" v-on:click="script_select(name)">
+                    {{name}}
+                    </a>
+                </div>
+
+                <input type="search" id="input_script_name" class="form-control"  placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
+                <input type="button" value="测试" id="button_script_test" class="btn btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;"/>
+                <input type="button" value="保存" id="button_script_save" class="btn btn-outline-info"  v-on:click="script_save()" />
+                <input type="button" value="列设" class="btn btn-outline-secondary"  v-on:click="column_setting_show()"/>
+                <input type="button" value="刪除" class="btn btn-outline-secondary" v-on:click="script_delete()"/>
+            </div>
+        </div>
+
+
+        <div v-bind:class="{'col-md-6' :true, gone: !setting.display.portfolio}" style="margin-top: 3px;">
+            <div class="input-group-prepend">
+                
+                <input type="button" id="button_portfolio_add" value="加入" class="btn btn-danger "  v-on:click="portfolio_update()"/>
+                <button type="button" class="btn btn-outline-danger dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="sr-only"></span>
+                </button>
+                <div class="dropdown-menu" id="dropdown_portfolio">
+                    <a class="dropdown-item" href="#" v-for="pname in portfolio_names" v-on:click="portfolio_select(pname)">
+                    {{pname}}
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" v-on:click="portfolio_add_manual()">
+                        编码加入
+                    </a>
+                </div>
+
+                <input type="search"  class="form-control" placeholder="自选组合" aria-label="portfolio" aria-describedby="portfolio"
+                       v-model="portfolio.name" >
+                <input type="button" value="显示" class="btn btn-outline-info"  v-on:click="portfolio_view()" style="margin-left: 3px;"/>
+                <input type="button" value="移出" class="btn btn-outline-secondary"  v-on:click="portfolio_unadd()" />
+                <input type="button" value="刪除" class="btn btn-outline-secondary" v-on:click="portfolio_delete()" />
+            </div>
+        </div>
+
+
+    </div>
+
+    <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 10px;" >
+        <div class="col-md-12" style="border: 1px solid #f0f0f0; border-radius: 5px">
+            <pre id="editor" style="width: 100%; height: 100%; min-height: 160px;"><textarea></textarea></pre>
+        </div>
+    </div>
+
+    <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 10px;" >
+        <div class="col-md-12">
+            <pre id="console" style="width: 100%; height: 100%; background-color: #eeeeee; border-radius: 5px; padding: 5px;">{{console.text}}</pre>
+        </div>
+    </div>
+
+
+    <div id="div_table" class="row" style="margin-top: 10px;">
+        <div class="col-md-12">
+            <table id="table" >
+            </table>
+        </div>
+    </div>
+
+
+    <!-- -->
+
+    <div class="modal fade" id="div_column_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+        <div class="modal-dialog" style="min-width: 600px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">setting</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <button type="button" class="btn btn-primary" v-on:click="column_setting_do()">ok</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+                    <div style="margin: 5px">
+                        <input style="width: 75%"
+                                class="form-control mr-sm-2"
+                                type="search" placeholder="exclude"
+                                aria-label="exclude" v-model="setting.exclude">
+                    </div>
+                    <div>
+                        <table width="90%">
+                            <thead>
+                            <tr>
+                                <th>字段</th>
+                                <th>列名</th>
+                                <th>排序</th>
+                                <th>显示</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- :style="i % 2 ? 'background-color: rgb(244,244,244);' : ''"-->
+                            <!-- :style="isexclude(col.field) ? 'display:none' : 'display:inherit'" -->
+                            <tr v-for="(col, i) in columns" :style="isexclude(col.field) ? 'display:none' : (i % 2 ? 'background-color: rgb(244,244,244);' : '')">
+                                <td>{{col.field}}</td>
+                                <td>{{col.title}}</td>
+                                <td>
+                                    <input type="checkbox" v-model="col.sortable"/>
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="col.visible"/>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+
+</div>
+
+
+<!-- -->
+
+<script type="text/javascript" src="/js/fontawe/solid.js" ></script>
+<script type="text/javascript" src="/js/fontawe/fontawesome.js"></script>
+
+<script type="text/javascript" src="/js/ace/ace.js"></script>
+<script type="text/javascript" src="/js/axios/axios.min.js"></script>
+<script type="text/javascript" src="/js/jquery/jquery.js"></script>
+<script type="text/javascript" src="/js/bootstrap/popper.js"></script>
+<script type="text/javascript" src="/js/bootstrap/bootstrap.min.js" ></script>
+<script type="text/javascript" src="/js/bootstrap/bootstrap-table.js"></script>
+<script type="text/javascript" src="/js/common/util.js"></script>
+<script type="text/javascript" src="/js/vue/vue.js" ></script>
+<script type="text/javascript" src="/js/db/db.js"></script>
+
+<script type="text/javascript" src="coldef.js"></script>
+<script type="text/javascript" src="q.js"></script>
+
+<script type="text/javascript">
+
+</script>
+</body>
+</html>

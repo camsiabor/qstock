@@ -2,7 +2,7 @@ package httpv
 
 import (
 	"github.com/gin-gonic/gin"
-	"qcom/util/qlog"
+	"github.com/camsiabor/qcom/util/qlog"
 )
 func Recovery(f func(c *gin.Context, err interface{})) gin.HandlerFunc {
 	return RecoveryWithWriter(f)

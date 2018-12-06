@@ -1,16 +1,15 @@
 package sync
 
 import (
-	"github.com/garyburd/redigo/redis"
-	"qcom/agenda"
-	"qcom/global"
-	"qcom/qdao"
-	"qcom/scache"
-	"qcom/util"
-	"qcom/util/qlog"
-	"qcom/util/qref"
-	"qcom/util/qtime"
-	"stock/dict"
+	"github.com/camsiabor/qcom/agenda"
+	"github.com/camsiabor/qcom/global"
+	"github.com/camsiabor/qcom/qdao"
+	"github.com/camsiabor/qcom/scache"
+	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/qlog"
+	"github.com/camsiabor/qcom/util/qref"
+	"github.com/camsiabor/qcom/util/qtime"
+	"github.com/camsiabor/qstock/dict"
 	"strings"
 	"sync"
 	"time"
@@ -44,14 +43,14 @@ type ProfileRunInfo struct {
 
 type SyncAPIHandler func(
 	phrase string,
-	rclient redis.Conn,
+	dao qdao.D,
 	profile map[string]interface{},
 	profilename string,
 	arg1 interface{},
 	arg2 interface{}) (err error);
 
 type  SyncRequestHandler  func(
-	rclient redis.Conn,
+	dao qdao.D,
 	profile map[string]interface{},
 	profilename string,
 	requestargs map[string]interface{},

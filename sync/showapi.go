@@ -72,6 +72,10 @@ func (o * Syncer) ShowAPI_request(
 	var prefix = util.GetStr(profile, "", "prefix");
 	var primarykey = util.GetStr(profile, "code", "key");
 	var cachername = util.GetStr(profile, "", "cacher");
+	var mappername = util.GetStr(profile, "", "mapper");
+
+
+	var mapper = util.GetMapperManager().Get(mappername);
 
 	//var hastable = len(table) > 0;
 	var cacher * scache.SCache;
@@ -82,6 +86,15 @@ func (o * Syncer) ShowAPI_request(
 	var list = resbody["list"].([]interface{})
 	for _, one := range list {
 		var info = one.(map[string]interface{})
+
+		if (mapper != nil) {
+			_, err = mapper.Map(info, false);
+			if (err != nil) {
+				qlog.Log(qlog.ERROR, err);
+				continue;
+			}
+		}
+
 		var stockcode string = info[primarykey].(string);
 		var id string = prefix + stockcode;
 		info["_u"] = updatetime;

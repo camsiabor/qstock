@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-table.css"/>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
+    <link rel="stylesheet" href="/css/semantic/semantic.min.css"/>
+    <link rel="stylesheet" href="/css/vue/vuetable-2.css"/>
+
     <style>
         .gone {
             display: none;
@@ -149,11 +152,38 @@
         </div>
     </div>
 
-
+<!-- @vuetable:pagination-data="table_paging" -->
     <div id="div_table" class="row" style="margin-top: 10px;">
         <div class="col-md-12">
-            <table id="table" >
-            </table>
+            <div id="table">
+                <vuetable ref="vuetable"
+                          table-wrapper="#table"
+                          :css="css.table"
+                          :api-mode="false"
+                          :per-age="setting.table.page_size"
+                          :fields="table_fields"
+                          :data-manager="table_data_manage"
+                          pagination-path="pagination"
+                          @vuetable:pagination-data="table_paging">
+                ></vuetable>
+            </div>
+        </div>
+    </div>
+
+    <div id="div_table_pagination" class="row">
+        <div class="col-md-3">
+            <vuetable-pagination
+                    ref="pagination"
+                    :css="css.pagination"
+                    @vuetable-pagination:change-page="table_paging_change"
+            >
+            </vuetable-pagination>
+        </div>
+        <div class="col-md-1">
+            <input class="form-control mr-sm-2" type="search" v-model="table.data.length" disabled >
+        </div>
+        <div class="col-md-1">
+            <input class="form-control mr-sm-2" type="search" v-model="setting.table.page_size">
         </div>
     </div>
 
@@ -190,6 +220,7 @@
                             <tbody>
                             <!-- :style="i % 2 ? 'background-color: rgb(244,244,244);' : ''"-->
                             <!-- :style="isexclude(col.field) ? 'display:none' : 'display:inherit'" -->
+                            <!--
                             <tr v-for="(col, i) in columns" :style="isexclude(col.field) ? 'display:none' : (i % 2 ? 'background-color: rgb(244,244,244);' : '')">
                                 <td>{{col.field}}</td>
                                 <td>{{col.title}}</td>
@@ -200,6 +231,7 @@
                                     <input type="checkbox" v-model="col.visible"/>
                                 </td>
                             </tr>
+                            -->
                             </tbody>
                         </table>
                     </div>
@@ -225,15 +257,16 @@
 <script type="text/javascript" src="/js/bootstrap/popper.js"></script>
 <script type="text/javascript" src="/js/bootstrap/bootstrap.min.js" ></script>
 <script type="text/javascript" src="/js/bootstrap/bootstrap-table.js"></script>
-<script type="text/javascript" src="/js/common/util.js"></script>
+<script type="text/javascript" src="/js/semantic/semantic.js"></script>
 <script type="text/javascript" src="/js/vue/vue.js" ></script>
-<script type="text/javascript" src="/js/db/db.js"></script>
+<script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
 
+<script type="text/javascript" src="/js/common/util.js"></script>
+<script type="text/javascript" src="/js/db/db.js"></script>
 <script type="text/javascript" src="coldef.js"></script>
 <script type="text/javascript" src="q.js"></script>
 
 <script type="text/javascript">
-
 </script>
 </body>
 </html>

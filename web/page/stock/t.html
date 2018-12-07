@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>stock query</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-table.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
+    <link rel="stylesheet" href="/css/vue/vuetable-2.css"/>
+    <style>
+        .gone {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="dcontainer" class="container"  style="max-width: 9999px"  >
+
+    <h1>hello</h1>
+    <div id="div_table" class="row" style="margin-top: 10px;">
+        <div class="col-md-12">
+            <div id="table">
+                <vuetable
+                        table-wrapper="#table"
+                        :fields="['a','b','c']"
+                ></vuetable>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- -->
+
+<script type="text/javascript" src="/js/fontawe/solid.js" ></script>
+<script type="text/javascript" src="/js/fontawe/fontawesome.js"></script>
+<script type="text/javascript" src="/js/ace/ace.js"></script>
+<script type="text/javascript" src="/js/axios/axios.min.js"></script>
+<script type="text/javascript" src="/js/jquery/jquery.js"></script>
+<script type="text/javascript" src="/js/bootstrap/popper.js"></script>
+<script type="text/javascript" src="/js/bootstrap/bootstrap.min.js" ></script>
+<script type="text/javascript" src="/js/bootstrap/bootstrap-table.js"></script>
+<script type="text/javascript" src="/js/common/util.js"></script>
+<script type="text/javascript" src="/js/vue/vue.js" ></script>
+<script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
+<script type="text/javascript">
+
+    // import Vuetable from "/js/vue/vuetable/vuetable-2-full";
+
+    Vue.component('vuetable', Vuetable.Vuetable);
+
+    const vue = new Vue({
+        el: '#dcontainer'
+    });
+
+</script>
+</body>
+</html>

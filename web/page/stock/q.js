@@ -1,68 +1,138 @@
 
 
 const util = new QUtil();
+
+Vue.component('vuetable', Vuetable.Vuetable);
+Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
+// Vue.component('vuetable-pagination', Vuetable.VuetablePaginationMixin)
+// Vue.component('vuetable-pagination', Vuetable.VuetablePaginationInfoMixin);
+// Vue.component('vuetable-pagination-dropdown', Vuetable.VuetablePaginationDropDown);
+
+
+
+let datamock = [{
+    code: "greetings",
+    name: "redis",
+    now: 1, open: 1, min: 1, max: 1, close: 1,
+    change_reate: 1
+},{
+    code: "greetings",
+    name: "lua",
+    now: 3, open: 1, min: 1, max: 1, close: 1,
+    change_reate: 1
+}];
+
+
+let cssmock = {
+    table: {
+        tableWrapper: '',
+        tableHeaderClass: 'mb-0',
+        tableBodyClass: 'mb-0',
+        tableClass: 'table table-bordered table-hover',
+        loadingClass: 'loading',
+        ascendingIcon: 'glyphicon glyphicon-chevron-up',
+        descendingIcon: 'glyphicon glyphicon-chevron-down',
+        handleIcon: 'glyphicon glyphicon-menu-hamburger',
+        ascendingIcon2: 'fa fa-chevron-up',
+        descendingIcon2: 'fa fa-chevron-down',
+        handleIcon2: 'fa fa-bars text-secondary',
+
+        ascendingClass: 'sorted-asc',
+        descendingClass: 'sorted-desc',
+        sortableIcon: 'fa fa-sort',
+        detailRowClass: 'vuetable-detail-row',
+
+        renderIcon(classes, options) {
+            return `<i class="${classes.join(' ')}"></span>`
+        }
+    },
+    pagination: {
+        wrapperClass: "pagination pull-right",
+        activeClass: "btn btn-outline-info",
+        disabledClass: "disabled",
+        pageClass: "btn page-item",
+        linkClass: "page-link",
+        icons: {
+            first: "",
+            prev: "",
+            next: "",
+            last: ""
+        }
+    }
+};
+
 const vue = new Vue({
     el: '#dcontainer',
     /* [data] ------------------------------------------------------------------- */
-    data: {
-        db: null,
-        stocks: [],
-        columns: [],
-        setting: {
-            mode: "query",
-            page_size: 5,
-            exclude: "buy,sell",
+    data() {
+        return {
+            db: null,
+            stocks: [],
+            columns: [],
+            table: {
+                "data": datamock
+            },
+            setting: {
+                table : {
+                    page_size : 5,
+                    fields : _columns_default || ofields || _columns_default
+                },
+                mode: "query",
+                exclude: "buy,sell",
+                script: {
+                    last: ""
+                },
+                portfolio_last: "",
+                portfolio: {
+                    last: ""
+                },
+                display: {
+                    editor: true,
+                    script: true,
+                    portfolio: true
+                }
+            },
+            script_names: [],
             script: {
-                last: ""
+                name: "",
+                script: "--lua.redis"
             },
-            portfolio_last: "",
+            portfolio_names: [],
+            portfolios: {},
             portfolio: {
-                last: ""
+                name: ""
             },
-            display: {
-                editor: true,
-                script: true,
-                portfolio: true
-            }
-        },
-        script_names: [],
-        script: {
-            name: "",
-            script: "--lua.redis"
-        },
-        portfolio_names: [],
-        portfolios: {},
-        portfolio: {
-            name: ""
-        },
-        console: {
-            text: "redis.lua console",
-            msg_error: "error",
-            msg_success: "success",
-        },
-        token : {
-            snapshot_sz : "meta.a.snapshot.sz",
-            snapshot_sh : "meta.a.snapshot.sh",
-            khistory_sz : "meta.a.khistory.sz",
-            khistory_sh : "meta.a.khistory.sh"
+            console: {
+                text: "redis.lua console",
+                msg_error: "error",
+                msg_success: "success",
+            },
+            token: {
+                snapshot_sz: "meta.a.snapshot.sz",
+                snapshot_sh: "meta.a.snapshot.sh",
+                khistory_sz: "meta.a.khistory.sz",
+                khistory_sh: "meta.a.khistory.sh"
+            },
+            css : cssmock
         }
     },
     /* [methods] ------------------------------------------------------------------- */
     methods: {
         config_persist: function () {
-            let toptions = $("#table").bootstrapTable("getOptions");
-            this.setting.page_size = toptions.pageSize;
-            this.setting.script.last = this.script.name;
-            if (this.portfolio.name) {
-                this.setting.portfolio.last = this.portfolio.name;
-                this.setting.portfolio_last = this.portfolio.name;
+
+            if (this.timer_config_persist) {
+                clearTimeout(this.timer_config_persist);
             }
-            let o = {
-                columns: this.columns,
-                setting: this.setting
-            };
-            let jstr = JSON.stringify(o, null, 0);
-            localStorage.setItem("q.html", jstr);
+
+            this.timer_config_persist = setTimeout(function () {
+                let o = {
+                    columns: this.columns,
+                    setting: this.setting
+                };
+                let jstr = JSON.stringify(o, null, 0);
+                localStorage.setItem("q.html", jstr);
+            }.bind(this), 1000);
+
         },
         config_load: function () {
             let jstr = localStorage.getItem("q.html");
@@ -89,7 +159,7 @@ const vue = new Vue({
                     let need_refresh = {
                         meta: meta,
                         snapshot_sz: true,
-                        snapshot_sh: true,
+                        snapshot_sh: false,
                         khistory_sz: false,
                         khistory_sh: false
                     };
@@ -146,7 +216,7 @@ const vue = new Vue({
 
         script_select: function (name) {
             this.script.name = name;
-            this.config_persist();
+            this.setting.script.last = name;
             axios.post("/script/get", {
                 name: name
             }).then(function (resp) {
@@ -166,9 +236,9 @@ const vue = new Vue({
                 util.popover("#button_script_save", "需要脚本名字", "bottom");
                 return;
             }
+            this.setting.script.last = this.script.name;
             this.script.script = this.editor.getValue().trim();
 
-            this.config_persist();
             axios.post("/script/update", this.script).then(function (resp) {
                 util.handle_response(resp, this.console, "script saved @ " + this.script.name)
                 util.popover("#button_script_save", "保存成功", "bottom");
@@ -283,7 +353,7 @@ const vue = new Vue({
                         khistory = khistory.concat(stock.khistory);
                     }
                 }
-                this.init_table(adata);
+                this.table_init(adata);
                 this.db.update("snapshot", "code", [], stocks);
                 // TODO khistory cache
                 // this.db.update("khistory", "code", [ "time" ], khistory);
@@ -340,7 +410,6 @@ const vue = new Vue({
 
                 }
             }
-            this.config_persist();
         },
         isexclude: function (s) {
 
@@ -359,8 +428,7 @@ const vue = new Vue({
             $('#div_column_setting').modal('toggle')
         },
         column_setting_do: function () {
-            this.init_table();
-            this.config_persist();
+            this.table_init();
             $('#div_column_setting').modal('hide')
         },
         /* [portfolio] ------------------------------------------------------------------- */
@@ -443,13 +511,17 @@ const vue = new Vue({
             if (pname) {
                 this.portfolio.name = pname;
             }
-            this.config_persist();
+            this.setting.portfolio.last = pname;
             if (this.setting.mode === "portfolio") {
                 this.portfolio_view();
             }
         },
         portfolio_unadd: function () {
             let codes = this.table_get_selection("code");
+            if (codes.length === 0) {
+                alert("select something please");
+                return;
+            }
             let portfolio = "portf_" + this.portfolio.name;
             axios.post("/cmd/go", {
                 "type": "db",
@@ -457,6 +529,7 @@ const vue = new Vue({
                 "args": ["common", portfolio, codes]
             }).then(function (resp) {
                 util.handle_response(resp);
+                this.portfolio_view();
                 // util.popover("body", "删除组合 " + name + " 成功");
             }.bind(this));
         },
@@ -525,17 +598,24 @@ const vue = new Vue({
             this.editor.setOption("wrap", "free");
             this.editor.setTheme("ace/theme/github");
         },
-        init_table: function (data) {
+
+
+
+        table_init: function (data) {
+
 
             let columns_show = [];
             for (let i = 0; i < this.columns.length; i++) {
                 let col = this.columns[i];
-                let coldef = _columns_default_map[col.field];
                 if (typeof col.visible === 'undefined') {
                     col.visible = false;
                 }
                 if (col.field === "operate") {
                     col.visible = true;
+                }
+                let coldef = _columns_default_map[col.field];
+                if (!coldef) {
+                    continue;
                 }
                 col.sorter = coldef.sorter;
                 col.cellStyle = coldef.cellStyle;
@@ -544,60 +624,94 @@ const vue = new Vue({
             }
 
 
-            if (this.bstable) {
-                if (data) {
-                    $("#table").bootstrapTable("refreshOptions", {
-                        data: data,
-                        columns: columns_show
-                    });
-                } else {
-                    $("#table").bootstrapTable("refreshOptions", {
-                        columns: columns_show
-                    });
-                }
-            } else {
+            if (data) {
+                this.table.data = data;
+            }
+        },
 
-                data = data || [
-                    {
-                        code: "greetings",
-                        name: "redis-lua script",
-                        nowPrice: 1, openPrice: 1, todayMin: 1, todayMax: 1, swing: 1,
-                        diff_money: 1, diff_rate: 1
+        table_paging(data) {
+            console.info("pageing", data);
+            this.$refs.pagination.setPaginationData(data);
+        },
 
-                    }
-                ];
+        table_paging_change(page) {
+            console.info("pageing change", page);
+            this.$refs.vuetable.changePage(page)
+        },
 
-                this.bstable = $("#table").bootstrapTable({
-                    data: data,
-                    // showToggle :true,
-                    // showColumns :true,
-                    pagination: true,
-                    sidePagination: "client",
-
-                    pageSize: this.setting.page_size || 3,
-                    pageList: [3, 5, 7, 10, 25, 50],
-                    columns: columns_show,
-                    // detailView : true,
-                    // detailFormatter : function(index, row, element) {
-                    //     return "<span>helloworld</span>";
-                    // },
-                    onPageChange: function (number, size) {
-                        this.setting.page_size = size;
-                        this.config_persist();
-                    }.bind(this),
-                    onDblClickRow: function (row, $element, field, index) {
-                        console.log(row, $element, field, index);
-                    }.bind(this)
-                });
-
+        table_data_manage(sortOrder, pagination) {
+            let data = this.table.data;
+            if (data.length <= 0) {
+                return;
             }
 
-            this.table_resize();
-        }
+            // sortOrder can be empty, so we have to check for that as well
+            if (sortOrder.length > 0) {
+                console.log("orderBy:", sortOrder[0].sortField, sortOrder[0].direction);
+                /*e
+                data = _.orderBy(
+                    local,
+                    sortOrder[0].sortField,
+                    sortOrder[0].direction
+                );
+                */
+            }
+            let page_size = this.setting.table.page_size * 1;
+            pagination = this.$refs.vuetable.makePagination(
+                data.length,
+                page_size
+            );
+
+            let from = pagination.from - 1;
+            let to = from + page_size;
+            let slice = data.slice(from, to);
+            return {
+                pagination: pagination,
+                data: slice
+            };
+        },
+
     }, /* methods end */
 
+
+    /* [computed] --------------------------------------------------------------- */
+
+    computed : {
+
+        table_fields : function() {
+            return this.setting.table.fields;
+        },
+
+        // data : function () {
+        //     return { data : this.table.data };
+        // }
+
+    },
+
+    /* [watch] ------------------------------------------------------------------- */
+
+    watch: {
+        "table.data" : function(n, o) {
+            this.$refs.vuetable.refresh();
+        },
+        setting : {
+            handler(n, o) {
+                if (!n.table.page_size) {
+                    n.table.page_size = 5;
+                }
+                if (isNaN(n.table.page_size * 1)) {
+                    n.table.page_size = 5;
+                }
+                this.config_persist();
+            },
+            deep: true
+        }
+    },
+
     /* [mount] ------------------------------------------------------------------- */
-    mounted: function () {
+    mounted () {
+
+
 
         util.context = this;
         // web database
@@ -613,7 +727,7 @@ const vue = new Vue({
 
         // view init
         this.init_editor();
-        this.init_table();
+        this.table_init();
 
         this.script_list();
         this.portfolio_list();

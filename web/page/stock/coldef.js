@@ -10,66 +10,85 @@ var MyComponent= Vue.extend({
 });
 */
 
+var ofields = [{
+    "name" : "name",
+    "title" : "名字"
+}, {
+    "name" : "change_rate",
+    "title" : "波动"
+}, {
+    "name" : "now",
+    "title" : "价格"
+}, {
+    "name" : "pb",
+    "title" : "PB"
+}, {
+    "name" : "turnover",
+    "title" : "换手",
+    "visible" : false
+}];
+
 
 var _columns_default = [
     {
-        "field" : "operate",
+        "name" : "operate",
         "title" : "o",
-        "visible" : true,
+        "visible" : false,
         "checkbox" : true
-        // "formatter" : function(value, row, index, field) {
+        // "formatter2" : function(value, row, index, field) {
         //     return index + "";
         // }
     },
     {
-        "field": "code",
+        "name": "code",
         "title": "编码",
         "visible" : false
     },
     {
-        "field" : "name",
+        "name" : "name",
         "title" : "名字",
         "visible" : true,
-        "formatter" : function(value, row, index, field) {
+        "formatter2" : function(value, row, index, field) {
             return row.name + "<br/>" + row.code + "<br/><pre style='font-size: 0.8em'>" + row._u + "</pre>";
         }
     },
     {
-        "field" : "nowPrice",
+        "name" : "now",
         "title" : "当前",
         "visible" : true,
-        "formatter" : function(value, row, index, field) {
-            return value + "<br/><pre style='font-size:0.85em;color:grey;'>" + row.todayMax + "\n" + row.openPrice + "\n" + row.todayMin + "\n" + row.swing + "%</pre>";
+        "formatter2" : function(value, row, index, field) {
+            return value + "<br/><pre style='font-size:0.85em;color:grey;'>" + row.high + "\n" + row.open + "\n" + row.low  + "\n" + row.close +  "</pre>";
         },
         "cellStyle" : function(value, row, index, field) {
-            let diff_money = row.diff_money * 1;
-            let color = (diff_money > 0) ? "red" : "green"
+            let change_rate = row.change_rate * 1;
+            let color = (change_rate > 0) ? "red" : "green"
             return {
                 css: { "color": color }
             };
         }
     },
     {
-        "field" : "openPrice",
+        "name" : "open",
         "title" : "开盘",
         "visible" : false
     },
     {
-        "field" : "closePrice",
+        "name" : "close",
         "title" : "收盘",
         "visible" : false
     },
     {
-        "field" : "swing",
-        "title" : "振幅"
+        "name" : "swing",
+        "title" : "振幅",
+        "visible" : false
     },
     {
-        "field" : "diff_money",
+        "name" : "change",
         "title" : "涨跌金额",
         "sortable" : true,
         "visible" : false,
         formatter : function(value, row, index, field) {
-            return row.diff_money + "<br/>" + row.diff_rate + "%";
+            return row.change + "<br/>" + row.change_rate + "%";
         },
         "cellStyle" : function(value, row, index, field) {
             value = value * 1;
@@ -80,12 +99,12 @@ var _columns_default = [
         }
     },
     {
-        "field" : "diff_rate",
+        "name" : "change_rate",
         "title" : "涨跌",
         "sortable" : true,
         "visible" : true,
-        "formatter" : function(value, row, index, field) {
-            return row.diff_rate + "%<br/>" + row.diff_money;
+        "formatter2" : function(value, row, index, field) {
+            return row.change_rate;
         },
         "cellStyle" : function(value, row, index, field) {
             value = value * 1;
@@ -96,44 +115,44 @@ var _columns_default = [
         }
     },
     {
-        "field" : "all_value",
+        "name" : "vtotal",
         "title" : "总市",
         "sortable" : true,
-        "visible" : true
+        "visible" : false
     },
     {
-        "field" : "circulation_value",
+        "name" : "vcir",
         "title" : "流市",
         "sortable" : true,
         "visible" : false
     },
     {
-        "field" : "pb", /* 巿淨 */
+        "name" : "pb", /* 巿淨 */
         "title" : "PB",
         "sortable" : true,
         "visible" : true,
-        "formatter" : function(value, row, index, field){
+        "formatter2" : function(value, row, index, field){
             return value;
         }
     },
     {
-        "field" : "pe", /* 巿盈 */
+        "name" : "pe", /* 巿盈 */
         "title" : "PE",
         "sortable" : true,
-        "visible" : true
+        "visible" : false
     },
     {
-        "field" : "turnover",
+        "name" : "turnover",
         "title" : "换手",
         "sortable" : true,
         "visible" : true
     },
     {
-        "field" : "appointRate",
+        "name" : "appointRate",
         "title" : "委比",
         "sortable" : true,
-        "visible" : true,
-        "formatter" : function(value, row, index, field){
+        "visible" : false,
+        "formatter2" : function(value, row, index, field){
             return row.appointRate + "%<br/>" + row.appointDiff;
         },
         "cellStyle" : function(value, row, index, field) {
@@ -145,7 +164,7 @@ var _columns_default = [
         }
     },
     {
-        "field" : "appointDiff",
+        "name" : "appointDiff",
         "title" : "委差",
         "sortable" : true,
         "visible" : false,
@@ -158,125 +177,137 @@ var _columns_default = [
         }
     },
     {
-        "field" : "totalcapital",
+        "name" : "totalcapital",
         "title" : "总股本",
         "visible" : false
     },
     {
-        "field" : "currcapital",
+        "name" : "currcapital",
         "title" : "流通股本",
         "visible" : false
     },
     {
-        "field" : "todayMax",
-        "title" : "最高"
+        "name" : "max",
+        "title" : "最高",
+        "visible" : false
     },
     {
-        "field" : "todayMin",
-        "title" : "最低"
+        "name" : "min",
+        "title" : "最低",
+        "visible" : false
     },
     {
-        "field" : "tradeNum",
+        "name" : "vol",
         "title" : "成交量",
         "sortable" : true,
         "visible" : false
     },
     {
-        "field" : "tradeAmount",
+        "name" : "amount",
         "title" : "成交金额",
         "sortable" : true,
         "visible" : false
     },
+    /*
     {
-        "field" : "buy1_n",
-        "title" : "#B1"
+        "name" : "buy1_n",
+        "title" : "#B1",
+        "visible" : false
     },
     {
-        "field" : "buy1_m",
-        "title" : "B1"
+        "name" : "buy1_m",
+        "title" : "B1",
+        "visible" : false
     },
     {
-        "field" : "buy2_n",
-        "title" : "#B2"
+        "name" : "buy2_n",
+        "title" : "#B2",
+        "visible" : false
     },
     {
-        "field" : "buy2_m",
-        "title" : "B2"
+        "name" : "buy2_m",
+        "title" : "B2",
+        "visible" : false
     },
     {
-        "field" : "buy3_n",
-        "title" : "#B3"
+        "name" : "buy3_n",
+        "title" : "#B3",
+        "visible" : false
     },
     {
-        "field" : "buy3_m",
-        "title" : "B3"
+        "name" : "buy3_m",
+        "title" : "B3",
+        "visible" : false
     },
     {
-        "field" : "buy4_n",
+        "name" : "buy4_n",
         "title" : "#B4"
+        ,"visible" : false
     },
     {
-        "field" : "buy4_m",
-        "title" : "B4"
+        "name" : "buy4_m",
+        "title" : "B4",
+        "visible" : false
     },
     {
-        "field" : "buy5_n",
+        "name" : "buy5_n",
         "title" : "#B5"
     },
     {
-        "field" : "buy5_m",
+        "name" : "buy5_m",
         "title" : "B5"
     },
     {
-        "field" : "sell1_n",
+        "name" : "sell1_n",
         "title" : "#S1"
     },
     {
-        "field" : "sell1_m",
+        "name" : "sell1_m",
         "title" : "S1"
     },
     {
-        "field" : "sell2_n",
+        "name" : "sell2_n",
         "title" : "#S2"
     },
     {
-        "field" : "sell2_m",
+        "name" : "sell2_m",
         "title" : "S2"
     },
     {
-        "field" : "sell3_n",
+        "name" : "sell3_n",
         "title" : "#S3"
     },
     {
-        "field" : "sell3_m",
+        "name" : "sell3_m",
         "title" : "S3"
     },
     {
-        "field" : "sell4_n",
+        "name" : "sell4_n",
         "title" : "#S4"
     },
     {
-        "field" : "sell4_m",
+        "name" : "sell4_m",
         "title" : "S4"
     },
     {
-        "field" : "sell5_n",
+        "name" : "sell5_n",
         "title" : "#S5"
     },
     {
-        "field" : "sell5_m",
+        "name" : "sell5_m",
         "title" : "S5"
     },
+    */
     {
-        "field" : "_u",
+        "name" : "_u",
         "title" : "u",
         "visible" : false
     },
     {
-        "field" : "advance",
+        "name" : "advance",
         "title" : "a",
         "visible" : false,
-        "formatter" : function(value, row, index, field) {
+        "formatter2" : function(value, row, index, field) {
             return '<input type="button" value="移出" class="btn btn-outline-secondary"  v-on:click="portfolio_unadd()" />'
         }
     }

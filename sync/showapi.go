@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/qerr"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qtime"
 	"github.com/camsiabor/qstock/dict"
@@ -56,7 +57,7 @@ func (o * Syncer) ShowAPI_request(
 	if showapi_res_code != 0 {
 		var showapi_res_error = m["showapi_res_error"].(string)
 		qlog.Log(qlog.ERROR, o.Name, "code", showapi_res_code, "msg", showapi_res_error)
-		return nil, util.NewCError(int(showapi_res_code), o.Name, showapi_res_error);
+		return nil, qerr.NewCError(int(showapi_res_code), o.Name, showapi_res_error);
 	}
 
 	var resbody, _ = m["showapi_res_body"].(map[string]interface{})
@@ -64,7 +65,7 @@ func (o * Syncer) ShowAPI_request(
 	if ret_code != 0 {
 		var remark = resbody["remark"].(string)
 		qlog.Log(qlog.ERROR, o.Name, "ret_code", ret_code, "remark", remark)
-		return nil, util.NewCError(int(ret_code), o.Name, remark);
+		return nil, qerr.NewCError(int(ret_code), o.Name, remark);
 	}
 
 	var prefix = util.GetStr(profile, "", "prefix");

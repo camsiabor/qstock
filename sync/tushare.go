@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qtime"
 	"showSdk/httplib"
@@ -89,11 +89,12 @@ func (o * Syncer) TuShare_khistory(
 		return err;
 	}
 
+	var db = util.GetStr(profile, dict.DB_HISTORY, "db");
 	var metatoken = o.GetMetaToken(profilename);
 	//var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var market= util.GetStr(profile, "", "marker");
 	var fetcheach = util.GetInt(profile, 30, "each");
-	var from_date_str, _ = util.AsStrErr(dao.Get(dict.DB_HISTORY, metatoken, "fetch_last_date", false));
+	var from_date_str, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
 	if (len(from_date_str) <= 0) {
 		from_date_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102");
 	}
@@ -122,10 +123,8 @@ func (o * Syncer) TuShare_khistory(
 	}
 
 	var cachername = util.GetStr(profile, dict.CACHE_STOCK_KHISTORY, "cacher");
-	var cacher * scache.SCache;
-	if (len(cachername) > 0) {
-		cacher = scache.GetCacheManager().Get(cachername);
-	}
+	var cacher = scache.GetCacheManager().Get(cachername);
+
 	var rargs= make(map[string]interface{});
 	for _, code := range codes {
 		rargs["ts_code"] = code + keysuffix;
@@ -156,14 +155,14 @@ func (o * Syncer) TuShare_khistory(
 				cacher.SetSubVal(minfo, code, datestr);
 			}
 		}
-		var _, rerr = dao.Updates(dict.DB_HISTORY, code, dates, infos, true, true);
+		var _, rerr = dao.Updates(db, code, dates, infos, true, true);
 		if (rerr != nil) {
 			qlog.Log(qlog.ERROR, "api", "showapi", "khistory", rerr);
 		}
 	}
 
 	if (err != nil) {
-		dao.Update(dict.DB_HISTORY, metatoken, "fetch_last_date", to_date_str, true, false);
+		dao.Update(db, metatoken, "fetch_last_date", to_date_str, true, false);
 	}
 
 

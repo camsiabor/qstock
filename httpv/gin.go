@@ -11,7 +11,7 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qos"
 	"github.com/camsiabor/qcom/util/qref"

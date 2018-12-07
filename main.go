@@ -11,7 +11,8 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/qconfig"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
@@ -32,7 +33,7 @@ func handleCmd() {
 		}
 		qlog.Log(qlog.INFO, "main", "receive cmd", cmd);
 		if (cmd == "config reload") {
-			var config, err = util.ConfigLoad(g.ConfigPath, "includes");
+			var config, err = qconfig.ConfigLoad(g.ConfigPath, "includes");
 			if (err != nil) {
 				qlog.Log(qlog.FATAL, "config", "load failure", err);
 			} else {
@@ -115,7 +116,7 @@ func main() {
 	if (len(g.ConfigPath) == 0) {
 		g.ConfigPath = "config.json"
 	}
-	var config, err = util.ConfigLoad(g.ConfigPath, "includes")
+	var config, err = qconfig.ConfigLoad(g.ConfigPath, "includes")
 	if err != nil {
 		qlog.Log(qlog.FATAL, "config", "load failure", g.ConfigPath, err)
 		return

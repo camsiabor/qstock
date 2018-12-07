@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/util"
 	"showSdk/httplib"
 	"time"
 )

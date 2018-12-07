@@ -5,7 +5,8 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qcom/util/qerr"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qref"
 	"github.com/camsiabor/qcom/util/qtime"
@@ -199,8 +200,9 @@ func (o * Syncer) worker() {
 }
 
 
-func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, force bool, factor float64) (error) {
+func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, force bool, factor float64) (ferr error) {
 
+	defer qerr.SimpleRecover(0);
 
 	var now = time.Now();
 	var profileRunInfo = o.GetProfileRunInfo(profilename);

@@ -3605,16 +3605,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       if (!this.hasCallback(field)) return;
 
       if (typeof field.callback == 'function') {
-        return field.callback(this.getObjectValue(item, field.name));
+        let val = this.getObjectValue(item, field.name);
+        return field.callback(val, item, field.name, this);
       }
 
-      var args = field.callback.split('|');
+      var args = field.callback.split('|').concat( [ item, field.name, this ]);
       var func = args.shift();
 
       if (typeof this.$parent[func] === 'function') {
         var value = this.getObjectValue(item, field.name);
-
-        return args.length > 0 ? this.$parent[func].apply(this.$parent, [value].concat(args)) : this.$parent[func].call(this.$parent, value);
+        if (args.length > 0) {
+            this.$parent[func].apply(this.$parent, [value].concat(args));
+        } else {
+            this.$parent[func].call(this.$parent, value);
+        }
       }
 
       return null;

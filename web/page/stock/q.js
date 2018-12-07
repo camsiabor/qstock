@@ -10,56 +10,6 @@ Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
 
 
 
-let datamock = [{
-    code: "greetings",
-    name: "redis",
-    now: 1, open: 1, min: 1, max: 1, close: 1,
-    change_reate: 1
-},{
-    code: "greetings",
-    name: "lua",
-    now: 3, open: 1, min: 1, max: 1, close: 1,
-    change_reate: 1
-}];
-
-
-let cssmock = {
-    table: {
-        tableWrapper: '',
-        tableHeaderClass: 'mb-0',
-        tableBodyClass: 'mb-0',
-        tableClass: 'table table-bordered table-hover',
-        loadingClass: 'loading',
-        ascendingIcon: 'glyphicon glyphicon-chevron-up',
-        descendingIcon: 'glyphicon glyphicon-chevron-down',
-        handleIcon: 'glyphicon glyphicon-menu-hamburger',
-        ascendingIcon2: 'fa fa-chevron-up',
-        descendingIcon2: 'fa fa-chevron-down',
-        handleIcon2: 'fa fa-bars text-secondary',
-
-        ascendingClass: 'sorted-asc',
-        descendingClass: 'sorted-desc',
-        sortableIcon: 'fa fa-sort',
-        detailRowClass: 'vuetable-detail-row',
-
-        renderIcon(classes, options) {
-            return `<i class="${classes.join(' ')}"></span>`
-        }
-    },
-    pagination: {
-        wrapperClass: "pagination pull-right",
-        activeClass: "btn btn-outline-info",
-        disabledClass: "disabled",
-        pageClass: "btn page-item",
-        linkClass: "page-link",
-        icons: {
-            first: "",
-            prev: "",
-            next: "",
-            last: ""
-        }
-    }
-};
 
 const vue = new Vue({
     el: '#dcontainer',
@@ -75,7 +25,7 @@ const vue = new Vue({
             setting: {
                 table : {
                     page_size : 5,
-                    fields : _columns_default || ofields || _columns_default
+                    fields : _columns_default
                 },
                 mode: "query",
                 exclude: "buy,sell",
@@ -382,21 +332,6 @@ const vue = new Vue({
             }.bind(this))
         },
 
-        table_resize: function () {
-            setTimeout(function () {
-                return;
-                let browserHeight = document.body.clientHeight;
-                let offsetTop = document.getElementById("div_table").offsetTop;
-                let theight = browserHeight - offsetTop + 10;
-                if (theight < 100) {
-                    theight = 100;
-                }
-                console.log(browserHeight, offsetTop, theight);
-                $("#table").bootstrapTable("refreshOptions", {
-                    height: theight
-                });
-            }, 1280);
-        },
         toggle: function (target, type) {
             if (type === "view") {
                 this.setting.display[target] = !this.setting.display[target];
@@ -433,8 +368,9 @@ const vue = new Vue({
         },
         /* [portfolio] ------------------------------------------------------------------- */
         table_get_selection: function (field) {
+            // TODO get selection
             let result = [];
-            let rows = $("#table").bootstrapTable("getSelections");
+            let rows = [];
             for (let i = 0; i < rows.length; i++) {
                 let row = rows[i];
                 result.push(row[field]);
@@ -630,12 +566,10 @@ const vue = new Vue({
         },
 
         table_paging(data) {
-            console.info("pageing", data);
             this.$refs.pagination.setPaginationData(data);
         },
 
         table_paging_change(page) {
-            console.info("pageing change", page);
             this.$refs.vuetable.changePage(page)
         },
 
@@ -646,15 +580,33 @@ const vue = new Vue({
             }
 
             // sortOrder can be empty, so we have to check for that as well
-            if (sortOrder.length > 0) {
-                console.log("orderBy:", sortOrder[0].sortField, sortOrder[0].direction);
-                /*e
-                data = _.orderBy(
-                    local,
-                    sortOrder[0].sortField,
-                    sortOrder[0].direction
-                );
-                */
+            let clone = [].concat(data);
+            let sortlen = sortOrder.length;
+            if (sortlen > 0) {
+                /*
+                direction, field, sortField
+                 */
+
+                for(let i = 0; i < sortlen; i++) {
+                    let one = sortOrder[i];
+                    one.asc = one.direction === 'asc';
+                }
+
+                clone = clone.sort(function(a , b){
+                    let r = 0;
+                    for(let i = 0; i < sortlen; i++) {
+                        let one = sortOrder[i];
+                        let field = one.sortField;
+                        if (one.asc) {
+                            r = a[field] * 1 - b[field] * 1;
+                        } else {
+                            r = b[field] * 1 - a[field] * 1;
+                        }
+                        if (r !== 0) {
+                            return r;
+                        }
+                    }
+                })
             }
             let page_size = this.setting.table.page_size * 1;
             pagination = this.$refs.vuetable.makePagination(
@@ -664,10 +616,10 @@ const vue = new Vue({
 
             let from = pagination.from - 1;
             let to = from + page_size;
-            let slice = data.slice(from, to);
+            clone = clone.slice(from, to);
             return {
                 pagination: pagination,
-                data: slice
+                data: clone
             };
         },
 
@@ -696,12 +648,10 @@ const vue = new Vue({
         },
         setting : {
             handler(n, o) {
-                if (!n.table.page_size) {
-                    n.table.page_size = 5;
-                }
-                if (isNaN(n.table.page_size * 1)) {
-                    n.table.page_size = 5;
-                }
+                if (!n.table.page_size) { n.table.page_size = 5; }
+                if (isNaN(n.table.page_size * 1)) { n.table.page_size = 5; }
+                if (n.table.page_size < 0) { n.table.page_size = -n.table.page_size; }
+                if (n.table.page_size >= 50) { n.table.page_size = 50; }
                 this.config_persist();
             },
             deep: true

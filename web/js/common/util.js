@@ -239,3 +239,13 @@ QUtil.prototype.values = function (m, filter) {
     return vals;
 }
 
+QUtil.stock_color = function (n) {
+    n = n * 1;
+    if (isNaN(n) || n === 0) {
+        return "grey";
+    } else if (n > 0) {
+        return "red";
+    } else {
+        return "green";
+    }
+}

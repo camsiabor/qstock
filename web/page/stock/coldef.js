@@ -10,32 +10,63 @@ var MyComponent= Vue.extend({
 });
 */
 
-var ofields = [{
-    "name" : "name",
-    "title" : "名字"
-}, {
-    "name" : "change_rate",
-    "title" : "波动"
-}, {
-    "name" : "now",
-    "title" : "价格"
-}, {
-    "name" : "pb",
-    "title" : "PB"
-}, {
-    "name" : "turnover",
-    "title" : "换手",
-    "visible" : false
+
+const datamock = [{
+    code: "greetings",
+    name: "redis",
+    now: 1, open: 1, min: 1, max: 1, close: 1,
+    change_reate: 1
+},{
+    code: "greetings",
+    name: "lua",
+    now: 3, open: 1, min: 1, max: 1, close: 1,
+    change_reate: 1
 }];
 
 
-var _columns_default = [
+const cssmock = {
+    table: {
+        tableWrapper: '',
+        tableHeaderClass: 'mb-0',
+        tableBodyClass: 'mb-0',
+        tableClass: 'table table-bordered table-hover',
+        loadingClass: 'loading',
+        ascendingIcon: 'fa fa-chevron-circle-up',
+        descendingIcon: 'fa fa-chevron-circle-down',
+        handleIcon: 'fa-chrome',
+        handleIcon2: 'fa fa-bars text-secondary',
+
+        ascendingClass: 'sorted-asc',
+        descendingClass: 'sorted-desc',
+        sortableIcon: 'fa fa-sort',
+        detailRowClass: 'vuetable-detail-row',
+
+        renderIcon(classes, options) {
+            return `<i class="${classes.join(' ')}"></span>`
+        }
+    },
+    pagination: {
+        wrapperClass: "pagination pull-right",
+        activeClass: "btn btn-outline-info",
+        disabledClass: "disabled",
+        pageClass: "btn page-item",
+        linkClass: "page-link",
+        icons: {
+            first: "",
+            prev: "",
+            next: "",
+            last: ""
+        }
+    }
+};
+
+const _columns_default = [
     {
         "name" : "operate",
         "title" : "o",
         "visible" : false,
         "checkbox" : true
-        // "formatter2" : function(value, row, index, field) {
+        // "callback" : function(value, row, col, vuetable) {
         //     return index + "";
         // }
     },
@@ -48,7 +79,7 @@ var _columns_default = [
         "name" : "name",
         "title" : "名字",
         "visible" : true,
-        "formatter2" : function(value, row, index, field) {
+        "callback": function (value, row, col, vuetable) {
             return row.name + "<br/>" + row.code + "<br/><pre style='font-size: 0.8em'>" + row._u + "</pre>";
         }
     },
@@ -56,15 +87,20 @@ var _columns_default = [
         "name" : "now",
         "title" : "当前",
         "visible" : true,
-        "formatter2" : function(value, row, index, field) {
-            return value + "<br/><pre style='font-size:0.85em;color:grey;'>" + row.high + "\n" + row.open + "\n" + row.low  + "\n" + row.close +  "</pre>";
-        },
-        "cellStyle" : function(value, row, index, field) {
-            let change_rate = row.change_rate * 1;
-            let color = (change_rate > 0) ? "red" : "green"
-            return {
-                css: { "color": color }
-            };
+        "callback" : function(value, row, col, vuetable) {
+            let now_color = QUtil.stock_color(row.now * 1 - row.open * 1);
+            let open_color = QUtil.stock_color(row.open * 1 - row.close * 1);
+            let low_color = QUtil.stock_color(row.low * 1 - row.close * 1);
+            let high_color = QUtil.stock_color(row.high * 1 - row.close * 1);
+            let html = [];
+            html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
+            html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.close + " -> " + row.open + "</div>");
+            html.push("<div class='s-bold s-tiny'>");
+            html.push("<span style='color:" + low_color + "'>" + row.low + "</span>");
+            html.push(" - ")
+            html.push("<span style='color:" + high_color + "'>" + row.high + "</span>");
+            html.push("</div>");
+            return html.join("");
         }
     },
     {
@@ -87,31 +123,21 @@ var _columns_default = [
         "title" : "涨跌金额",
         "sortable" : true,
         "visible" : false,
-        formatter : function(value, row, index, field) {
-            return row.change + "<br/>" + row.change_rate + "%";
-        },
-        "cellStyle" : function(value, row, index, field) {
-            value = value * 1;
-            let color = (value > 0) ? "red" : "green"
-            return {
-                css: { "color": color }
-            };
+        "callback" : function(value, row, col, vuetable) {
+            row.change_rate = row.change_rate * 1;
+            let color = QUtil.stock_color(row.change_rate);
+            return "<span style='color:'" + color + "'>" + row.change_rate + "</span>";
         }
     },
     {
         "name" : "change_rate",
         "title" : "涨跌",
-        "sortable" : true,
+        "sortField" : "change_rate",
         "visible" : true,
-        "formatter2" : function(value, row, index, field) {
-            return row.change_rate;
-        },
-        "cellStyle" : function(value, row, index, field) {
-            value = value * 1;
-            let color = (value > 0) ? "red" : "green"
-            return {
-                css: { "color": color }
-            };
+        "callback" : function(value, row, col, vuetable) {
+            row.change_rate = row.change_rate * 1;
+            let color = QUtil.stock_color(row.change_rate);
+            return "<span class='s-bold' style='color:" + color + "'>" + row.change_rate + " %</span>";
         }
     },
     {
@@ -131,7 +157,7 @@ var _columns_default = [
         "title" : "PB",
         "sortable" : true,
         "visible" : true,
-        "formatter2" : function(value, row, index, field){
+        "callback" : function(value, row, col, vuetable){
             return value;
         }
     },
@@ -152,10 +178,10 @@ var _columns_default = [
         "title" : "委比",
         "sortable" : true,
         "visible" : false,
-        "formatter2" : function(value, row, index, field){
+        "callback" : function(value, row, col, vuetable){
             return row.appointRate + "%<br/>" + row.appointDiff;
         },
-        "cellStyle" : function(value, row, index, field) {
+        "cellStyle" : function(value, row, col, vuetable) {
             value = value * 1;
             let color = (value > 0) ? "red" : "green"
             return {
@@ -168,7 +194,7 @@ var _columns_default = [
         "title" : "委差",
         "sortable" : true,
         "visible" : false,
-        "cellStyle" : function(value, row, index, field) {
+        "cellStyle" : function(value, row, col, vuetable) {
             value = value * 1;
             let color = (value > 0) ? "red" : "green"
             return {
@@ -307,7 +333,7 @@ var _columns_default = [
         "name" : "advance",
         "title" : "a",
         "visible" : false,
-        "formatter2" : function(value, row, index, field) {
+        "callback" : function(value, row, col, vuetable) {
             return '<input type="button" value="移出" class="btn btn-outline-secondary"  v-on:click="portfolio_unadd()" />'
         }
     }

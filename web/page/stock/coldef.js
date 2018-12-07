@@ -62,13 +62,10 @@ const cssmock = {
 
 const _columns_default = [
     {
-        "name" : "operate",
-        "title" : "o",
-        "visible" : false,
-        "checkbox" : true
-        // "callback" : function(value, row, col, vuetable) {
-        //     return index + "";
-        // }
+        "name" : "__checkbox",
+        "title" : "",
+        "width" : "2%",
+        "visible" : true
     },
     {
         "name": "code",
@@ -78,14 +75,19 @@ const _columns_default = [
     {
         "name" : "name",
         "title" : "名字",
+        "width" : "15%",
         "visible" : true,
         "callback": function (value, row, col, vuetable) {
+            // let html = [];
+            // html.push("<div  v-on:click='alert(1)' value='ok'>hello world</div>");
+            // return html.join('');
             return row.name + "<br/>" + row.code + "<br/><pre style='font-size: 0.8em'>" + row._u + "</pre>";
         }
     },
     {
         "name" : "now",
         "title" : "当前",
+        "width" : "18%",
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
             let now_color = QUtil.stock_color(row.now * 1 - row.open * 1);
@@ -133,11 +135,12 @@ const _columns_default = [
         "name" : "change_rate",
         "title" : "涨跌",
         "sortField" : "change_rate",
+        "width" : "12%",
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
             let color = QUtil.stock_color(row.change_rate);
-            return "<span class='s-bold' style='color:" + color + "'>" + row.change_rate + " %</span>";
+            return "<span class='s-bold' style='color:" + color + "'>" + row.change_rate + "</span>";
         }
     },
     {
@@ -155,23 +158,27 @@ const _columns_default = [
     {
         "name" : "pb", /* 巿淨 */
         "title" : "PB",
-        "sortable" : true,
+        "sortField" : "pb",
+        "width" : "12%",
         "visible" : true,
-        "callback" : function(value, row, col, vuetable){
-            return value;
+        "callback" : function (value) {
+            return (value + "").substr(0, 4);
         }
     },
     {
         "name" : "pe", /* 巿盈 */
         "title" : "PE",
-        "sortable" : true,
+        "sortField" : "pe",
         "visible" : false
     },
     {
         "name" : "turnover",
         "title" : "换手",
-        "sortable" : true,
-        "visible" : true
+        "sortField" : "turnover",
+        "visible" : true,
+        "callback" : function (value) {
+            return (value + "").substr(0, 4);
+        }
     },
     {
         "name" : "appointRate",
@@ -180,27 +187,13 @@ const _columns_default = [
         "visible" : false,
         "callback" : function(value, row, col, vuetable){
             return row.appointRate + "%<br/>" + row.appointDiff;
-        },
-        "cellStyle" : function(value, row, col, vuetable) {
-            value = value * 1;
-            let color = (value > 0) ? "red" : "green"
-            return {
-                css: { "color": color }
-            };
         }
     },
     {
         "name" : "appointDiff",
         "title" : "委差",
         "sortable" : true,
-        "visible" : false,
-        "cellStyle" : function(value, row, col, vuetable) {
-            value = value * 1;
-            let color = (value > 0) ? "red" : "green"
-            return {
-                css: { "color": color }
-            };
-        }
+        "visible" : false
     },
     {
         "name" : "totalcapital",
@@ -325,17 +318,9 @@ const _columns_default = [
     },
     */
     {
-        "name" : "_u",
-        "title" : "u",
-        "visible" : false
-    },
-    {
-        "name" : "advance",
-        "title" : "a",
-        "visible" : false,
-        "callback" : function(value, row, col, vuetable) {
-            return '<input type="button" value="移出" class="btn btn-outline-secondary"  v-on:click="portfolio_unadd()" />'
-        }
+        "name" : '__component:actions',
+        "title" : '',
+        "visible" : true
     }
 ];
 

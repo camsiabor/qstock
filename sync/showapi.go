@@ -67,62 +67,55 @@ func (o * Syncer) ShowAPI_request(
 		return nil, util.NewCError(int(ret_code), o.Name, remark);
 	}
 
-	var db = util.GetStr(profile, "", "db");
-	var table = util.GetStr(profile, "", "table");
 	var prefix = util.GetStr(profile, "", "prefix");
 	var primarykey = util.GetStr(profile, "code", "key");
-	var cachername = util.GetStr(profile, "", "cacher");
+
+
+
 	var mappername = util.GetStr(profile, "", "mapper");
-
-
 	var mapper = util.GetMapperManager().Get(mappername);
 
 	//var hastable = len(table) > 0;
-	var cacher * scache.SCache;
-	if (len(cachername) > 0) {
-		cacher = scache.GetCacheManager().Get(cachername)
-	}
+
+
 	var updatetime = time.Now().Format("02-1504"); // updateimte
 	var list = resbody["list"].([]interface{})
-	for _, one := range list {
-		var info = one.(map[string]interface{})
-
+	var ids = make([]interface{}, len(list));
+	for i, one := range list {
+		var info = one.(map[string]interface{});
 		if (mapper != nil) {
 			_, err = mapper.Map(info, false);
 			if (err != nil) {
 				qlog.Log(qlog.ERROR, err);
-				continue;
+				break;
 			}
 		}
-
 		var stockcode string = info[primarykey].(string);
 		var id string = prefix + stockcode;
+		ids[i] = id;
 		info["_u"] = updatetime;
-		if (len(table) == 0) {
-			var _, uerr = dao.Update(db, "", id, info, true, false);
-			if (uerr == nil) {
-				if (cacher != nil) {
-					cacher.Set(info, stockcode);
-				}
-			} else {
-				qlog.Log(qlog.ERROR, uerr);
-			}
-		} else {
-			var _, uerr = dao.Update(db, table, id, info, true, true);
-			if (uerr == nil) {
-				if (cacher != nil) {
-					cacher.SetSubVal(info, table, id);
-				}
-			} else {
-				qlog.Log(qlog.ERROR, uerr);
-			}
-		}
 	}
 
-	if err == nil {
-		qlog.Log(qlog.INFO, o.Name, "persist", profilename, requestargs)
-	} else {
-		qlog.Log(qlog.ERROR, o.Name, "persist failure", profilename, requestargs);
+
+	if (err == nil) {
+
+		var db = util.GetStr(profile, "", "db");
+		var group = util.GetStr(profile, "", "group");
+		var cachername = util.GetStr(profile, "", "cacher");
+		var cacher = scache.GetCacheManager().Get(cachername)
+
+		var idsss = util.AsStringSlice(ids, 0);
+		if (len(group) == 0) {
+			if (cacher != nil) {
+				cacher.Sets(list, idsss);
+			}
+			_, err= dao.Updates(db, group, ids, list, true, false);
+		} else {
+			if (cacher != nil) {
+				cacher.SetSubVals(list, idsss, group);
+			}
+			_, err= dao.Updates(db, group, ids, list, true, true);
+		}
 	}
 
 	return list, nil;

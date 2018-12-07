@@ -2,14 +2,45 @@
 
 const util = new QUtil();
 
+
+Vue.component('actions', {
+    template : 
+        "<div class='btn-group btn-group-sm'>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search'></i></button>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle'></i></button>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle'></i></button>" +
+        "</div>",
+    props: {
+        rowData: {
+            type: Object,
+            required: true
+        },
+        rowIndex: {
+            type: Number
+        }
+    },
+    methods: {
+        act (action, data, index) {
+            let code = data.code;
+            let context = this.$root;
+            switch (action) {
+                case "portfolio.add":
+                    context.portfolio_update( [ code ]);
+                    break;
+                case "portfolio.unadd":
+                    context.portfolio_unadd( [ code ]);
+                    break;
+            }
+            console.log('custom-actions: ' + action, data.name, index)
+        }
+    }
+});
+
 Vue.component('vuetable', Vuetable.Vuetable);
 Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
 // Vue.component('vuetable-pagination', Vuetable.VuetablePaginationMixin)
 // Vue.component('vuetable-pagination', Vuetable.VuetablePaginationInfoMixin);
 // Vue.component('vuetable-pagination-dropdown', Vuetable.VuetablePaginationDropDown);
-
-
-
 
 const vue = new Vue({
     el: '#dcontainer',
@@ -20,7 +51,8 @@ const vue = new Vue({
             stocks: [],
             columns: [],
             table: {
-                "data": datamock
+                data: datamock,
+                datamap : {}
             },
             setting: {
                 table : {
@@ -367,15 +399,21 @@ const vue = new Vue({
             $('#div_column_setting').modal('hide')
         },
         /* [portfolio] ------------------------------------------------------------------- */
-        table_get_selection: function (field) {
-            // TODO get selection
-            let result = [];
-            let rows = [];
-            for (let i = 0; i < rows.length; i++) {
-                let row = rows[i];
-                result.push(row[field]);
+        table_get_selection: function (retrow) {
+            let codes = [].concat(this.$refs.vuetable.selectedTo);
+            if (retrow) {
+                let result = [];
+                for (let i = 0; i < codes.length; i++) {
+                    let code = codes[i]
+                    let one = this.table.datamap[code];
+                    if (one) {
+                        result.push(one);
+                    }
+                }
+                return result;
+            } else {
+                return codes;
             }
-            return result;
         },
         portfolio_list: function () {
             axios.post("/cmd/go", {
@@ -411,7 +449,7 @@ const vue = new Vue({
             }
 
             if (!codes_sel) {
-                codes_sel = this.table_get_selection("code");
+                codes_sel = this.table_get_selection();
                 if (codes_sel.length === 0) {
                     util.popover("#button_portfolio_add", "需要选择对象", "bottom");
                     return;
@@ -452,8 +490,10 @@ const vue = new Vue({
                 this.portfolio_view();
             }
         },
-        portfolio_unadd: function () {
-            let codes = this.table_get_selection("code");
+        portfolio_unadd: function (codes) {
+            if (!codes) {
+                codes = this.table_get_selection();
+            }
             if (codes.length === 0) {
                 alert("select something please");
                 return;
@@ -644,6 +684,10 @@ const vue = new Vue({
 
     watch: {
         "table.data" : function(n, o) {
+            for(let i = 0; i < n.length; i++) {
+                let one = n[i];
+                this.table.datamap[one.code] = one;
+            }
             this.$refs.vuetable.refresh();
         },
         setting : {

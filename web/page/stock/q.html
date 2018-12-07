@@ -18,29 +18,12 @@
             font-size: 0.7em;
         }
 
-        .gone {
-            display: none;
-        }
-
-        .s-bold {
-            font-weight: bolder;
-        }
-
-        .s-tiny {
-            font-size: 0.8em;
-        }
-
-        .s-up {
-            color: red;
-        }
-
-        .s-down {
-            color: forestgreen;
-        }
-
-        .s-grey {
-            color: grey;
-        }
+        .gone { display: none; }
+        .s-bold { font-weight: bolder; }
+        .s-tiny { font-size: 0.8em; }
+        .s-up { color: red; }
+        .s-down { color: forestgreen; }
+        .s-grey { color: grey; }
 
     </style>
 </head>
@@ -177,25 +160,8 @@
         </div>
     </div>
 
-<!-- @vuetable:pagination-data="table_paging" -->
-    <div id="div_table" class="row" style="margin-top: 10px;">
-        <div class="col-md-12">
-            <div id="table">
-                <vuetable ref="vuetable"
-                          table-wrapper="#table"
-                          :css="css.table"
-                          :api-mode="false"
-                          :per-age="setting.table.page_size"
-                          :fields="table_fields"
-                          :data-manager="table_data_manage"
-                          pagination-path="pagination"
-                          @vuetable:pagination-data="table_paging">
-                ></vuetable>
-            </div>
-        </div>
-    </div>
 
-    <div id="div_table_pagination" class="row">
+    <div id="div_table_pagination" class="row" style="margin-top: 5px;" >
         <div class="col-md-3">
             <vuetable-pagination
                     ref="pagination"
@@ -211,6 +177,27 @@
             <input class="form-control mr-sm-2" type="search" v-model="setting.table.page_size">
         </div>
     </div>
+
+    <div id="div_table" class="row" style="margin-top: 5px;">
+        <div class="col-md-12">
+            <div id="table">
+                <vuetable ref="vuetable"
+                          table-wrapper="#table"
+                          :css="css.table"
+                          :api-mode="false"
+                          :per-age="setting.table.page_size"
+                          :fields="table_fields"
+                          track-by="code"
+                          :data-manager="table_data_manage"
+                          :multi-sort="true"
+                          multi-sort-key="ctrl"
+                          pagination-path="pagination"
+                          @vuetable:pagination-data="table_paging">
+                ></vuetable>
+            </div>
+        </div>
+    </div>
+
 
 
     <!-- -->

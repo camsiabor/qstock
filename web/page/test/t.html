@@ -22,17 +22,6 @@
 <div id="dcontainer" class="container"  style="max-width: 9999px"  >
 
     <h1>hello</h1>
-    <div id="div_table" class="row" style="margin-top: 10px;">
-        <div class="col-md-12">
-            <div id="table">
-                <vuetable
-                        table-wrapper="#table"
-                        :fields="['a','b','c']"
-                ></vuetable>
-            </div>
-        </div>
-    </div>
-
 
 </div>
 
@@ -49,15 +38,15 @@
 <script type="text/javascript" src="/js/common/util.js"></script>
 <script type="text/javascript" src="/js/vue/vue.js" ></script>
 <script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
+<!--
+<script type="text/javascript" src="t.js"></script>
+-->
+
 <script type="text/javascript">
 
     // import Vuetable from "/js/vue/vuetable/vuetable-2-full";
 
-    Vue.component('vuetable', Vuetable.Vuetable);
 
-    const vue = new Vue({
-        el: '#dcontainer'
-    });
 
 </script>
 </body>

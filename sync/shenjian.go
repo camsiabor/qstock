@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/camsiabor/qcom/qdao"
+	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
-	"github.com/camsiabor/qcom/util/qlog"
-	"github.com/camsiabor/qstock/dict"
 	"showSdk/httplib"
 	"time"
 )
@@ -48,9 +47,8 @@ func (o Syncer) ShenJian_request(
 	}
 
 	var key = util.GetStr(profile, "code", "key");
-	var mapperName = util.GetStr(profile, "", "mapper");
-	var mapper = util.GetMapperManager().Get(mapperName);
-
+	var mappername = util.GetStr(profile, "", "mapper");
+	var mapper = util.GetMapperManager().Get(mappername);
 
 
 	data = util.GetSlice(m, "data");
@@ -67,6 +65,26 @@ func (o Syncer) ShenJian_request(
 			}
 		}
 	}
+
+	if (err == nil) {
+		var db = util.GetStr(profile, "", "db");
+		var group = util.GetStr(profile, "", "group");
+		var cachername = util.GetStr(profile, "", "cacher");
+		var cacher = scache.GetCacheManager().Get(cachername);
+
+		var idsss = util.AsStringSlice(ids, 0);
+		if (len(group) == 0) {
+			_, err = dao.Updates(db, group, ids, data, true, false);
+			if (cacher != nil) {
+				cacher.Sets(data, idsss);
+			}
+		} else {
+			_, err = dao.Updates(db, group, ids, data, true, true);
+			if (cacher != nil) {
+				cacher.SetSubVals(data, idsss, group);
+			}
+		}
+	}
 	return data, ids, err;
 }
 
@@ -79,14 +97,7 @@ func (o * Syncer) ShenJian_snapshot(
 	if (phrase != "work") {
 		return nil;
 	}
-
-	data, ids, err := o.ShenJian_request(dao, profile, profilename, nil, nil, nil);
-	if (err == nil) {
-		_, err = dao.Updates(dict.DB_DEFAULT, "", ids, data, true, false);
-		if (err == nil) {
-			qlog.Log(qlog.INFO, "shenjian", "snapshot", len(data));
-		}
-	}
+	_, _, err = o.ShenJian_request(dao, profile, profilename, nil, nil, nil);
 	return err;
 }
 

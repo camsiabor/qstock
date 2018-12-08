@@ -298,18 +298,18 @@ func (o * HttpServer) routeQuery() {
 				var now = time.Now()
 				time_to_str = qtime.YYYY_MM_dd(&now);
 			}
-			time_from, perr := time.Parse("2006-01-02", time_from_str);
+			time_from, perr := time.Parse("20060102", time_from_str);
 			if (perr != nil) {
 				o.RespJsonEx(nil, perr, c);
 				return;
 			}
-			time_to, perr := time.Parse("2006-01-02", time_to_str);
+			time_to, perr := time.Parse("20060102", time_to_str);
 			if (perr != nil) {
 				o.RespJsonEx(nil, perr, c);
 				return;
 			}
 
-			time_array, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "2006-01-02", time.Saturday, time.Sunday);
+			time_array, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "20060102", time.Saturday, time.Sunday);
 			if (perr != nil) {
 				o.RespJsonEx(nil, perr, c);
 				return;

@@ -19,17 +19,12 @@ func (o * Syncer) ShowAPI_request(
 	dao qdao.D,
 	profile map[string]interface{},
 	profilename string,
-	requestargs map[string]interface{},
-	handler SyncAPIHandler) (interface{}, error) {
+	requestargs map[string]interface{}) (interface{}, error) {
 
 	if (!o.doContinue) {
 		return nil, nil;
 	}
 
-	var nice = util.GetInt64(profile, 100, "nice" );
-	if (nice > 0) {
-		time.Sleep(time.Duration(nice) * time.Millisecond);
-	}
 
 	var api = util.GetStr(profile, "", "api");
 	var request = normalRequest.ShowapiRequest(o.domain+  "/" + api, o.appid, o.appsecret)
@@ -39,6 +34,13 @@ func (o * Syncer) ShowAPI_request(
 		}
 	}
 
+	var timeout = util.GetInt64(profile, 20, "timeout");
+	var nice = util.GetInt64(profile, 250, "nice");
+	request.SetConnectTimeOut(time.Duration(timeout) * time.Second);
+	request.SetConnectTimeOut(time.Duration(10) * time.Second);
+	if (nice >= 0) {
+		time.Sleep(time.Millisecond * time.Duration(nice));
+	}
 	var jsonstr, err = request.Post()
 	if err != nil {
 		qlog.Log(qlog.FATAL, o.Name, err)
@@ -106,7 +108,7 @@ func (o * Syncer) ShowAPI_snapshot(
 			stockids = strings.TrimRight(stockids, ",")
 			rargs["stocks"] = stockids;
 			rargs["needIndex"] = "0";
-			_, err = o.ShowAPI_request(dao, profile, profilename, rargs, nil)
+			_, err = o.ShowAPI_request(dao, profile, profilename, rargs)
 			stockids = ""
 		}
 	}
@@ -170,7 +172,7 @@ func (o * Syncer) ShowAPI_khistory(
 		rargs["code"] = code;
 		rargs["begin"] = from_date_str;
 		rargs["end"] = to_date_str;
-		data, err := o.ShowAPI_request(dao, profile, profilename, rargs, nil);
+		data, err := o.ShowAPI_request(dao, profile, profilename, rargs);
 		if (data == nil || err != nil) {
 			continue;
 		}

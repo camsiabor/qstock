@@ -6,10 +6,10 @@ import (
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util/qerr"
-	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qref"
 	"github.com/camsiabor/qcom/util/qtime"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qstock/dict"
 	"strings"
 	"sync"
@@ -30,7 +30,6 @@ type Syncer struct {
 	channelFetchCmd    chan * global.Cmd;
 	channelWorkProfile chan * global.Cmd;
 	profileRunInfos    map[string]*ProfileRunInfo;
-	RequestHandler 	   SyncRequestHandler
 }
 
 
@@ -42,20 +41,6 @@ type ProfileRunInfo struct {
 	LastRunError error;
 }
 
-type SyncAPIHandler func(
-	phrase string,
-	dao qdao.D,
-	profile map[string]interface{},
-	profilename string,
-	arg1 interface{},
-	arg2 interface{}) (err error);
-
-type  SyncRequestHandler  func(
-	dao qdao.D,
-	profile map[string]interface{},
-	profilename string,
-	requestargs map[string]interface{},
-	handler SyncAPIHandler) (interface{}, error);
 
 func (o * Syncer) Run(name string) {
 	o.Name = name;
@@ -64,12 +49,21 @@ func (o * Syncer) Run(name string) {
 	o.appid =  util.GetInt(config,  0, "appid");
 	o.appsecret = util.GetStr(config,  "", "appsecret");
 	o.domain = util.GetStr(config, "", "domain");
-
 	o.channelFetchCmd = make(chan * global.Cmd, 64);
 	o.channelWorkProfile = make(chan * global.Cmd, 64);
 	o.profileRunInfos = make(map[string]*ProfileRunInfo);
 	o.doContinue = true;
 	o.concurrent = 0;
+
+	var profiles = util.GetMap(config, true, "profiles");
+	for _, one := range profiles {
+		var profile = util.AsMap(one, false);
+		if (profile == nil) {
+			continue;
+		}
+		util.MapMerge(profile, config, false);
+	}
+
 	go o.heartbeat();
 }
 
@@ -119,8 +113,11 @@ func (o * Syncer) heartbeat() {
 		}
 		//qlog.Log(qlog.INFO, o.Name, "heartbeat cmd", cmd);
 		var agendaNameDefault = util.GetStr(g.Config, "stock", "api", o.Name, "agenda");
-		var profiles= util.GetMap(g.Config, true, "api", o.Name, "profiles");
+		var profiles = util.GetMap(g.Config, true, "api", o.Name, "profiles");
 		for profilename, profile := range profiles {
+			if (util.AsMap(profile, false) == nil) {
+				continue;
+			}
 			var force = false;
 			if (cmd != nil) {
 				if (strings.Contains(cmd.Name, profilename)) {
@@ -154,8 +151,6 @@ func (o * Syncer) heartbeat() {
 			dcmd.SetData("factor", factor);
 			o.channelWorkProfile <- dcmd;
 		}
-
-
 		select_interval = util.GetInt(g.Config, 300, "api", o.Name, "select_interval");
 	}
 }
@@ -184,6 +179,7 @@ func (o * Syncer) worker() {
 			if (profile == nil) {
 				qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);
 			} else {
+
 				o.doprofile(profilename, profile, force, factor)
 			}
 		case <-timeout:
@@ -203,7 +199,6 @@ func (o * Syncer) worker() {
 func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, force bool, factor float64) (ferr error) {
 
 	defer qerr.SimpleRecover(0);
-
 	var now = time.Now();
 	var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var interval = util.GetInt64(profile, 3600, "interval");
@@ -245,11 +240,8 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 	}
 
 
-	var g = global.GetInstance();
 	var sync_record_cacher = scache.GetCacheManager().Get("sync");
-	var nice_default = util.GetInt64(g.Config, 0, "api", o.Name, "nice");
-	var nice_profile = util.GetInt64(profile, nice_default, "nice");
-	profile["nice"] = nice_profile;
+
 	dao.Update(database, metatoken, "start", timestamp, true, -1);
 	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
@@ -334,16 +326,16 @@ func (o * Syncer) PersistAndCache(
 	var idsss = make([]string, datalen);
 	ids = make([]interface{}, datalen);
 	for i, one := range data {
-		idsss[i] = util.GetStr(one, "", key);
-		ids[i] = idsss[i];
-		if (len(group) == 0 && len(groupkey) > 0) {
-			group = util.GetStr(one, "", groupkey);
-		}
 		if (mapper != nil) {
 			_, err := mapper.Map(one, false);
 			if (err != nil) {
 				return nil, nil, err;
 			}
+		}
+		idsss[i] = util.GetStr(one, "", key);
+		ids[i] = idsss[i];
+		if (len(group) == 0 && len(groupkey) > 0) {
+			group = util.GetStr(one, "", groupkey);
 		}
 	}
 

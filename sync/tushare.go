@@ -32,6 +32,7 @@ func (o Syncer) TuShare_request(
 	var req = httplib.Post(o.domain)
 	var reqm = make(map[string]interface{});
 	var api = util.GetStr(profile, "", "api");
+
 	reqm["token"] = o.appsecret;
 	reqm["api_name"] = api;
 	if (fields != nil && len(fields) > 0) {
@@ -43,6 +44,12 @@ func (o Syncer) TuShare_request(
 		return
 	}
 	req.Body(ret);
+	var timeout = util.GetInt64(profile, 20, "timeout");
+	var nice = util.GetInt64(profile, 250, "nice");
+	req.SetTimeout(time.Duration(10) * time.Second, time.Duration(timeout) * time.Second);
+	if (nice > 0) {
+		time.Sleep(time.Millisecond * time.Duration(nice));
+	}
 	httpresp, err := req.DoRequest();
 	if err != nil {
 		return;
@@ -128,14 +135,38 @@ func (o * Syncer) TuShare_khistory(
 	}
 	var perr error;
 	var rargs= make(map[string]interface{});
+	var fails = make([]string, len(codes));
+	var failcount = 0;
 	for _, code := range codes {
 		rargs["ts_code"] = code + keysuffix;
 		rargs["start_date"] = from_date_str;
 		rargs["end_date"] = to_date_str;
 		_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
-		if (err != nil) {
+		if (err == nil) {
+			qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
+		} else {
+			qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
+			fails[failcount] = code;
+			failcount++;
+		}
+	}
+
+	if (failcount > 0) {
+		qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount);
+	}
+
+	for _, code := range fails {
+		rargs["ts_code"] = code + keysuffix;
+		rargs["start_date"] = from_date_str;
+		rargs["end_date"] = to_date_str;
+		_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
+		if (err == nil) {
+			qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
+		} else {
+			qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
 			perr = err;
 		}
 	}
+
 	return perr;
 }

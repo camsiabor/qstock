@@ -59,7 +59,6 @@ func (o * Syncer) ShowAPI_request(
 		qlog.Log(qlog.ERROR, o.Name, "code", showapi_res_code, "msg", showapi_res_error)
 		return nil, qerr.NewCError(int(showapi_res_code), o.Name, showapi_res_error);
 	}
-
 	var resbody, _ = m["showapi_res_body"].(map[string]interface{})
 	var ret_code = resbody["ret_code"].(float64)
 	if ret_code != 0 {
@@ -67,59 +66,9 @@ func (o * Syncer) ShowAPI_request(
 		qlog.Log(qlog.ERROR, o.Name, "ret_code", ret_code, "remark", remark)
 		return nil, qerr.NewCError(int(ret_code), o.Name, remark);
 	}
-
-	var prefix = util.GetStr(profile, "", "prefix");
-	var primarykey = util.GetStr(profile, "code", "key");
-
-
-
-	var mappername = util.GetStr(profile, "", "mapper");
-	var mapper = util.GetMapperManager().Get(mappername);
-
-	//var hastable = len(table) > 0;
-
-
-	var updatetime = time.Now().Format("02-1504"); // updateimte
 	var list = resbody["list"].([]interface{})
-	var ids = make([]interface{}, len(list));
-	for i, one := range list {
-		var info = one.(map[string]interface{});
-		if (mapper != nil) {
-			_, err = mapper.Map(info, false);
-			if (err != nil) {
-				qlog.Log(qlog.ERROR, err);
-				break;
-			}
-		}
-		var stockcode string = info[primarykey].(string);
-		var id string = prefix + stockcode;
-		ids[i] = id;
-		info["_u"] = updatetime;
-	}
-
-
-	if (err == nil) {
-
-		var db = util.GetStr(profile, "", "db");
-		var group = util.GetStr(profile, "", "group");
-		var cachername = util.GetStr(profile, "", "cacher");
-		var cacher = scache.GetCacheManager().Get(cachername)
-
-		var idsss = util.AsStringSlice(ids, 0);
-		if (len(group) == 0) {
-			if (cacher != nil) {
-				cacher.Sets(list, idsss);
-			}
-			_, err= dao.Updates(db, group, ids, list, true, false);
-		} else {
-			if (cacher != nil) {
-				cacher.SetSubVals(list, idsss, group);
-			}
-			_, err= dao.Updates(db, group, ids, list, true, true);
-		}
-	}
-
-	return list, nil;
+	list, _, err = o.PersistAndCache(profile, dao, list);
+	return list, err;
 }
 
 func (o * Syncer) ShowAPI_snapshot(
@@ -246,14 +195,14 @@ func (o * Syncer) ShowAPI_khistory(
 				cacher.SetSubVal(minfo, code, datestr);
 			}
 		}
-		var _, rerr = dao.Updates(dict.DB_HISTORY, code, dates, infos, true, true);
+		var _, rerr = dao.Updates(dict.DB_HISTORY, code, dates, infos, true, -1);
 		if (rerr != nil) {
 			qlog.Log(qlog.ERROR, "api", "showapi", "khistory", rerr);
 		}
 	}
 
 	if (err != nil) {
-		dao.Update(dict.DB_HISTORY, metatoken, "fetch_last_date", to_date_str, true, false);
+		dao.Update(dict.DB_HISTORY, metatoken, "fetch_last_date", to_date_str, true, -1);
 	}
 
 	return err;

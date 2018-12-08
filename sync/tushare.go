@@ -3,14 +3,13 @@ package sync
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"github.com/camsiabor/qcom/qdao"
-	"github.com/camsiabor/qcom/scache"
-	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qtime"
-	"showSdk/httplib"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/pkg/errors"
+	"showSdk/httplib"
 	"time"
 )
 
@@ -25,8 +24,7 @@ func (o Syncer) TuShare_request(
 	profile map[string]interface{},
 	profilename string,
 	fields []string,
-	requestargs map[string]interface{},
-	handler SyncAPIHandler) (ret interface{}, err error) {
+	requestargs map[string]interface{}) (ret interface{}, err error) {
 
 	if (!o.doContinue) {
 		return;
@@ -62,19 +60,26 @@ func (o Syncer) TuShare_request(
 		var retmsg = util.GetStr(m, "", "msg");
 		return nil, errors.New(retmsg);
 	}
-	var mapperName = util.GetStr(profile, "", "mapper");
+
 	var data = util.GetMap(m, false, "data");
 	var cols = util.GetStringSlice(data, "fields");
 	var rows = util.GetSlice(data, "items");
-	var mapper = util.GetMapperManager().Get(mapperName);
-	maps, err := util.ColRowToMaps(cols, rows, mapper);
+	var datalen = len(rows);
+	if (datalen <= 0){
+		return nil, nil;
+	}
+	maps, err := util.ColRowToMaps(cols, rows, nil);
+	if (err != nil) {
+		return nil, err;
+	}
+	maps, _, err = o.PersistAndCache(profile, dao, maps);
 	return maps, err;
+
 }
 
 
 
 func (o * Syncer) TuShare_khistory(
-
 	phrase string, dao qdao.D,
 	profile map[string]interface{}, profilename string,
 	arg1 interface{}, arg2 interface{}) (err error) {
@@ -121,50 +126,16 @@ func (o * Syncer) TuShare_khistory(
 		qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err);
 		return err;
 	}
-
-	var cachername = util.GetStr(profile, dict.CACHE_STOCK_KHISTORY, "cacher");
-	var cacher = scache.GetCacheManager().Get(cachername);
-
+	var perr error;
 	var rargs= make(map[string]interface{});
 	for _, code := range codes {
 		rargs["ts_code"] = code + keysuffix;
 		rargs["start_date"] = from_date_str;
 		rargs["end_date"] = to_date_str;
-		data, err := o.TuShare_request(dao, profile, profilename, nil, rargs, nil);
-		if (data == nil || err != nil) {
-			continue;
-		}
-		var list = data.([]interface{});
-		var listlen = len(list);
-		if (listlen == 0) {
-			continue;
-		}
-		var index = 0;
-		var dates = make([]interface{}, listlen);
-		var infos = make([]interface{}, listlen);
-		for _, info := range list {
-			var minfo = info.(map[string]interface{});
-			var datestr = util.AsStr(minfo["date"], "");
-			//delete(minfo, "code");
-			//delete(minfo, "market");
-			//delete(minfo, "stockName");
-			dates[index] = datestr;
-			infos[index] = minfo;
-			index = index + 1;
-			if (cacher != nil){
-				cacher.SetSubVal(minfo, code, datestr);
-			}
-		}
-		var _, rerr = dao.Updates(db, code, dates, infos, true, true);
-		if (rerr != nil) {
-			qlog.Log(qlog.ERROR, "api", "showapi", "khistory", rerr);
+		_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
+		if (err != nil) {
+			perr = err;
 		}
 	}
-
-	if (err != nil) {
-		dao.Update(db, metatoken, "fetch_last_date", to_date_str, true, false);
-	}
-
-
-	return err;
+	return perr;
 }

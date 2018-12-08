@@ -66,10 +66,8 @@
                         动作
                     </a>
                     <div class="dropdown-menu" aria-labelledby="" >
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sz')">同步深圳</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sh')">同步上海</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sz')">同步深圳历史</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sh')">同步上海历史</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sz')">同步映照</a>
+                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sz', 'k.history.sh')">同步历史</a>
                         <a class="dropdown-item" href="#" v-on:click="clear_cache('local', 'mode')">清除记忆</a>
                         <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'meta')">清除缓存META</a>
                         <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'snapshot')">清除缓存映照</a>

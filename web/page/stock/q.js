@@ -241,11 +241,18 @@ const vue = new Vue({
             }.bind(this)).catch(util.handle_error.bind(this));
         },
 
-        stock_sync : function(profile) {
-            if (confirm("going to sync? " + profile)) {
-                axios.post("/stock/sync", {
-                    profile: profile
-                }).then(util.handle_response)
+        stock_sync : function() {
+            let profiles = arguments;
+            let profiles_str = "";
+            for(let i = 0; i < profiles.length; i++) {
+                profiles_str = profiles_str + " " + profiles[i];
+            }
+            if (confirm("going to sync? " + profiles_str)) {
+                for(let i = 0; i < profiles.length; i++) {
+                    axios.post("/stock/sync", {
+                        profile: profiles[i]
+                    }).then(util.handle_response)
+                }
             }
         },
 

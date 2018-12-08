@@ -250,8 +250,8 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 	var nice_default = util.GetInt64(g.Config, 0, "api", o.Name, "nice");
 	var nice_profile = util.GetInt64(profile, nice_default, "nice");
 	profile["nice"] = nice_profile;
-	dao.Update(database, metatoken, "start", timestamp, true, false);
-	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, false);
+	dao.Update(database, metatoken, "start", timestamp, true, -1);
+	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
 	sync_record_cacher.SetSubVal(timestamp, profilename, "start");
 	sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&start), profilename, "start_str");
@@ -265,8 +265,8 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 	if (err == nil) {
 		start = time.Now();
 		profile["last"] = start.Unix();
-		dao.Update(database, metatoken, "last", start.Unix(), true, false);
-		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, false);
+		dao.Update(database, metatoken, "last", start.Unix(), true, -1);
+		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
 		profileRunInfo.LastEndTime = end.Unix();
 		profileRunInfo.RunCount = profileRunInfo.RunCount + 1;
@@ -310,3 +310,53 @@ func (o * Syncer) GetProfileRunInfo(profilename string) (*ProfileRunInfo) {
 }
 
 
+
+func (o * Syncer) PersistAndCache(
+	profile map[string]interface{},
+	dao qdao.D,
+	data []interface{}) (rdata []interface{}, ids []interface{}, err error){
+
+	if (data == nil) {
+		return nil, nil, nil;
+	}
+	var datalen = len(data);
+	if (datalen <= 0) {
+		return nil, nil, nil;
+	}
+	rdata = data;
+	var key = util.GetStr(profile, "code", "key");
+	var group = util.GetStr(profile, "", "group");
+	var groupkey = util.GetStr(profile, "", "groupkey");
+
+	var mappername = util.GetStr(profile, "", "mapper");
+	var mapper = util.GetMapperManager().Get(mappername);
+
+	var idsss = make([]string, datalen);
+	ids = make([]interface{}, datalen);
+	for i, one := range data {
+		idsss[i] = util.GetStr(one, "", key);
+		ids[i] = idsss[i];
+		if (len(group) == 0 && len(groupkey) > 0) {
+			group = util.GetStr(one, "", groupkey);
+		}
+		if (mapper != nil) {
+			_, err := mapper.Map(one, false);
+			if (err != nil) {
+				return nil, nil, err;
+			}
+		}
+	}
+
+	var db = util.GetStr(profile, "", "db");
+	var cachername = util.GetStr(profile, "", "cacher");
+	var cacher = scache.GetCacheManager().Get(cachername);
+	_, err = dao.Updates(db, group, ids, data, true, -1);
+	if (cacher != nil) {
+		if (len(group) == 0) {
+			cacher.Sets(data, idsss);
+		} else {
+			cacher.SetSubVals(data, idsss, group);
+		}
+	}
+	return data, ids, err;
+}

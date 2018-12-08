@@ -309,9 +309,16 @@ const _columns_default = [
     },
     */
     {
-        "name" : '__component:actions',
+        "name" : '__component:vuetable-actions',
         "title" : '',
-        "visible" : true
+        "visible" : true,
+        "width" : "10%"
+    },
+    {
+        "name" : '__component:vuetable-chart',
+        "title" : '',
+        "visible" : true,
+        "width" : "50%"
     }
 ];
 

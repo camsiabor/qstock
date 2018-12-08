@@ -10,9 +10,9 @@ function DB(opt) {
     this.mode = "simple";
     this.desc = this.desc || this.name;
     this.version = this.version || "1";
-    this.dbsize = this.dbsize || (10 * 1024 * 1024);
+    this.dbsize = this.dbsize || (32 * 1024 * 1024);
     this.db = window.openDatabase(this.name, this.version, this.name, this.dbsize, function (db) {
-        console.log("[db]", "open", this.name, db );
+        console.log("[db]", "open", this.name, db, "size", this.dbsize );
     }.bind(this));
 }
 

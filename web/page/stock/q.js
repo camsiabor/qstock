@@ -1,12 +1,12 @@
 
 
 
-Vue.component('actions', {
+Vue.component('vuetable-actions', {
     template : 
-        "<div class='btn-group btn-group-sm'>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search'></i></button>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle'></i></button>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle'></i></button>" +
+        "<div class=''>" +
+            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button></div>" +
+            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button></div>" +
+            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button></div>" +
         "</div>",
     props: {
         rowData: {
@@ -29,24 +29,7 @@ Vue.component('actions', {
                     context.portfolio_unadd( [ code ]);
                     break;
             }
-            console.log('custom-actions: ' + action, data.name, index)
-        }
-    }
-});
-
-Vue.component('stock-chart', {
-    template : "<div></div>",
-    props: {
-        rowData: {
-            type: Object,
-            required: true
-        },
-        rowIndex: {
-            type: Number
-        }
-    },
-    methods: {
-        act (action, data, index) {
+            console.log('custom-actions: ' + action, data.name, index, data);
         }
     }
 });
@@ -768,7 +751,8 @@ const vue = new Vue({
         util.context = this;
         // web database
         this.db = new DB({
-            "name": "stock"
+            name: "stock",
+            dbsize : 32 * 1024 * 1024
         });
         this.db.createtable("meta", "id");
         this.db.createtable("snapshot", "code");

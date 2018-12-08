@@ -80,6 +80,14 @@
         </div>
     </nav>
 
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="test">
+
+            </div>
+        </div>
+    </div>
+
     <div id="div_tool" class="row" style="margin-top: 10px">
 
         <div v-bind:class="{'col-md-6' :true, gone: !setting.display.script}" style="margin-top: 3px;">
@@ -145,7 +153,7 @@
     </div>
 
 
-    <div id="div_table_pagination" class="row" style="margin-top: 5px;" >
+    <div id="div_table_pagination" style="margin-top: 5px;" v-bind:class="{'row' :true, gone: table.data.length <= setting.table.page_size }">
         <div class="col-md-3">
             <vuetable-pagination
                     ref="pagination"
@@ -258,10 +266,12 @@
 <script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
 
 <script type="text/javascript" src="/js/g2/g2.js" ></script>
+<script type="text/javascript" src="/js/g2/data-set.js" ></script>
 
 <script type="text/javascript" src="/js/common/util.js"></script>
 <script type="text/javascript" src="/js/db/db.js"></script>
 <script type="text/javascript" src="coldef.js"></script>
+<script type="text/javascript" src="q-chart-k.js"></script>
 <script type="text/javascript" src="q.js"></script>
 
 <script type="text/javascript">

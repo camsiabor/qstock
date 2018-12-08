@@ -133,40 +133,31 @@ func (o * Syncer) TuShare_khistory(
 		qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err);
 		return err;
 	}
+
 	var perr error;
 	var rargs= make(map[string]interface{});
-	var fails = make([]string, len(codes));
-	var failcount = 0;
-	for _, code := range codes {
-		rargs["ts_code"] = code + keysuffix;
-		rargs["start_date"] = from_date_str;
-		rargs["end_date"] = to_date_str;
-		_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
-		if (err == nil) {
-			qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
+	for retry := 1; retry <= 3; retry++ {
+		var fails = make([]string, len(codes));
+		var failcount = 0;
+		for _, code := range codes {
+			rargs["ts_code"] = code + keysuffix;
+			rargs["start_date"] = from_date_str;
+			rargs["end_date"] = to_date_str;
+			_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
+			if (err == nil) {
+				qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
+			} else {
+				qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
+				fails[failcount] = code;
+				failcount++;
+			}
+		}
+		if (failcount > 0) {
+			codes = fails;
+			qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount, "retry", retry);
 		} else {
-			qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
-			fails[failcount] = code;
-			failcount++;
+			break;
 		}
 	}
-
-	if (failcount > 0) {
-		qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount);
-	}
-
-	for _, code := range fails {
-		rargs["ts_code"] = code + keysuffix;
-		rargs["start_date"] = from_date_str;
-		rargs["end_date"] = to_date_str;
-		_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
-		if (err == nil) {
-			qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
-		} else {
-			qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
-			perr = err;
-		}
-	}
-
 	return perr;
 }

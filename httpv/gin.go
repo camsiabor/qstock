@@ -360,7 +360,7 @@ func (o * HttpServer) routeScript() {
 		var m, _ = o.ReqParse(c);
 		var name = util.GetStr(m, "", "name");
 		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, true);
+		var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, -1);
 		o.RespJsonEx(data, err, c);
 	});
 

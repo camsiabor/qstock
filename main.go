@@ -12,6 +12,7 @@ import (
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util/qconfig"
+	"github.com/camsiabor/qcom/util/qref"
 	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qstock/dict"
@@ -130,7 +131,7 @@ func main() {
 
 	// [mapper] ------------------------------------------------------------------------------------------------
 	var mapperConfig = util.GetMap(g.Config, true, "mapping");
-	util.GetMapperManager().Init(mapperConfig);
+	qref.GetMapperManager().Init(mapperConfig);
 
 	// [redis] ------------------------------------------------------------------------------------------------
 	qdao.GetDaoManager().Init();

@@ -329,7 +329,7 @@ func (o * Syncer) PersistAndCache(
 	var groupkey = util.GetStr(profile, "", "groupkey");
 
 	var mappername = util.GetStr(profile, "", "mapper");
-	var mapper = util.GetMapperManager().Get(mappername);
+	var mapper = qref.GetMapperManager().Get(mappername);
 
 	var idsss = make([]string, datalen);
 	ids = make([]interface{}, datalen);

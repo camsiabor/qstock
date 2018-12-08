@@ -68,7 +68,7 @@ func (o Syncer) TuShare_request(
 	if (datalen <= 0){
 		return nil, nil;
 	}
-	maps, err := util.ColRowToMaps(cols, rows, nil);
+	maps, err := util.ColRowToMaps(cols, rows);
 	if (err != nil) {
 		return nil, err;
 	}

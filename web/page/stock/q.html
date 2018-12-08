@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="/css/bootstrap/bootstrap.css"/>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
-    <link rel="stylesheet" href="/css/semantic/semantic.min.css"/>
     <link rel="stylesheet" href="/css/vue/vuetable-2.css"/>
 
     <style>
@@ -19,7 +18,7 @@
         }
 
         .gone { display: none; }
-        .s-bold { font-weight: bolder; }
+        .s-bolxd { font-weight: bolder; }
         .s-tiny { font-size: 0.8em; }
         .s-up { color: red; }
         .s-down { color: forestgreen; }
@@ -33,7 +32,8 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">
-            {{ setting.mode == "query" ?"查询模式" : "组合模式"}}
+            <span v-if="setting.mode=='query'">查询模式</span>
+            <span v-if="setting.mode=='portfolio'">组合模式</span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -79,20 +79,6 @@
             </ul>
         </div>
     </nav>
-
-    <!--
-
-    <div id="popover" class="formula-hint" title="提示" data-container="body" data-toggle="popover" data-placement="top" data-content="helloworld">
-    </div>
-    <div class="alert alert-success alert-dismissible fade" role="alert">
-        {{console.msg_success}}
-    </div>
-
-    <div class="alert alert-danger alert-dismissible fade" role="alert">
-        {{console.msg_error}}
-    </div>
-    -->
-
 
     <div id="div_tool" class="row" style="margin-top: 10px">
 
@@ -264,11 +250,14 @@
 <script type="text/javascript" src="/js/ace/ace.js"></script>
 <script type="text/javascript" src="/js/axios/axios.min.js"></script>
 <script type="text/javascript" src="/js/jquery/jquery.js"></script>
+
 <script type="text/javascript" src="/js/bootstrap/popper.js"></script>
 <script type="text/javascript" src="/js/bootstrap/bootstrap.min.js" ></script>
-<script type="text/javascript" src="/js/semantic/semantic.js"></script>
+
 <script type="text/javascript" src="/js/vue/vue.js" ></script>
 <script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
+
+<script type="text/javascript" src="/js/g2/g2.js" ></script>
 
 <script type="text/javascript" src="/js/common/util.js"></script>
 <script type="text/javascript" src="/js/db/db.js"></script>

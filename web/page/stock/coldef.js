@@ -1,14 +1,5 @@
 
-/*
-var MyComponent= Vue.extend({
-    template: '<a style="color:#07bb49;" v-on:click="world('+"'"+id+"'"+')">删除</a>',
-    methods:{
-        world:function(id) {
-            alert(this.data);
-        }
-    }
-});
-*/
+const util = new QUtil();
 
 
 const datamock = [{
@@ -90,10 +81,10 @@ const _columns_default = [
         "width" : "18%",
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
-            let now_color = QUtil.stock_color(row.now * 1 - row.open * 1);
-            let open_color = QUtil.stock_color(row.open * 1 - row.close * 1);
-            let low_color = QUtil.stock_color(row.low * 1 - row.close * 1);
-            let high_color = QUtil.stock_color(row.high * 1 - row.close * 1);
+            let now_color = util.stock_color(row.now * 1 - row.open * 1);
+            let open_color = util.stock_color(row.open * 1 - row.close * 1);
+            let low_color = util.stock_color(row.low * 1 - row.close * 1);
+            let high_color = util.stock_color(row.high * 1 - row.close * 1);
             let html = [];
             html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
             html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.close + " -> " + row.open + "</div>");
@@ -127,7 +118,7 @@ const _columns_default = [
         "visible" : false,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
-            let color = QUtil.stock_color(row.change_rate);
+            let color = util.stock_color(row.change_rate);
             return "<span style='color:'" + color + "'>" + row.change_rate + "</span>";
         }
     },
@@ -139,7 +130,7 @@ const _columns_default = [
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
-            let color = QUtil.stock_color(row.change_rate);
+            let color = util.stock_color(row.change_rate);
             return "<span class='s-bold' style='color:" + color + "'>" + row.change_rate + "</span>";
         }
     },

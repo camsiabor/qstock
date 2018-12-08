@@ -53,7 +53,7 @@ func initSyncer(g * global.Global) {
 	scache_snapshot.Db = dict.DB_DEFAULT;
 	scache_khistory.Dao = dict.DAO_MAIN;
 	scache_khistory.Db = dict.DB_HISTORY;
-	scache_snapshot.Loader = func(scache * scache.SCache, keys []string) (interface{}, error) {
+	scache_snapshot.Loader = func(scache * scache.SCache, keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;
@@ -61,7 +61,7 @@ func initSyncer(g * global.Global) {
 		var code = keys[0];
 		return conn.Get(scache.Db, "", code, true);
 	}
-	scache_khistory.Loader = func(scache *scache.SCache, keys []string) (interface{}, error) {
+	scache_khistory.Loader = func(scache *scache.SCache, keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;

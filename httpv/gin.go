@@ -293,7 +293,6 @@ func (o * HttpServer) routeQuery() {
 		var time_array_len = 0;
 		var time_array []string = nil;
 		if (len(time_from_str) > 0) {
-			time_array = make([]string, 256);
 			if (len(time_to_str) <= 0) {
 				var now = time.Now()
 				time_to_str = qtime.YYYY_MM_dd(&now);
@@ -309,11 +308,12 @@ func (o * HttpServer) routeQuery() {
 				return;
 			}
 
-			time_array, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "20060102", time.Saturday, time.Sunday);
+			times, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "20060102", time.Saturday, time.Sunday);
 			if (perr != nil) {
 				o.RespJsonEx(nil, perr, c);
 				return;
 			}
+			time_array = times;
 			time_array_len = len(time_array);
 		}
 
@@ -323,7 +323,7 @@ func (o * HttpServer) routeQuery() {
 				continue;
 			}
 			var scode = code.(string);
-			snapshoto, err := cacher_stock_snapshot.Get(scode, true);
+			snapshoto, err := cacher_stock_snapshot.Get(true, scode);
 			snapshot := util.AsMap(snapshoto, false);
 			if (err != nil) {
 				o.RespJsonEx(0, err, c);

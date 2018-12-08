@@ -156,14 +156,24 @@ QUtil.prototype.get_val = function (o, key, defval) {
     return r;
 };
 
+QUtil.prototype.add_day = function(d, delta, truncate) {
+    let to = d.getTime() + (delta * 24 * 3600 * 1000);
+    let r = new Date();
+    r.setTime(to);
+    if (truncate) {
+        r.setHours(0, 0, 0, 0);
+    }
+    return r;
+}
+
 QUtil.prototype.format_date = function (date, datesplitter) {
 
     if (typeof datesplitter === 'undefined') {
         datesplitter = "-";
     }
     let y = date.getFullYear();
-    let m = date.getMonth();
-    let d = date.getDay();
+    let m = date.getMonth() + 1;
+    let d = date.getDate();
 
     let tmp = [];
     tmp.push(y + "");
@@ -239,7 +249,7 @@ QUtil.prototype.values = function (m, filter) {
     return vals;
 }
 
-QUtil.stock_color = function (n) {
+QUtil.prototype.stock_color = function (n) {
     n = n * 1;
     if (isNaN(n) || n === 0) {
         return "grey";

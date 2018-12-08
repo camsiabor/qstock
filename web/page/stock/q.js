@@ -1,7 +1,5 @@
 
 
-const util = new QUtil();
-
 
 Vue.component('actions', {
     template : 
@@ -32,6 +30,23 @@ Vue.component('actions', {
                     break;
             }
             console.log('custom-actions: ' + action, data.name, index)
+        }
+    }
+});
+
+Vue.component('stock-chart', {
+    template : "<div></div>",
+    props: {
+        rowData: {
+            type: Object,
+            required: true
+        },
+        rowIndex: {
+            type: Number
+        }
+    },
+    methods: {
+        act (action, data, index) {
         }
     }
 });
@@ -288,34 +303,26 @@ const vue = new Vue({
                 let may_i_refresh =
                     (has_sz && need_refresh.snapshot_sz) || (has_sh && need_refresh.snapshot_sh);
                 if (may_i_refresh) {
-                    axios.post("/stock/gets", {
-                        "codes": codes
-                    }).then(this.stock_data_adapt);
+                    this.stock_data_request(codes);
                 } else {
-                    let stock_exist = {};
+                    let codes_exist = {};
                     for (let i = 0; i < codes.length; i++) {
                         let code = codes[i];
-                        stock_exist[code] = false;
+                        codes_exist[code] = false;
                     }
                     this.db.query_by_id("snapshot", "code", codes, function (stocks_local) {
                         for (let i = 0; i < stocks_local.length; i++) {
                             let code = stocks_local[i]["code"];
-                            stock_exist[code] = true;
+                            codes_exist[code] = true;
                         }
-                        let stock_non_exit = [];
-                        for (let code in stock_exist) {
-                            if (!stock_exist[code]) {
-                                stock_non_exit.push(code);
+                        let codes_not_exist = [];
+                        for (let code in codes_exist) {
+                            if (!codes_exist[code]) {
+                                codes_not_exist.push(code);
                             }
                         }
-                        if (stock_non_exit.length > 0) {
-                            axios.post("/stock/gets", {
-                                "codes": codes
-                            }).then(function (resp) {
-                                let stocks_remote = util.handle_response(resp);
-                                resp.data.data = stocks_remote.concat(stocks_local);
-                                this.stock_data_adapt(resp);
-                            }.bind(this));
+                        if (codes_not_exist.length > 0) {
+                            this.stock_data_request(codes_not_exist, stocks_local)
                         } else {
                             let resp = {data: {data: stocks_local}};
                             /* fake */
@@ -325,29 +332,76 @@ const vue = new Vue({
                 }
             }.bind(this));
         },
+        stock_data_request: function(codes, stocks, time_from, time_to, callback) {
 
-        stock_data_adapt: function (resp) {
+            if (typeof time_to === 'undefined') {
+                let to = new Date();
+                time_to = util.format_date(to, "");
+            }
+
+            if (typeof time_from === 'undefined') {
+                let now = new Date();
+                let from = util.add_day(now, -30);
+                time_from = util.format_date(from, "");
+            }
+
+            axios.post("/stock/gets", {
+                "codes": codes,
+                "time_from" : time_from,
+                "time_to" : time_to
+            }).then(function (resp) {
+                let stocks_remote = util.handle_response(resp);
+                if (stocks) {
+                    resp.data.data = stocks_remote.concat(stocks);
+                }
+                this.stock_data_adapt(resp, callback);
+            }.bind(this));
+        },
+
+        stock_data_adapt: function (resp, callback) {
             let stocks = util.handle_response(resp);
             if (stocks instanceof Array) {
                 let adata = [];
                 let khistory = [];
+                let khistory_map = {};
                 for (let i = 0; i < stocks.length; i++) {
                     let stock = stocks[i];
-
+                    let code = stock.code;
+                    let stock_khistory = stock.khistory;
                     stock["turnover"] = util.get_val(stock, "turnover", "").replace("%", "");
                     stock["appointRate"] = util.get_val(stock, "appointRate", "").replace("%", "");
                     adata.push(stock);
-
-                    if (stock.khistory && stock.khistory instanceof Array) {
-                        khistory = khistory.concat(stock.khistory);
+                    if (stock_khistory) {
+                        for(let k = 0; k < stock_khistory.length; k++) {
+                            let onek = stock_khistory[k];
+                            onek.id = code + "-" + onek.date;
+                        }
+                        khistory = khistory.concat(stock_khistory);
+                        khistory_map[code] = stock_khistory;
+                        delete stock.khistory;
                     }
                 }
-                this.table_init(adata);
                 this.db.update("snapshot", "code", [], stocks);
-                // TODO khistory cache
-                // this.db.update("khistory", "code", [ "time" ], khistory);
+
+                if (khistory.length > 0) {
+                    for (let i = 0; i < stocks.length; i++) {
+                        let stock = stocks[i];
+                        let code = stock.code;
+                        stock.khistory = khistory_map[code];
+                    }
+                }
+
+                this.table_init(adata);
+
+                if (khistory.length > 0) {
+                    this.db.update("khistory", "id", ["code", "date"], khistory);
+                }
+
             } else {
                 this.console.text = JSON.stringify(stocks);
+            }
+            if (callback) {
+                callback(resp);
             }
         },
         script_query: function () {
@@ -524,9 +578,7 @@ const vue = new Vue({
                 let codes = util.keys(codesm, function (m, k, v) {
                     return v;
                 });
-                axios.post("/stock/gets", {
-                    "codes": codes
-                }).then(this.stock_data_adapt);
+                this.stock_data_request(codes);
             }.bind(this));
         },
         portfolio_delete: function (name) {
@@ -586,7 +638,7 @@ const vue = new Vue({
 
         table_init: function (data) {
 
-
+            // TODO columns
             let columns_show = [];
             for (let i = 0; i < this.columns.length; i++) {
                 let col = this.columns[i];
@@ -601,8 +653,7 @@ const vue = new Vue({
                     continue;
                 }
                 col.sorter = coldef.sorter;
-                col.cellStyle = coldef.cellStyle;
-                col.formatter = coldef.formatter;
+                col.callback = coldef.callback;
                 columns_show.push(col);
             }
 
@@ -721,7 +772,7 @@ const vue = new Vue({
         });
         this.db.createtable("meta", "id");
         this.db.createtable("snapshot", "code");
-        this.db.createtable("khistory", "code", ["date", "data"]);
+        this.db.createtable("khistory", "id", [ "code", "date", "data"]);
 
         // local storage configuration
         this.config_load();

@@ -37,12 +37,12 @@ Vue.component('vuetable-chart', {
                 one.date2 = date2;
             }
 
-            console.log(this.cid, data, this.chart);
+            // console.log(this.cid, data, this.chart);
 
             this.chart && this.chart.destroy();
             let ds = new DataSet({
                 state: {
-                    start: 20181101,
+                    start: 20181128,
                     end: 20181208
                 }
             });
@@ -65,6 +65,8 @@ Vue.component('vuetable-chart', {
                     return obj;
                 }
             });
+
+
             this.chart = new G2.Chart({
                 container: this.cid,
                 forceFit: true,
@@ -76,11 +78,13 @@ Vue.component('vuetable-chart', {
                 'date2': {
                     type: 'timeCat',
                     nice: false,
-                    range: [0, 1]
+                    range: [0, 1],
+                    tick : 1,
+                    tickInterval: 2 * 24 * 60 * 60 * 1000
                 },
-                // trend: {
-                //     values: ['上涨', '下跌']
-                // },
+                trend: {
+                    values: ['上涨', '下跌']
+                },
                 'vol': {
                     alias: '成交量'
                 },
@@ -100,6 +104,11 @@ Vue.component('vuetable-chart', {
                     alias: '股票价格'
                 }
             });
+
+            this.chart.scale('x', {
+                tickCount: 1
+            });
+
             this.chart.legend({
                 title : null
             });

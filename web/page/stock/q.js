@@ -309,23 +309,27 @@ const vue = new Vue({
                         } else {
                             let resp = {data: {data: stocks_local}};
                             /* fake */
-                            this.stock_data_adapt(resp);
+                            this.stock_data_adapt(resp, true);
                         }
                     }.bind(this));
                 }
             }.bind(this));
         },
-        stock_data_request: function(codes, stocks, time_from, time_to, callback) {
+        stock_data_request: function(codes, stocks, time_from, time_to, refresh_table, callback) {
 
-            if (typeof time_to === 'undefined') {
+            if (typeof time_to === "string" && time_to.length === 0) {
                 let to = new Date();
                 time_to = util.format_date(to, "");
             }
 
-            if (typeof time_from === 'undefined') {
+            if (typeof time_from === 'string' && time_from.length === 0) {
                 let now = new Date();
                 let from = util.add_day(now, -30);
                 time_from = util.format_date(from, "");
+            }
+
+            if (typeof refresh_table === 'undefined') {
+                refresh_table = true;
             }
 
             axios.post("/stock/gets", {
@@ -337,11 +341,11 @@ const vue = new Vue({
                 if (stocks) {
                     resp.data.data = stocks_remote.concat(stocks);
                 }
-                this.stock_data_adapt(resp, callback);
+                this.stock_data_adapt(resp, refresh_table, callback);
             }.bind(this));
         },
 
-        stock_data_adapt: function (resp, callback) {
+        stock_data_adapt: function (resp, refresh_table, callback) {
             let stocks = util.handle_response(resp);
             if (stocks instanceof Array) {
                 let adata = [];
@@ -361,7 +365,7 @@ const vue = new Vue({
                         }
                         khistory = khistory.concat(stock_khistory);
                         khistory_map[code] = stock_khistory;
-                        delete stock.khistory;
+                        stock.khistory = null;
                     }
                 }
                 this.db.update("snapshot", "code", [], stocks);
@@ -374,7 +378,9 @@ const vue = new Vue({
                     }
                 }
 
-                this.table_init(adata);
+                if (refresh_table) {
+                    this.table_init(adata);
+                }
 
                 if (khistory.length > 0) {
                     this.db.update("khistory", "id", ["code", "date"], khistory);
@@ -608,8 +614,7 @@ const vue = new Vue({
                 mode: "ace/mode/lua",
                 selectionStyle: "text",
                 highlightActiveLine: true,
-                highlightSelectedWord: true,
-                cursorStyle: "ace",
+                highlightSelectedWord: true,                cursorStyle: "ace",
                 newLineMode: "unix",
                 fontSize: "0.8em"
             });

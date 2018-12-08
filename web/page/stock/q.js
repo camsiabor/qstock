@@ -617,7 +617,16 @@ const vue = new Vue({
             this.editor.setTheme("ace/theme/github");
         },
 
-
+        chart_init: function () {
+            let vuetable = this.$refs.vuetable;
+            let children = vuetable.$children;
+            for(let i = 0; i < children.length; i++) {
+                let one = children[i];
+                if (one.cid) {
+                    one.chart_render();
+                }
+            }
+        },
 
         table_init: function (data) {
 
@@ -648,6 +657,7 @@ const vue = new Vue({
 
         table_paging(data) {
             this.$refs.pagination.setPaginationData(data);
+            this.chart_init();
         },
 
         table_paging_change(page) {

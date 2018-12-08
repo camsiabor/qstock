@@ -24,10 +24,12 @@ Vue.component('vuetable-chart', {
         chart_render : function () {
 
             if (!this.rowData || !this.rowData.khistory) {
+                console.log(this.cid, "no khistory", this.rowData.khistory);
                 return;
             }
 
             let data = this.rowData.khistory;
+
             for(let i = 0; i < data.length; i++) {
                 let one = data[i];
                 let date = one.date;
@@ -35,7 +37,9 @@ Vue.component('vuetable-chart', {
                 one.date2 = date2;
             }
 
-            this.chart && this.chart.destory();
+            console.log(this.cid, data, this.chart);
+
+            this.chart && this.chart.destroy();
             let ds = new DataSet({
                 state: {
                     start: 20181101,
@@ -74,9 +78,9 @@ Vue.component('vuetable-chart', {
                     nice: false,
                     range: [0, 1]
                 },
-                trend: {
-                    values: ['上涨', '下跌']
-                },
+                // trend: {
+                //     values: ['上涨', '下跌']
+                // },
                 'vol': {
                     alias: '成交量'
                 },
@@ -96,9 +100,9 @@ Vue.component('vuetable-chart', {
                     alias: '股票价格'
                 }
             });
-            // chart.legend({
-            //     offset: 20
-            // });
+            this.chart.legend({
+                title : null
+            });
             this.chart.tooltip({
                 showTitle: false,
                 itemTpl: '<li data-index={index}>' + '<span style="background-color:{color};" class="g2-tooltip-marker"></span>' + '{name}{value}</li>'
@@ -111,6 +115,7 @@ Vue.component('vuetable-chart', {
                 }
             });
             kView.source(dv);
+
             kView.schema().position('date2*range').color('trend', function(val) {
                 if (val === '上涨') {
                     return '#f04864';
@@ -121,15 +126,16 @@ Vue.component('vuetable-chart', {
             }).shape('candle').tooltip('date2*open*close*high*low', function(date2, open, close, high, low) {
                 return {
                     name: date2,
-                    value: '<br><span style="padding-left: 16px">开盘价：' + open + '</span><br/>' + '<span style="padding-left: 16px">收盘价：' + end + '</span><br/>' + '<span style="padding-left: 16px">最高价：' + high + '</span><br/>' + '<span style="padding-left: 16px">最低价：' + low + '</span>'
+                    value: '<br><span style="padding-left: 16px">开盘价：' + open + '</span><br/>' + '<span style="padding-left: 16px">收盘价：' + close + '</span><br/>' + '<span style="padding-left: 16px">最高价：' + high + '</span><br/>' + '<span style="padding-left: 16px">最低价：' + low + '</span>'
                 };
             });
+
             this.chart.render();
 
         }
     },
     mounted : function () {
-        this.chart_render();
+        // this.chart_render();
         // setTimeout(function () {
         //     this.chart_render();
         // }.bind(this), 100);

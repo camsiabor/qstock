@@ -49,22 +49,26 @@ func initSyncer(g * global.Global) {
 
 	var scache_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT);
 	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY);
-	scache_snapshot.Loader = func(scache *scache.SCache, keys []string) (interface{}, error) {
-		conn, err := qdao.GetDaoManager().Get(dict.DAO_MAIN);
+	scache_snapshot.Dao = dict.DAO_MAIN;
+	scache_snapshot.Db = dict.DB_DEFAULT;
+	scache_khistory.Dao = dict.DAO_MAIN;
+	scache_khistory.Db = dict.DB_HISTORY;
+	scache_snapshot.Loader = func(scache * scache.SCache, keys []string) (interface{}, error) {
+		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;
 		}
 		var code = keys[0];
-		return conn.Get(dict.DB_DEFAULT, "", code, true);
+		return conn.Get(scache.Db, "", code, true);
 	}
 	scache_khistory.Loader = func(scache *scache.SCache, keys []string) (interface{}, error) {
-		conn, err := qdao.GetDaoManager().Get(dict.DAO_MAIN);
+		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;
 		}
 		var code = keys[0];
 		var datestr = keys[1];
-		return conn.Get(dict.DB_HISTORY, code, datestr, true);
+		return conn.Get(scache.Db, code, datestr, true);
 	};
 
 	var api_config = util.GetMap(g.Config, true, "api");

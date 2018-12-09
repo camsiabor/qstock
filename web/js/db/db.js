@@ -114,6 +114,10 @@ DB.prototype.table_parse = function(tableinfo) {
     return tableinfo;
 };
 
+DB.prototype.args_flatten = function(args) {
+    return "'" + args.join("','") + "'";
+};
+
 DB.prototype.args_flatten_qs = function(args) {
     let qs = [];
     for(let i = 0; i < args.length; i++) {
@@ -267,12 +271,14 @@ DB.prototype.update = function(tablename, fieldnames, data, errcallback) {
                     args.push(str);
                     args.push(id);
                     if (id) {
+                        // TODO Promise.all()
                         let sql = ids_exist_map[id] ? sql_update : sql_insert;
-                        tx.executeSql(sql, args);
+                        tx.executeSql(sql, args, null, this.errcallback);
                     }
                 }
+                // TODO Promise.all()
                 resolve(tablename, data);
-            }, function (tx, err) {
+            }.bind(this), function (tx, err) {
                 console.error("[db]", "[update]", tx, err);
                 reject(err);
             });
@@ -284,9 +290,9 @@ DB.prototype.update = function(tablename, fieldnames, data, errcallback) {
 
 DB.prototype.delete_by_id = function(tablename, ids) {
     let keyname = this.get_keyname(tablename);
-    let qs = this.args_flatten_qs(ids);
+    let qs = this.args_flatten(ids);
     let sql = "DELETE FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ")";
-    return this.exec(sql, ids);
+    return this.exec(sql, []);
 };
 
 
@@ -351,12 +357,12 @@ DB.prototype.query = function (sql, args) {
 
 DB.prototype.query_ids = function (tablename, ids) {
     let keyname = this.get_keyname(tablename);
-    let qs = this.args_flatten_qs(ids);
+    let qs = this.args_flatten(ids);
     let sql = "SELECT " + keyname + " FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ") ";
 
     return new Promise(function (resolve, reject) {
         this.db.transaction(function (tx) {
-            tx.executeSql(sql, ids, function (tx, result) {
+            tx.executeSql(sql, [], function (tx, result) {
                 let resultarray = [];
                 let rows = result.rows;
                 let len = rows.length;
@@ -376,7 +382,7 @@ DB.prototype.query_ids = function (tablename, ids) {
 
 DB.prototype.query_by_id = function (tablename, ids, callback) {
     let keyname = this.get_keyname(tablename);
-    let qs = this.args_flatten_qs(ids);
+    let qs = this.args_flatten(ids);
     let sql = "SELECT * FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ") ";
-    return this.query(sql, ids);
+    return this.query(sql, []);
 };

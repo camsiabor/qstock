@@ -4,26 +4,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/util"
-	"showSdk/httplib"
+	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"time"
 )
 
 // https://www.shenjian.io/index.php?r=market/product&product_id=328#stack-info-2
 
 func (o Syncer) ShenJian_request(
-	dao qdao.D,
-	profile map[string]interface{},
-	profilename string,
+	work * ProfileWork,
 	fields []string,
 	requestargs map[string]interface{}) (data []interface{}, ids []interface{}, err error) {
 
 	if (!o.doContinue) {
 		return;
 	}
-
+	var profile = work.Profile;
 	var api = util.GetStr(profile, "", "api");
 	var url = o.domain + "/" + api;
 	var req = httplib.Post(url)
@@ -52,26 +49,24 @@ func (o Syncer) ShenJian_request(
 	}
 
 	data = util.GetSlice(m, "data");
-	return o.PersistAndCache(profile, dao, data);
+	return o.PersistAndCache(work, data);
 }
 
 
 
 func (o * Syncer) ShenJian_snapshot(
-	phrase string, dao qdao.D,
-	profile map[string]interface{}, profilename string,
-	arg1 interface{}, arg2 interface{} ) (err error) {
+	phrase string, work * ProfileWork ) (err error) {
 
 	if (phrase != "work") {
 		return nil;
 	}
 	for i := 0; i < 2; i++ {
-		_, _, err = o.ShenJian_request(dao, profile, profilename, nil, nil);
+		_, _, err = o.ShenJian_request(work, nil, nil);
 		if (err == nil) {
-			qlog.Log(qlog.INFO, profilename, "persist", "sucess");
+			qlog.Log(qlog.INFO, work.ProfileName, "persist", "sucess");
 			break;
 		} else {
-			qlog.Log(qlog.ERROR, profilename, "persist", "fail", err);
+			qlog.Log(qlog.ERROR, work.ProfileName, "persist", "fail", err);
 		}
 	}
 	return err;

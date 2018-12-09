@@ -11,11 +11,10 @@ function QUtil(opt) {
 
 QUtil.prototype.handle_error = function(error) {
     let err = error.stack || error;
-    if (this.context.console) {
+    if (this.context && this.context.console) {
         this.context.console.text = err;
     }
     window.console.error(err);
-    this.popover("", err);
 };
 
 QUtil.prototype.handle_response = function(resp, printer, msg) {

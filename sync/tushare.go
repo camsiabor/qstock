@@ -3,13 +3,12 @@ package sync
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qtime"
 	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"github.com/pkg/errors"
-	"showSdk/httplib"
 	"time"
 )
 
@@ -20,15 +19,14 @@ curl -X POST -d '{"api_name": "trade_cal", "token": "xxxxxxxx", "params": {"exch
 
 
 func (o Syncer) TuShare_request(
-	dao qdao.D,
-	profile map[string]interface{},
-	profilename string,
+	work * ProfileWork,
 	fields []string,
 	requestargs map[string]interface{}) (ret interface{}, err error) {
 
 	if (!o.doContinue) {
 		return;
 	}
+	var profile = work.Profile;
 	var req = httplib.Post(o.domain)
 	var reqm = make(map[string]interface{});
 	var api = util.GetStr(profile, "", "api");
@@ -79,17 +77,14 @@ func (o Syncer) TuShare_request(
 	if (err != nil) {
 		return nil, err;
 	}
-	maps, _, err = o.PersistAndCache(profile, dao, maps);
+	maps, _, err = o.PersistAndCache(work, maps);
 	return maps, err;
 
 }
 
 
 
-func (o * Syncer) TuShare_khistory(
-	phrase string, dao qdao.D,
-	profile map[string]interface{}, profilename string,
-	arg1 interface{}, arg2 interface{}) (err error) {
+func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error) {
 
 	if (phrase != "work") {
 		return nil;
@@ -100,6 +95,9 @@ func (o * Syncer) TuShare_khistory(
 		qlog.Log(qlog.ERROR, err);
 		return err;
 	}
+	var dao = work.Dao;
+	var profile = work.Profile;
+	var profilename = work.ProfileName;
 
 	var db = util.GetStr(profile, dict.DB_HISTORY, "db");
 	var metatoken = o.GetMetaToken(profilename);
@@ -143,7 +141,7 @@ func (o * Syncer) TuShare_khistory(
 			rargs["ts_code"] = code + keysuffix;
 			rargs["start_date"] = from_date_str;
 			rargs["end_date"] = to_date_str;
-			_, err := o.TuShare_request(dao, profile, profilename, nil, rargs);
+			_, err := o.TuShare_request(work, nil, rargs);
 			if (err == nil) {
 				qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
 			} else {

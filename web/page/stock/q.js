@@ -132,67 +132,22 @@ const vue = new Vue({
             }
         },
 
-        sync_meta_query: function (dbs, callback) {
-            axios.post("/stock/keys", {
+        sync_meta_query: function (dbs) {
+            let meta;
+            return axios.post("/stock/keys", {
                 "dbs": dbs,
                 "keys" : "meta*"
-            }).then(function (resp) {
-                let meta = util.handle_response(resp);
-                this.db.query_by_id("meta", "id", ["0"], function (data) {
-                    let need_refresh = {
-                        meta: meta,
-                        snapshot_sz: true,
-                        snapshot_sh: false,
-                        khistory_sz: false,
-                        khistory_sh: false
-                    };
-
-                    let meta_prev = data[0];
-                    if (meta_prev) {
-                        try {
-                            let snapshot_sz = meta[this.token.snapshot_sz]["last"] * 1;
-                            let snapshot_sz_prev = meta_prev[this.token.snapshot_sz]["last"] * 1;
-                            need_refresh.snapshot_sz = snapshot_sz_prev < snapshot_sz;
-                        } catch (e) {
-                            need_refresh.snapshot_error = e;
-                        }
-                        try {
-                            let snapshot_sh = meta[this.token.snapshot_sh]["last"] * 1;
-                            let snapshot_sh_prev = meta_prev[this.token.snapshot_sh]["last"] * 1;
-                            need_refresh.snapshot_sh = snapshot_sh_prev < snapshot_sh;
-                        } catch (e) {
-                            need_refresh.snapshot_error = e;
-                        }
-                        try {
-                            let khistory_sz = meta[this.token.khistory_sz]["last"] * 1;
-                            let khistory_sz_prev = meta_prev[this.token.khistory_sz]["last"] * 1;
-                            need_refresh.khistory_sz = khistory_sz_prev < khistory_sz;
-                        } catch (e) {
-                            need_refresh.khistory_error = e;
-                        }
-                        try {
-                            let khistory_sh = meta[this.token.khistory_sh]["last"] * 1;
-                            let khistory_sh_prev = meta_prev[this.token.khistory_sh]["last"] * 1;
-                            need_refresh.khistory_sh = khistory_sh_prev < khistory_sh;
-                        } catch (e) {
-                            need_refresh.khistory_error = e;
-                        }
-
-                        if (need_refresh.snapshot_sh || need_refresh.snapshot_sz) {
-                            this.db.delete_all("snapshot");
-                        }
-                    }
-                    meta.id = "0";
-                    this.db.update("meta", "id", [], meta);
-                    if (callback) {
-                        callback(need_refresh, meta_prev);
-                    }
-                }.bind(this));
-            }.bind(this)).catch(util.handle_error.bind(this))
+            })
+            .then(function (resp) {
+                meta = util.handle_response(resp);
+                this.db.update("meta",  [], meta);
+                return meta;
+            }.bind(this))
+            .catch(util.handle_error.bind(this));
         },
 
         script_list: function () {
-            axios.post("/script/list").then(function (json) {
+            return axios.post("/script/list").then(function (json) {
                 this.script_names = util.handle_response(json, this.console, "");
             }.bind(this)).catch(util.handle_error.bind(this))
         },
@@ -270,6 +225,11 @@ const vue = new Vue({
         },
 
         stock_get_data_by_code: function (resp, refresh_table, fetch_khistory, time_from, time_to) {
+
+            if (typeof fetch_khistory === 'undefined') {
+                fetch_khistory = false;
+            }
+
             let codes;
             if (resp instanceof Array) {
                 codes = resp;
@@ -282,54 +242,46 @@ const vue = new Vue({
                 }
                 return;
             }
-            let has_sz = false;
-            let has_sh = false;
-            for(let i = 0; i < codes.length; i++) {
-                if (codes[i].charAt(0) === '0') {
-                    has_sz = true;
-                    break;
-                }
-            }
-            for(let i = 0; i < codes.length; i++) {
-                if (codes[i].charAt(0) === '6') {
-                    has_sh = true;
-                    break;
-                }
-            }
-            if (typeof fetch_khistory === 'undefined') {
-                fetch_khistory = false;
-            }
-            this.sync_meta_query([ "def", "history" ], function (need_refresh) {
-                let may_i_refresh =
-                    (has_sz && need_refresh.snapshot_sz) || (has_sh && need_refresh.snapshot_sh);
 
-                if (may_i_refresh) {
-                    this.stock_data_request(codes);
-                } else {
-                    let codes_exist = {};
-                    for (let i = 0; i < codes.length; i++) {
-                        let code = codes[i];
-                        codes_exist[code] = false;
+            let codes_map = {};
+            for (let i = 0; i < codes.length; i++) {
+                let code = codes[i];
+                codes_map[code] = false;
+            }
+
+            let meta;
+            this.sync_meta_query([ "def", "history" ])
+            .then(function (meta_resp) {
+                meta = meta_resp;
+                return this.db.query_by_id_promise("snapshot",  codes );
+            }.bind(this))
+            .then(function (stocks_local) {
+
+                let nowday = new Date().getDay();
+                let is_stock_day = nowday >= 1 && nowday <= 5;
+
+                for (let i = 0; i < stocks_local.length; i++) {
+                    let stock = stocks_local[i];
+                    let code = stock["code"];
+                    if (is_stock_day) {
+                        let _u = stock["_u"];
+                    } else {
+                        codes_map[code] = true;
                     }
-                    this.db.query_by_id("snapshot", "code", codes, function (stocks_local) {
-                        for (let i = 0; i < stocks_local.length; i++) {
-                            let code = stocks_local[i]["code"];
-                            codes_exist[code] = true;
-                        }
-                        let codes_not_exist = [];
-                        for (let code in codes_exist) {
-                            if (!codes_exist[code]) {
-                                codes_not_exist.push(code);
-                            }
-                        }
-                        if (codes_not_exist.length > 0) {
-                            this.stock_data_request(codes_not_exist, stocks_local, time_from, time_to)
-                        } else {
-                            let resp = {data: {data: stocks_local}};
-                            /* fake */
-                            this.stock_data_adapt(resp, false, true);
-                        }
-                    }.bind(this));
+
+                }
+                let codes_need_refresh = [];
+                for (let code in codes_map) {
+                    if (!codes_map[code]) {
+                        codes_need_refresh.push(code);
+                    }
+                }
+                if (codes_need_refresh.length > 0) {
+                    this.stock_data_request(codes_need_refresh, stocks_local, time_from, time_to)
+                } else {
+                    let resp = {data: {data: stocks_local}};
+                    /* fake */
+                    this.stock_data_adapt(resp, false, true);
                 }
             }.bind(this));
         },
@@ -380,13 +332,12 @@ const vue = new Vue({
             let adata = [];
             let khistory = [];
             let khistory_map = {};
-            let khistory_fetch = [];
+            let max_date = "";
             for (let i = 0; i < stocks.length; i++) {
                 let stock = stocks[i];
                 let code = stock.code;
                 let stock_khistory = stock.khistory;
-                stock["turnover"] = util.get_val(stock, "turnover", "").replace("%", "");
-                stock["appointRate"] = util.get_val(stock, "appointRate", "").replace("%", "");
+
                 adata.push(stock);
                 if (stock_khistory && stock_khistory.length > 0) {
                     for(let k = 0; k < stock_khistory.length; k++) {
@@ -395,14 +346,17 @@ const vue = new Vue({
                     }
                     khistory = khistory.concat(stock_khistory);
                     khistory_map[code] = stock_khistory;
-                    let max = util.array_most(stock_khistory, function (max, one) {
-                        return max.date * 1 > one.date * 1;
-                    });
-                    khistory_fetch.push({ code : code, date : max.date });
+                    if (!max_date) {
+                        let max = util.array_most(stock_khistory, function (max, one) {
+                            return max.date * 1 > one.date * 1;
+                        });
+                        max_date = max.date;
+                    }
+                    stock._u_khistory = max_date;
                     stock.khistory = null;
                 }
             }
-            this.db.update("snapshot", "code", [], stocks);
+            this.db.update("snapshot", [ "_u" ], stocks);
 
             if (khistory.length > 0) {
                 for (let i = 0; i < stocks.length; i++) {
@@ -417,10 +371,7 @@ const vue = new Vue({
             }
 
             if (khistory.length > 0) {
-                this.db.update("khistory", "id", ["code", "date" ], khistory);
-            }
-            if (khistory_fetch.length > 0) {
-                this.db.update("khistory_fetch", "code", [ "date" ], khistory_fetch);
+                this.db.update("khistory", ["code", "date" ], khistory);
             }
 
             if (callback) {
@@ -796,38 +747,51 @@ const vue = new Vue({
     /* [mount] ------------------------------------------------------------------- */
     mounted () {
 
-
-
         util.context = this;
         // web database
-        this.db = new DB({
+        DB.new_db_promise({
             name: "stock",
-            dbsize : 32 * 1024 * 1024
+            dbsize : 32 * 1024 * 1024,
+            schema : {
+                "meta" : {
+                    "keyname" : "id"
+                },
+                "snapshot" : {
+                    "keyname" : "code",
+                    "fields" : [ "_u", "_u_k", "data" ]
+                },
+                "khistory" : {
+                    "keyname" : "id",
+                    "fields" : [ "code", "date", "data" ]
+                }
+            }
+        }).then(function (db) {
+            this.db = db;
+
+            // local storage configuration
+            this.config_load();
+
+            // view init
+            this.init_editor();
+            this.table_init();
+
+            this.script_list();
+            this.portfolio_list();
+
+            // data init
+            this.sync_meta_query(["def", "history"]).then(function () {
+                if (this.setting.script.last) {
+                    this.script_select(this.setting.script.last)
+                }
+                if (this.setting.portfolio.last || this.setting.portfolio_last) {
+                    this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
+                }
+            }.bind(this));
+
+        }.bind(this))
+        .catch(function (err) {
+           console.error("[fatal]", err);
         });
-        this.db.table_create("meta", "id");
-        this.db.table_create("snapshot", "code");
-        this.db.table_create("khistory", "id", [ "code", "date", "data"]);
-        this.db.table_create("khistory_fetch", "code", [ "date", "data"]);
 
-        // local storage configuration
-        this.config_load();
-
-        // view init
-        this.init_editor();
-        this.table_init();
-
-        this.script_list();
-        this.portfolio_list();
-
-        // data init
-        this.sync_meta_query(["def", "history"], function () {
-            if (this.setting.script.last) {
-                this.script_select(this.setting.script.last)
-            }
-            if (this.setting.portfolio.last || this.setting.portfolio_last) {
-                this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
-            }
-        }.bind(this));
-
-    }
+    } // mount end
 });

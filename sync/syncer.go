@@ -32,7 +32,17 @@ type Syncer struct {
 	profileRunInfos    map[string]*ProfileRunInfo;
 }
 
-
+type ProfileWork struct {
+	Id interface{};
+	Dao qdao.D;
+	ProfileName string;
+	Profile map[string]interface{};
+	StartTime int64;
+	EndTime int64;
+	Force bool;
+	Factor float64;
+	Context * Syncer;
+}
 
 type ProfileRunInfo struct {
 	RunCount int;
@@ -179,8 +189,13 @@ func (o * Syncer) worker() {
 			if (profile == nil) {
 				qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);
 			} else {
-
-				o.doprofile(profilename, profile, force, factor)
+				var work = &ProfileWork{
+					Profile: profile,
+					ProfileName: profilename,
+					Force: force,
+					Factor: factor,
+				};
+				o.DoProfile(work)
 			}
 		case <-timeout:
 
@@ -196,16 +211,18 @@ func (o * Syncer) worker() {
 }
 
 
-func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, force bool, factor float64) (ferr error) {
-
+func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
+	work.Context = o;
+	var profile = work.Profile;
+	var profilename = work.ProfileName;
 	defer qerr.SimpleRecover(0);
 	var now = time.Now();
 	var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var interval = util.GetInt64(profile, 3600, "interval");
 	var colddown = util.GetInt64(profile, 600, "colddown");
-	interval = int64(float64(interval) * factor);
-	colddown = int64(float64(colddown) * factor);
-	if (!force) {
+	interval = int64(float64(interval) * work.Factor);
+	colddown = int64(float64(colddown) * work.Factor);
+	if (!work.Force) {
 		if (now.Unix()-profileRunInfo.LastRunTime < colddown) {
 			//qlog.Log(qlog.INFO, o.Name, "current running", profilename, profileRunInfo.LastRunTime, "/", now.Unix());
 			return nil;
@@ -221,24 +238,28 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 	if (dao == nil) {
 		return cerr;
 	}
+
 	start := now;
 	timestamp := now.Unix();
+
+	work.Dao = dao;
+	work.StartTime = timestamp;
+	work.Id = qtime.Time2Int64(&start);
 
 	metatoken := o.GetMetaToken(profilename);
 
 	slast, _ := dao.Get(database, metatoken, "last", false);
 	last := util.AsInt64(slast, 0);
 
-	if (force) {
+	if (work.Force) {
 		qlog.Log(qlog.INFO, o.Name, profilename, "force!", "current", timestamp, "last", last);
 	} else {
-		qlog.Log(qlog.INFO, o.Name, profilename, "current", timestamp, "last", last, "interval", interval, "delta", timestamp -last, "factor", factor);
+		qlog.Log(qlog.INFO, o.Name, profilename, "current", timestamp, "last", last, "interval", interval, "delta", timestamp -last, "factor", work.Factor);
 		if (timestamp - last < interval) {
 			//qlog.Log(qlog.INFO, o.Name, profilename, "fetch in cooldown");
 			return nil;
 		}
 	}
-
 
 	var sync_record_cacher = scache.GetCacheManager().Get("sync");
 
@@ -248,9 +269,9 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 	sync_record_cacher.SetSubVal(timestamp, profilename, "start");
 	sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&start), profilename, "start_str");
 
-	var args = make(map[string]interface{});
 	var funcname = util.GetStr(profile, "", "handler");
-	var _, err = qref.FuncCallByName(o, funcname, "work", dao, profile, profilename, args, args);
+
+	var _, err = qref.FuncCallByName(o, funcname, "work", work);
 	var end = time.Now();
 	var elapse = end.Unix() - start.Unix();
 
@@ -263,7 +284,8 @@ func (o * Syncer) doprofile(profilename string, profile map[string]interface{}, 
 		profileRunInfo.LastEndTime = end.Unix();
 		profileRunInfo.RunCount = profileRunInfo.RunCount + 1;
 
-		sync_record_cacher.SetSubVal(end.Unix(), profilename, "last");
+		work.EndTime = end.Unix();
+		sync_record_cacher.SetSubVal(work.EndTime, profilename, "last");
 		sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&end), profilename, "last_str");
 
 		qlog.Log(qlog.INFO, "profile", profilename, "done", "consume", elapse);
@@ -304,8 +326,7 @@ func (o * Syncer) GetProfileRunInfo(profilename string) (*ProfileRunInfo) {
 
 
 func (o * Syncer) PersistAndCache(
-	profile map[string]interface{},
-	dao qdao.D,
+	work * ProfileWork,
 	data []interface{}) (rdata []interface{}, ids []interface{}, err error){
 
 	if (data == nil) {
@@ -316,6 +337,7 @@ func (o * Syncer) PersistAndCache(
 		return nil, nil, nil;
 	}
 	rdata = data;
+	var profile = work.Profile;
 	var key = util.GetStr(profile, "code", "key");
 	var group = util.GetStr(profile, "", "group");
 	var groupkey = util.GetStr(profile, "", "groupkey");
@@ -326,13 +348,15 @@ func (o * Syncer) PersistAndCache(
 	var idsss = make([]string, datalen);
 	ids = make([]interface{}, datalen);
 	for i, one := range data {
+		var m = one.(map[string]interface{});
+		m["_u"] = work.Id;
 		if (mapper != nil) {
 			_, err := mapper.Map(one, false);
 			if (err != nil) {
 				return nil, nil, err;
 			}
 		}
-		idsss[i] = util.GetStr(one, "", key);
+		idsss[i] = util.GetStr(m, "", key);
 		ids[i] = idsss[i];
 		if (len(group) == 0 && len(groupkey) > 0) {
 			group = util.GetStr(one, "", groupkey);
@@ -342,7 +366,7 @@ func (o * Syncer) PersistAndCache(
 	var db = util.GetStr(profile, "", "db");
 	var cachername = util.GetStr(profile, "", "cacher");
 	var cacher = scache.GetCacheManager().Get(cachername);
-	_, err = dao.Updates(db, group, ids, data, true, -1);
+	_, err = work.Dao.Updates(db, group, ids, data, true, -1);
 	if (cacher != nil) {
 		if (len(group) == 0) {
 			cacher.Sets(data, idsss);

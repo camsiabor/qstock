@@ -11,30 +11,56 @@ function DB(opt) {
     this.desc = this.desc || this.name;
     this.version = this.version || "1";
     this.dbsize = this.dbsize || (32 * 1024 * 1024);
-    let promise = new Promise(function (resolve, reject) {
-        this.db = window.openDatabase(this.name, this.version, this.name, this.dbsize);
-        if (this.db) {
-            console.log("[db]", "open", this.name, "size", this.dbsize, this.db );
-            resolve();
-        } else {
-            reject();
-        }
-    }.bind(this));
+    this.db = window.openDatabase(this.name, this.version, this.name, this.dbsize);
+    if (this.db) {
+        console.log("[db]", "open", this.name, "size", this.dbsize, this.db );
+    } else {
+        throw "[db] create database " + this.name + " error ";
+    }
 
-    promise.then(function () {
-        return this.query_raw_promise("SELECT * FROM sqlite_master WHERE type = 'table'");
-    }.bind(this)).then(function (tables) {
-        for(let i = 0; i < tables.length; i++) {
-            let table = this.table_parse(tables[i]);
-            this.tables[table.name] = table;
+    let promises = [];
+    let schema = this.schema;
+    if (schema) {
+        for(let tablename in schema) {
+            let profile = schema[tablename];
+            if (!profile) {
+                continue;
+            }
+            let promise = this.table_create_promise(tablename, profile.keyname, profile.fields, profile);
+            promises.push(promise);
         }
-    }.bind(this)).catch(function (err) {
-        throw "[db] create database " + this.name + " error " + err;
+    }
+
+    let promise = this.table_get_promise();
+    promises.push(promise);
+
+    let me = this;
+    Promise.all(promises).then(function (r) {
+        opt.callback && opt.callback("success", r, me, me.db);
+    }).catch(function (err) {
+        opt.callback && opt.callback("error", err, me, me.db);
     });
+
 }
 
 
-
+DB.new_db_promise = function(opt) {
+    return new Promise(function (resolve, reject) {
+        opt.callback = function (msg, r, db) {
+            if (msg === 'error') {
+                reject(r);
+                return;
+            }
+            resolve(db);
+        };
+        try {
+            new DB(opt);
+        } catch (e) {
+            console.error("[db]", "[new_db_promise]", e);
+            reject(e);
+        }
+    });
+};
 
 DB.prototype.errcallback = function(tx, err) {
     console.error(tx, err);
@@ -76,14 +102,15 @@ DB.prototype.table_parse = function(tableinfo) {
     let sql_created = tableinfo.sql;
     let q_open_i = sql_created.indexOf('(');
     let q_close_i = sql_created.indexOf(")");
-    tableinfo.fields = sql_created.substring(q_open_i + 1, q_close_i).split(",");
+    let fields = sql_created.substring(q_open_i + 1, q_close_i).split(",");
+    tableinfo.fields = [];
     tableinfo.fields_map = {};
-    for(let i = 0; i < tableinfo.fields.length; i++) {
-        let field = tableinfo.fields[i].trim();
+    for(let i = 0; i < fields.length; i++) {
+        let field = fields[i].trim();
         if (!field) {
             continue;
         }
-        if (field.indexOf(" unique")) {
+        if (field.indexOf(" unique") > 0) {
             field = field.substring(0, field.indexOf(" "));
             tableinfo.keyname = field;
         }
@@ -93,23 +120,44 @@ DB.prototype.table_parse = function(tableinfo) {
     return tableinfo;
 };
 
-DB.prototype.table_get = function(tablename, callback, errcallback) {
-    this.query_raw("SELECT * FROM sqlite_master WHERE type = ? AND name = ?", [ "table", tablename ], function (rows) {
-        let table;
+DB.prototype.args_flatten_qs = function(args) {
+    let qs = [];
+    for(let i = 0; i < args.length; i++) {
+        qs.push("?");
+    }
+    return qs.join(",");
+};
+
+DB.prototype.table_get = function(tablenames, callback, errcallback) {
+    let sql = "SELECT * FROM sqlite_master WHERE type = 'table' ";
+    if (tablenames) {
+        if (typeof tablenames === 'string') {
+            tablenames = [ tablenames ];
+        }
+        let qs = this.args_flatten_qs(tablenames);
+        sql = sql + " AND name in (" + qs + ") ";
+    } else {
+        tablenames = [];
+    }
+    this.query_raw(sql, tablenames, function (rows) {
+        let tables = [];
         if (rows && rows.length > 0) {
-            table = rows[0];
-            table = this.table_parse(table);
+            for(let i = 0; i < rows.length; i++) {
+                let table = this.table_parse(rows[i]);
+                this.tables[table.name] = table;
+                tables.push(table);
+            }
         }
         if (callback) {
-            callback(table, rows);
+            callback(tables);
         }
     }.bind(this), errcallback || this.errcallback());
 };
 
 DB.prototype.table_get_promise = function(tablename) {
     return new Promise(function (resolve, reject) {
-        this.table_get(tablename, function (table) {
-            resolve(table);
+        this.table_get(tablename, function (tables) {
+            resolve(tables);
         }.bind(this), function (tx, err) {
             console.error("[db]", "[get_table_promie]", tx, err);
             reject(err);
@@ -117,60 +165,91 @@ DB.prototype.table_get_promise = function(tablename) {
     }.bind(this));
 };
 
-DB.prototype.table_create = function(tablename, keyname, fields) {
+DB.prototype.table_create = function(tablename, keyname, fields, options, callback, errcallback) {
     if (!keyname) {
         keyname = "id";
     }
     if (!fields) {
         fields = [ 'data' ]
     }
+    let need_to_drop = false;
+
     let promise = this.table_get_promise(tablename);
-    promise.then(function (table) {
-        let need_to_drop = false;
+
+    promise.then(function (tables) {
+        let table;
+        if (tables) {
+            table = tables[0];
+        }
         if (table) {
-            let fields_map = {};
-            fields_map[keyname + " unique"] = false;
-            for(let i = 0; i < table.fields.length; i++) {
-                let field = table.fields[i];
-                fields_map[field] = false;
-            }
-            for(let field in fields_map) {
-                if (!fields_map[field]) {
-                    need_to_drop = true;
-                    break;
+            if (table.keyname === keyname) {
+                let fields_map = {};
+                for(let i = 0; i < fields.length; i++) {
+                    let field = fields[i];
+                    fields_map[field] = false;
                 }
+                for(let i = 0; i < table.fields.length; i++) {
+                    let field = table.fields[i];
+                    fields_map[field] = true;
+                }
+                for(let field in fields_map) {
+                    if (!fields_map[field]) {
+                        need_to_drop = true;
+                        break;
+                    }
+                }
+            } else {
+                need_to_drop = true;
             }
         }
         if (need_to_drop) {
             return this.table_drop_promise(tablename);
         }
-    }.bind(this)).then(function () {
-        // droptable_promise then
-    }).finally(function() {
+    }.bind(this))
+    .then(function () {
         let sql = 'CREATE TABLE IF NOT EXISTS ' + tablename + ' (' + keyname + ' unique, ' + fields.join(",") + ')';
-        this.exec(sql, [], function () {
-            console.log("[db]", this.name, tablename, "created");
-        }.bind(this));
+        return this.exec_promise(sql, [])
+    }.bind(this))
+    .then(function () {
+        console.log("[db]", this.name, tablename, "created");
+        if (callback) {
+            callback(tablename);
+        }
+    });
 
-    }.bind(this));
-
+    return promise;
 
 };
 
-DB.prototype.table_drop = function(tablename) {
+DB.prototype.table_create_promise = function(tablename, keyname, fields, options) {
+    return new Promise(function (resolve, reject) {
+        this.table_create(tablename, keyname, fields, options, function (r) {
+            resolve(r)
+        }.bind(this), function (err) {
+            console.error("[db]", "[table_create_promise]", err);
+            reject(err);
+        })
+    }.bind(this));
+};
+
+DB.prototype.table_drop = function(tablename, callback) {
     this.exec("DROP TABLE " + tablename, [], function() {
         this.tables[tablename] = null;
         console.log("[db]", this.name, tablename, "dropped");
+        if (callback) {
+            callback(tablename);
+        }
     }.bind(this));
 };
 
 DB.prototype.table_drop_promise = function(tablename) {
     return this.exec_promise("DROP TABLE " + tablename);
-}
+};
 
 
 
-DB.prototype.update = function(tablename, keyname, fieldnames, data, callback, errcallback) {
+DB.prototype.update = function(tablename, fieldnames, data, callback, errcallback) {
+    let keyname = this.get_keyname(tablename);
     if (!(data instanceof Array)) {
         data = [ data ];
     }
@@ -184,7 +263,7 @@ DB.prototype.update = function(tablename, keyname, fieldnames, data, callback, e
 
     fieldnames = fieldnames || [];
 
-    this.query_ids(tablename, keyname, ids, function (ids_exist) {
+    this.query_ids(tablename, ids, function (ids_exist) {
 
         let ids_exist_map = {};
         for(let i = 0; i < ids_exist.length; i++) {
@@ -231,24 +310,22 @@ DB.prototype.update = function(tablename, keyname, fieldnames, data, callback, e
     }.bind(this));
 };
 
-DB.prototype.update_promise = function(tablename, keyname, fieldname, data) {
-  return new Promise(function (resolve, reject) {
-      this.update(tablename, keyname, fieldname, data, function () {
-          resolve();
-      }.bind(this), function (tx, err) {
-          console.error("[db]", "[update_promise]", tx, err);
-          reject(err);
-      });
-  }.bind(this));
+DB.prototype.update_promise = function(tablename, fieldname, data) {
+    return new Promise(function (resolve, reject) {
+        this.update(tablename, fieldname, data, function () {
+            resolve();
+        }.bind(this), function (tx, err) {
+            console.error("[db]", "[update_promise]", tx, err);
+            reject(err);
+        });
+    }.bind(this));
 };
 
-DB.prototype.delete_by_id = function(tablename, keyname, ids, callback, errcallback) {
+DB.prototype.delete_by_id = function(tablename, ids, callback, errcallback) {
+    let keyname = this.get_keyname(tablename);
     return this.db.transaction(function (tx) {
-        let qarray = [];
-        for(let i = 0; i < ids.length; i++) {
-            qarray.push("?");
-        }
-        let sql = "DELETE FROM " + tablename + " WHERE " + keyname + " IN (" + qarray.join(",") + ")";
+        let qs = this.args_flatten_qs(ids);
+        let sql = "DELETE FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ")";
         tx.executeSql(sql, ids, function (tx, result) {
             if (callback) {
                 callback(result, tx);
@@ -257,9 +334,14 @@ DB.prototype.delete_by_id = function(tablename, keyname, ids, callback, errcallb
     }.bind(this));
 };
 
-DB.prototype.delete_by_id_promise = function(tablename, keyname, ids) {
+DB.prototype.delete_by_id_promise = function(tablename, ids) {
     return new Promise(function (resolve, reject) {
-          this.delete_by_id(tablename, keyname, )
+          this.delete_by_id(tablename, id, function (r) {
+              resolve(r);
+          }.bind(this), function (tx, err) {
+              console.error("[db]", "[delete_by_id_promise]", tx, err);
+              reject(err);
+          }.bind(this));
     }.bind(this));
 };
 
@@ -333,14 +415,10 @@ DB.prototype.query_promise = function (sql, args) {
     return p;
 };
 
-DB.prototype.query_ids = function (tablename, keyname, ids, callback, errcallback) {
-    let qarray = [ ];
-    for (let i = 0; i < ids.length; i++) {
-        qarray.push("?");
-    }
-    qarray = qarray.join(",");
-
-    let sql = "SELECT " + keyname + " FROM " + tablename + " WHERE " + keyname + " IN (" + qarray + ") ";
+DB.prototype.query_ids = function (tablename, ids, callback, errcallback) {
+    let keyname = this.get_keyname(tablename);
+    let qs = this.args_flatten_qs(ids);
+    let sql = "SELECT " + keyname + " FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ") ";
     return this.db.transaction(function (tx) {
         tx.executeSql(sql, ids, function (tx, result) {
             let resultarray = [];
@@ -356,9 +434,9 @@ DB.prototype.query_ids = function (tablename, keyname, ids, callback, errcallbac
     }.bind(this));
 };
 
-DB.prototype.query_ids_promise = function(tablename, keyname, ids) {
+DB.prototype.query_ids_promise = function(tablename, ids) {
     return new Promise(function (resolve, reject) {
-        this.query_ids(tablename, keyname, ids, function (ids) {
+        this.query_ids(tablename, ids, function (ids) {
             resolve(ids);
         }, function (tx, err) {
             console.error("[db]", "[query_ids_promise]", tx, err);
@@ -367,27 +445,16 @@ DB.prototype.query_ids_promise = function(tablename, keyname, ids) {
     }.bind(this));
 };
 
-
-
-
-DB.prototype.query_by_id = function (tablename, keyname, ids, callback) {
-    let qarray = [ ];
-    for (let i = 0; i < ids.length; i++) {
-        qarray.push("?");
-    }
-    qarray = qarray.join(",");
-
-    let sql = "SELECT * FROM " + tablename + " WHERE " + keyname + " IN (" + qarray + ") ";
+DB.prototype.query_by_id = function (tablename, ids, callback) {
+    let keyname = this.get_keyname(tablename);
+    let qs = this.args_flatten_qs(ids);
+    let sql = "SELECT * FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ") ";
     return this.query(sql, ids, callback);
 };
 
-DB.prototype.query_by_id_promise = function (tablename, keyname, ids) {
-    let qarray = [ ];
-    for (let i = 0; i < ids.length; i++) {
-        qarray.push("?");
-    }
-    qarray = qarray.join(",");
-
-    let sql = "SELECT * FROM " + tablename + " WHERE " + keyname + " IN (" + qarray + ") "
+DB.prototype.query_by_id_promise = function (tablename, ids) {
+    let keyname = this.get_keyname(tablename);
+    let qs = this.args_flatten_qs(ids);
+    let sql = "SELECT * FROM " + tablename + " WHERE " + keyname + " IN (" + qs + ") ";
     return this.query_promise(sql, ids);
 }

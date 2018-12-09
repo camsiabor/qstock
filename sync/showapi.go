@@ -3,29 +3,26 @@ package sync
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util/qerr"
-	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qtime"
+	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qstock/dict"
-	"showSdk/normalRequest"
+	"github.com/camsiabor/qstock/sync/showSdk/normalRequest"
 	"strings"
 	"time"
 )
 
 func (o * Syncer) ShowAPI_request(
-	dao qdao.D,
-	profile map[string]interface{},
-	profilename string,
+	work * ProfileWork,
 	requestargs map[string]interface{}) (interface{}, error) {
 
 	if (!o.doContinue) {
 		return nil, nil;
 	}
 
-
+	var profile = work.Profile;
 	var api = util.GetStr(profile, "", "api");
 	var request = normalRequest.ShowapiRequest(o.domain+  "/" + api, o.appid, o.appsecret)
 	if (requestargs != nil) {
@@ -69,18 +66,17 @@ func (o * Syncer) ShowAPI_request(
 		return nil, qerr.NewCError(int(ret_code), o.Name, remark);
 	}
 	var list = resbody["list"].([]interface{})
-	list, _, err = o.PersistAndCache(profile, dao, list);
+	list, _, err = o.PersistAndCache(work, list);
 	return list, err;
 }
 
 func (o * Syncer) ShowAPI_snapshot(
-	phrase string, dao qdao.D,
-	profile map[string]interface{}, profilename string,
-	arg1 interface{}, arg2 interface{} ) (err error) {
+	phrase string, work * ProfileWork) (err error) {
 
 	if (phrase != "work") {
 		return nil;
 	}
+	var profile = work.ProfileName;
 	var market = util.GetStr(profile, "", "marker");
 	var fetcheach int64 = util.GetInt64(profile, 10, "each");
 	var fetchlimit int64 = util.GetInt64(profile, 5000, "limit");
@@ -96,7 +92,7 @@ func (o * Syncer) ShowAPI_snapshot(
 		return fmt.Errorf("unknown marker %s", market);
 	}
 
-	dao.SelectDB(dict.DB_DEFAULT);
+	work.Dao.SelectDB(dict.DB_DEFAULT);
 
 	var stockids= ""
 	var rargs= make(map[string]interface{});
@@ -108,7 +104,7 @@ func (o * Syncer) ShowAPI_snapshot(
 			stockids = strings.TrimRight(stockids, ",")
 			rargs["stocks"] = stockids;
 			rargs["needIndex"] = "0";
-			_, err = o.ShowAPI_request(dao, profile, profilename, rargs)
+			_, err = o.ShowAPI_request(work, rargs)
 			stockids = ""
 		}
 	}
@@ -117,11 +113,7 @@ func (o * Syncer) ShowAPI_snapshot(
 
 
 
-func (o * Syncer) ShowAPI_khistory(
-
-	phrase string, dao qdao.D,
-	profile map[string]interface{}, profilename string,
-	arg1 interface{}, arg2 interface{}) (err error) {
+func (o * Syncer) ShowAPI_khistory(phrase string, work * ProfileWork) (err error) {
 
 	if (phrase != "work") {
 		return nil;
@@ -133,6 +125,9 @@ func (o * Syncer) ShowAPI_khistory(
 		return err;
 	}
 
+	var dao = work.Dao;
+	var profile = work.Profile;
+	var profilename = work.ProfileName;
 	var metatoken = o.GetMetaToken(profilename);
 	//var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var market= util.GetStr(profile, "", "marker");
@@ -172,7 +167,7 @@ func (o * Syncer) ShowAPI_khistory(
 		rargs["code"] = code;
 		rargs["begin"] = from_date_str;
 		rargs["end"] = to_date_str;
-		data, err := o.ShowAPI_request(dao, profile, profilename, rargs);
+		data, err := o.ShowAPI_request(work, rargs);
 		if (data == nil || err != nil) {
 			continue;
 		}

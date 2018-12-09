@@ -3,10 +3,16 @@
 
 Vue.component('vuetable-actions', {
     template : 
+        "<div class='btn-group btn-group-sm'>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button>" +
+            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button>" +
+        "</div>",
+    template2 :
         "<div class=''>" +
-            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button></div>" +
-            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button></div>" +
-            "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button></div>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button></div>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button></div>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button></div>" +
         "</div>",
     props: {
         rowData: {
@@ -140,7 +146,7 @@ const vue = new Vue({
             })
             .then(function (resp) {
                 meta = util.handle_response(resp);
-                this.db.update("meta",  [], meta);
+                this.db.update("meta",  [], meta).then();
                 return meta;
             }.bind(this))
             .catch(util.handle_error.bind(this));
@@ -155,7 +161,7 @@ const vue = new Vue({
         script_select: function (name) {
             this.script.name = name;
             this.setting.script.last = name;
-            axios.post("/script/get", {
+            return axios.post("/script/get", {
                 name: name
             }).then(function (resp) {
                 let info = util.handle_response(resp);
@@ -250,13 +256,10 @@ const vue = new Vue({
             }
 
             let meta;
-            this.sync_meta_query([ "def", "history" ])
-            .then(function (meta_resp) {
+            this.sync_meta_query([ "def", "history" ]).then(function (meta_resp) {
                 meta = meta_resp;
-                return this.db.query_by_id_promise("snapshot",  codes );
-            }.bind(this))
-            .then(function (stocks_local) {
-
+                return this.db.query_by_id("snapshot",  codes );
+            }.bind(this)).then(function (stocks_local) {
                 let nowday = new Date().getDay();
                 let is_stock_day = nowday >= 1 && nowday <= 5;
 
@@ -286,12 +289,7 @@ const vue = new Vue({
             }.bind(this));
         },
 
-        stock_khistory_request: function(codes, stocks, time_from, time_to, callback) {
-            let sql = "SELECT code, count(1) from khistory where code = ? and date >= ? and date <= ? group by code";
-            this.db.query(sql, [])
-        },
-
-        stock_data_request: function(codes, stocks, time_from, time_to, fetch_khistory, refresh_table, callback) {
+        stock_data_request: function(codes, stocks, time_from, time_to, fetch_khistory, refresh_table) {
 
             if (typeof time_to === "string" && time_to.length === 0) {
                 let to = new Date();
@@ -310,7 +308,7 @@ const vue = new Vue({
                 refresh_table = true;
             }
 
-            axios.post("/stock/gets", {
+            return axios.post("/stock/gets", {
                 "codes": codes,
                 "time_from" : time_from,
                 "time_to" : time_to
@@ -319,11 +317,11 @@ const vue = new Vue({
                 if (stocks) {
                     resp.data.data = stocks_remote.concat(stocks);
                 }
-                this.stock_data_adapt(resp, fetch_khistory, refresh_table, callback);
+                this.stock_data_adapt(resp, fetch_khistory, refresh_table);
             }.bind(this));
         },
 
-        stock_data_adapt: function (resp, fetch_khistory, refresh_table, callback) {
+        stock_data_adapt: function (resp, fetch_khistory, refresh_table) {
             let stocks = util.handle_response(resp);
             if (!stocks instanceof Array) {
                 this.console.text = JSON.stringify(stocks);
@@ -356,27 +354,25 @@ const vue = new Vue({
                     stock.khistory = null;
                 }
             }
-            this.db.update("snapshot", [ "_u" ], stocks);
 
-            if (khistory.length > 0) {
-                for (let i = 0; i < stocks.length; i++) {
-                    let stock = stocks[i];
-                    let code = stock.code;
-                    stock.khistory = khistory_map[code];
+            return this.db.update("snapshot", [ "_u" ], stocks).then(function () {
+                if (khistory.length > 0) {
+                    for (let i = 0; i < stocks.length; i++) {
+                        let stock = stocks[i];
+                        let code = stock.code;
+                        stock.khistory = khistory_map[code];
+                    }
                 }
-            }
-
-            if (refresh_table) {
-                this.table_init(adata);
-            }
-
-            if (khistory.length > 0) {
-                this.db.update("khistory", ["code", "date" ], khistory);
-            }
-
-            if (callback) {
-                callback(resp, stocks, khistory_map);
-            }
+                if (khistory.length > 0) {
+                    return this.db.update("khistory", ["code", "date" ], khistory);
+                }
+            }.bind(this)).then(function () {
+               // khistory update promise
+            }).finally(function () {
+                if (refresh_table) {
+                    this.table_init(adata);
+                }
+            }.bind(this));
 
         },
         script_query: function () {
@@ -466,17 +462,7 @@ const vue = new Vue({
                 this.portfolio_names = data;
             }.bind(this));
         },
-        portfolio_get: function (name, callback) {
-            let portfolio_name = "portf_" + name;
-            axios.post("/cmd/go", {
-                "type": "db",
-                "cmd": "Get",
-                "args": ["common", "", portfolio_name, true]
-            }).then(function (resp) {
-                let data = util.handle_response(resp);
-                callback.call(this, data);
-            }.bind(this));
-        },
+
         portfolio_update: function (codes_sel) {
 
             if (!this.portfolio.name) {
@@ -549,8 +535,15 @@ const vue = new Vue({
             if (!name) {
                 name = this.portfolio.name;
             }
-            this.portfolio_get(name, function (codesm) {
-                let codes = util.keys(codesm, function (m, k, v) {
+
+            let portfolio_name = "portf_" + name;
+            return axios.post("/cmd/go", {
+                "type": "db",
+                "cmd": "Get",
+                "args": ["common", "", portfolio_name, true]
+            }).then(function (resp) {
+                let data = util.handle_response(resp);
+                let codes = util.keys(data, function (m, k, v) {
                     return v;
                 });
                 this.stock_data_request(codes);
@@ -585,7 +578,7 @@ const vue = new Vue({
                     this.console.text = "local storage clear";
                     break;
                 case "webdb":
-                    this.db.delete_all(target, function (tx) {
+                    this.db.delete_all(target).then(function () {
                         this.console.text = "web db table " + target + " clear ";
                     }.bind(this));
                     break;
@@ -758,7 +751,7 @@ const vue = new Vue({
                 },
                 "snapshot" : {
                     "keyname" : "code",
-                    "fields" : [ "_u", "_u_k", "data" ]
+                    "fields" : [ "_u", "_u_history", "data" ]
                 },
                 "khistory" : {
                     "keyname" : "id",

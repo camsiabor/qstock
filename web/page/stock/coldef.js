@@ -69,10 +69,13 @@ const _columns_default = [
         "width" : "15%",
         "visible" : true,
         "callback": function (value, row, col, vuetable) {
-            // let html = [];
-            // html.push("<div  v-on:click='alert(1)' value='ok'>hello world</div>");
-            // return html.join('');
-            return row.name + "<br/>" + row.code + "<br/><pre style='font-size: 0.8em'>" + row._u + "</pre>";
+            let _u = row._u;
+            if (_u) {
+                _u = (_u + "").substring(8);
+            } else {
+                _u = "";
+            }
+            return row.name + "<br/>" + row.code + "<br/><pre style='font-size: 0.8em'>" + _u + "</pre>";
         }
     },
     {

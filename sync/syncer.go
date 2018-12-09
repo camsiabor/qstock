@@ -264,6 +264,7 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 	var sync_record_cacher = scache.GetCacheManager().Get("sync");
 
 	dao.Update(database, metatoken, "start", timestamp, true, -1);
+	dao.Update(database, metatoken, "start_id", work.Id, true, -1);
 	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
 	sync_record_cacher.SetSubVal(timestamp, profilename, "start");
@@ -279,6 +280,7 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 		start = time.Now();
 		profile["last"] = start.Unix();
 		dao.Update(database, metatoken, "last", start.Unix(), true, -1);
+		dao.Update(database, metatoken, "last_id", work.Id, true, -1);
 		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
 		profileRunInfo.LastEndTime = end.Unix();
@@ -286,6 +288,7 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 
 		work.EndTime = end.Unix();
 		sync_record_cacher.SetSubVal(work.EndTime, profilename, "last");
+		sync_record_cacher.SetSubVal(work.Id, profilename, "last_id");
 		sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&end), profilename, "last_str");
 
 		qlog.Log(qlog.INFO, "profile", profilename, "done", "consume", elapse);

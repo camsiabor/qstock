@@ -9,6 +9,22 @@ function QUtil(opt) {
     this.context = this.context || window;
 }
 
+QUtil.get = function(obj, pathes, defval) {
+    let current = obj;
+    try {
+        for (let i = 0; i < pathes.length; i++) {
+            let path = pathes[i];
+            current = current[path];
+            if (!current) {
+                return defval;
+            }
+        }
+    } catch (ex) {
+        return defval;
+    }
+    return current;
+};
+
 QUtil.prototype.handle_error = function(error) {
     let err = error.stack || error;
     if (this.context && this.context.console) {
@@ -18,10 +34,22 @@ QUtil.prototype.handle_error = function(error) {
 };
 
 QUtil.prototype.handle_response = function(resp, printer, msg) {
+
+    if (!resp) {
+        return resp;
+    }
+
+    if (resp instanceof Array) {
+        return resp;
+    }
+
     let r = resp.data;
+
     if (typeof r === "string") {
         r = eval( "(" + r + ")" );
     }
+
+
 
     if (r.code) {
         let rdataclone = {};

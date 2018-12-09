@@ -1,4 +1,6 @@
 
+/* ===================== vue component vueable-chart ============================ */
+
 Vue.component('vuetable-chart', {
     template : "<div v-bind:id='cid' style='width: 99%; height: 99%;'></div>",
     props: {
@@ -27,6 +29,19 @@ Vue.component('vuetable-chart', {
             let time_to = util.date_format(to, "");
             let time_from = util.date_format(from, "");
             let code = this.rowData.code;
+
+            /*
+            if (typeof time_to === "string" && time_to.length === 0) {
+                let to = new Date();
+                time_to = util.date_format(to, "");
+            }
+
+            if (typeof time_from === 'string' && time_from.length === 0) {
+                let now = new Date();
+                let from = util.date_add_day(now, -30);
+                time_from = util.date_format(from, "");
+            }
+             */
 
             return;
             console.log("[chart] request", time_from, time_to, false);
@@ -165,5 +180,46 @@ Vue.component('vuetable-chart', {
         // setTimeout(function () {
         //     this.chart_render();
         // }.bind(this), 100);
+    }
+});
+
+/* ===================== vue component vueable-actions ============================ */
+
+Vue.component('vuetable-actions', {
+    template :
+        "<div class='btn-group btn-group-sm'>" +
+        "<button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button>" +
+        "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button>" +
+        "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button>" +
+        "</div>",
+    template2 :
+        "<div class=''>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button></div>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button></div>" +
+        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button></div>" +
+        "</div>",
+    props: {
+        rowData: {
+            type: Object,
+            required: true
+        },
+        rowIndex: {
+            type: Number
+        }
+    },
+    methods: {
+        act (action, data, index) {
+            let code = data.code;
+            let context = this.$root;
+            switch (action) {
+                case "portfolio.add":
+                    context.portfolio_update( [ code ]);
+                    break;
+                case "portfolio.unadd":
+                    context.portfolio_unadd( [ code ]);
+                    break;
+            }
+            console.log('custom-actions: ' + action, data.name, index, data);
+        }
     }
 });

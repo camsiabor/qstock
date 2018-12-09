@@ -1,44 +1,6 @@
 
 
 
-Vue.component('vuetable-actions', {
-    template : 
-        "<div class='btn-group btn-group-sm'>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button>" +
-            "<button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button>" +
-        "</div>",
-    template2 :
-        "<div class=''>" +
-        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"view.detail\", rowData, rowIndex)'><i class='fa fa-search s-tiny'></i></button></div>" +
-        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.add\", rowData, rowIndex)'><i class='fa fa-plus-circle s-tiny'></i></button></div>" +
-        "<div><button class='btn btn-sm btn-outline-secondary' @click='act(\"portfolio.unadd\", rowData, rowIndex)'><i class='fa fa-minus-circle s-tiny'></i></button></div>" +
-        "</div>",
-    props: {
-        rowData: {
-            type: Object,
-            required: true
-        },
-        rowIndex: {
-            type: Number
-        }
-    },
-    methods: {
-        act (action, data, index) {
-            let code = data.code;
-            let context = this.$root;
-            switch (action) {
-                case "portfolio.add":
-                    context.portfolio_update( [ code ]);
-                    break;
-                case "portfolio.unadd":
-                    context.portfolio_unadd( [ code ]);
-                    break;
-            }
-            console.log('custom-actions: ' + action, data.name, index, data);
-        }
-    }
-});
 
 Vue.component('vuetable', Vuetable.Vuetable);
 Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
@@ -230,18 +192,9 @@ const vue = new Vue({
             }
         },
 
-        stock_get_data_by_code: function (resp, refresh_table, fetch_khistory, time_from, time_to) {
+        stock_get_data_by_code: function (resp, time_from, time_to, refresh_table) {
 
-            if (typeof fetch_khistory === 'undefined') {
-                fetch_khistory = false;
-            }
-
-            let codes;
-            if (resp instanceof Array) {
-                codes = resp;
-            } else {
-                codes = util.handle_response(resp);
-            }
+            let codes = util.handle_response(resp);
             if (!codes || !(codes instanceof Array)) {
                 if (refresh_table) {
                     this.table_init([]);
@@ -249,143 +202,191 @@ const vue = new Vue({
                 return;
             }
 
-            let codes_map = {};
-            for (let i = 0; i < codes.length; i++) {
-                let code = codes[i];
-                codes_map[code] = false;
-            }
-
             let meta;
-            this.sync_meta_query([ "def", "history" ]).then(function (meta_resp) {
+            let fetch_khistory = time_from && time_from.length;
+            if (fetch_khistory) {
+                if (!time_to || !time_to.length) {
+                    let to = new Date();
+                    time_to = util.date_format(to, "");
+                }
+            }
+            // TODO short time cache
+            let stocks_local;
+            return this.sync_meta_query([ "def", "history" ]).then(function (meta_resp) {
                 meta = meta_resp;
                 return this.db.query_by_id("snapshot",  codes );
-            }.bind(this)).then(function (stocks_local) {
-                let nowday = new Date().getDay();
-                let is_stock_day = nowday >= 1 && nowday <= 5;
+            }.bind(this)).then(function(stocks_local_data) {
+                stocks_local = stocks_local_data;
+                if (fetch_khistory) {
+                    let qs = this.db.args_flatten_qs(codes);
+                    let sql = "SELECT * from khistory where code in (" + qs+ ") AND date >= ? AND date <= ?";
+                    let args = codes.concat([ time_from, time_to ]);
+                    let promise = this.db.query(sql, args);
+                    return promise;
+                }
+            }.bind(this)).then(function (khistorys) {
+                console.log("[meta]", meta);
 
+                let meta_snapshot_last_id = QUtil.get(meta, [ "meta.a.snapshot.sz", "last_id"] , 0) * 1;
+                let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);
+                let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "x").substring(0, 8);
+
+                let codes_map = {};
+                for (let i = 0; i < codes.length; i++) {
+                    let code = codes[i];
+                    codes_map[code] = true;
+                }
+
+                // let nowday = new Date().getDay();
+                // let is_stock_day = nowday >= 1 && nowday <= 5;
+                let stocks_stay = [];
+                let codes_need_refresh = [];
                 for (let i = 0; i < stocks_local.length; i++) {
                     let stock = stocks_local[i];
                     let code = stock["code"];
-                    if (is_stock_day) {
-                        let _u = stock["_u"];
-                    } else {
-                        codes_map[code] = true;
+                    let _u = stock["_u"] * 1;
+                    let stay = false;
+                    if (meta_snapshot_last_id === _u) {
+                        if (fetch_khistory) {
+                            let _u_khistory = stock["_u_khistory"];
+                            if (_u_khistory) {
+                                _u_khistory = _u_khistory.substring(0, 8);
+                            }
+                            let _u_khistory_meta = (code.charAt(0) === '0') ? meta_khistory_last_id_sz : meta_khistory_last_id_sh;
+                            if (_u_khistory === _u_khistory_meta) {
+                                stay = true;
+                            }
+                        } else {
+                            stay = true;
+                        }
                     }
-
+                    if (stay) {
+                        stocks_stay.push(stock);
+                        codes_map[code] = false;
+                    }
                 }
-                let codes_need_refresh = [];
-                for (let code in codes_map) {
-                    if (!codes_map[code]) {
+
+                if (fetch_khistory && khistorys && khistorys.length && stocks_stay.length) {
+                    let stocks_stay_map = {};
+                    for(let i = 0; i < stocks_stay.length; i++) {
+                        let one = stocks_stay[i];
+                        stocks_stay_map[one.code] = one;
+                    }
+                    for(let i = 0; i < khistorys.length; i++) {
+                        let one = khistorys[i];
+                        let code = one.code;
+                        let stock = stocks_stay_map[code];
+                        stock.khistory = stock.khistory || [];
+                        stock.khistory.push(one);
+                    }
+                }
+
+                for(let code in codes_map) {
+                    if (codes_map[code]) {
                         codes_need_refresh.push(code);
                     }
                 }
+
                 if (codes_need_refresh.length > 0) {
-                    this.stock_data_request(codes_need_refresh, stocks_local, time_from, time_to)
+                    return this.stock_data_request(codes_need_refresh, stocks_stay, time_from, time_to, refresh_table);
                 } else {
-                    let resp = {data: {data: stocks_local}};
-                    /* fake */
-                    this.stock_data_adapt(resp, false, true);
+                    return this.stock_data_adapt(stocks_stay, stocks_stay, refresh_table);
                 }
             }.bind(this));
         },
 
-        stock_data_request: function(codes, stocks, time_from, time_to, fetch_khistory, refresh_table) {
-
-            if (typeof time_to === "string" && time_to.length === 0) {
-                let to = new Date();
-                time_to = util.date_format(to, "");
-            }
-
-            if (typeof time_from === 'string' && time_from.length === 0) {
-                let now = new Date();
-                let from = util.date_add_day(now, -30);
-                time_from = util.date_format(from, "");
-            }
-            if (typeof fetch_khistory === 'undefined') {
-                fetch_khistory = false;
-            }
-            if (typeof refresh_table === 'undefined') {
-                refresh_table = true;
-            }
-
+        stock_data_request: function(codes, stocks_local, time_from, time_to, refresh_table) {
             return axios.post("/stock/gets", {
                 "codes": codes,
                 "time_from" : time_from,
                 "time_to" : time_to
             }).then(function (resp) {
                 let stocks_remote = util.handle_response(resp);
-                if (stocks) {
-                    resp.data.data = stocks_remote.concat(stocks);
+                if (stocks_local) {
+                    stocks_remote = stocks_remote.concat(stocks_local);
                 }
-                this.stock_data_adapt(resp, fetch_khistory, refresh_table);
+                return this.stock_data_adapt(stocks_remote, stocks_local, refresh_table);
             }.bind(this));
         },
 
-        stock_data_adapt: function (resp, fetch_khistory, refresh_table) {
+        stock_data_adapt: function (resp, stocks_local, refresh_table) {
+            if (typeof refresh_table === 'undefined') {
+                refresh_table = true;
+            }
             let stocks = util.handle_response(resp);
             if (!stocks instanceof Array) {
                 this.console.text = JSON.stringify(stocks);
                 return;
             }
-            let adata = [];
-            let khistory = [];
-            let khistory_map = {};
             let max_date = "";
+            let view_data = [];
+            let update_data = [];
+            let khistorys = [];
+            let khistorys_map = {};
+            let stocks_local_map = {};
+            for (let i = 0; i < stocks_local.length; i++) {
+                let stock_local = stocks_local[i];
+                stocks_local_map[stock_local.code] = stock_local;
+            }
             for (let i = 0; i < stocks.length; i++) {
                 let stock = stocks[i];
                 let code = stock.code;
                 let stock_khistory = stock.khistory;
-
-                adata.push(stock);
-                if (stock_khistory && stock_khistory.length > 0) {
-                    for(let k = 0; k < stock_khistory.length; k++) {
-                        let onek = stock_khistory[k];
-                        onek.id = code + "-" + onek.date;
+                if (!stocks_local_map[code]) {
+                    update_data.push(stock);
+                    if (stock_khistory && stock_khistory.length > 0) {
+                        for(let k = 0; k < stock_khistory.length; k++) {
+                            let onek = stock_khistory[k];
+                            onek.id = code + "-" + onek.date;
+                        }
+                        khistorys = khistorys.concat(stock_khistory);
+                        khistorys_map[code] = stock_khistory;
+                        if (!max_date) {
+                            let max = util.array_most(stock_khistory, function (max, one) {
+                                return max.date * 1 > one.date * 1;
+                            });
+                            max_date = max.date;
+                        }
+                        stock._u_khistory = max_date;
+                        stock.khistory = null;
                     }
-                    khistory = khistory.concat(stock_khistory);
-                    khistory_map[code] = stock_khistory;
-                    if (!max_date) {
-                        let max = util.array_most(stock_khistory, function (max, one) {
-                            return max.date * 1 > one.date * 1;
-                        });
-                        max_date = max.date;
-                    }
-                    stock._u_khistory = max_date;
-                    stock.khistory = null;
                 }
+                view_data.push(stock);
             }
 
-            return this.db.update("snapshot", [ "_u" ], stocks).then(function () {
-                if (khistory.length > 0) {
+            return this.db.update("snapshot", [ "_u" ], update_data).then(function () {
+                if (khistorys.length > 0) {
+                    return this.db.update("khistory", ["code", "date" ], khistorys);
+                }
+                return stocks;
+            }.bind(this)).then(function () {
+                return stocks;
+            }).finally(function () {
+                if (khistorys.length > 0) {
                     for (let i = 0; i < stocks.length; i++) {
                         let stock = stocks[i];
                         let code = stock.code;
-                        stock.khistory = khistory_map[code];
+                        stock.khistory = khistorys_map[code];
                     }
                 }
-                if (khistory.length > 0) {
-                    return this.db.update("khistory", ["code", "date" ], khistory);
-                }
-            }.bind(this)).then(function () {
-               // khistory update promise
-            }).finally(function () {
                 if (refresh_table) {
-                    this.table_init(adata);
+                    this.table_init(view_data);
                 }
+                return stocks;
             }.bind(this));
-
         },
+
         script_query: function () {
             this.console.text = "";
             let script = this.editor.getValue().trim();
-            axios.post("/cmd/query", {
+            return axios.post("/cmd/query", {
                 script: script
             }).then(this.stock_get_data_by_code)
         },
 
         script_test: function () {
             let script = this.editor.getValue().trim();
-            axios.post("/cmd/query", {
+            return axios.post("/cmd/query", {
                 script: script
             }).then(function (resp) {
                 let data = util.handle_response(resp);
@@ -393,6 +394,7 @@ const vue = new Vue({
                     data = JSON.stringify(data, null, 2);
                 }
                 this.console.text = data;
+                return data;
             }.bind(this))
         },
 
@@ -448,7 +450,7 @@ const vue = new Vue({
             }
         },
         portfolio_list: function () {
-            axios.post("/cmd/go", {
+            return axios.post("/cmd/go", {
                 "type": "db",
                 "cmd": "Keys",
                 "args": ["common", "", "portf_*"],
@@ -521,21 +523,19 @@ const vue = new Vue({
                 return;
             }
             let portfolio = "portf_" + this.portfolio.name;
-            axios.post("/cmd/go", {
+            return axios.post("/cmd/go", {
                 "type": "db",
                 "cmd": "Deletes",
                 "args": ["common", portfolio, codes]
             }).then(function (resp) {
                 util.handle_response(resp);
-                this.portfolio_view();
-                // util.popover("body", "删除组合 " + name + " 成功");
+                return this.portfolio_view();
             }.bind(this));
         },
         portfolio_view: function (name) {
             if (!name) {
                 name = this.portfolio.name;
             }
-
             let portfolio_name = "portf_" + name;
             return axios.post("/cmd/go", {
                 "type": "db",
@@ -557,15 +557,14 @@ const vue = new Vue({
                 return;
             }
             let key = "portf_" + name;
-            axios.post("/cmd/go", {
+            return axios.post("/cmd/go", {
                 "type": "db",
                 "cmd": "Delete",
                 "args": ["common", "", key]
             }).then(function (resp) {
                 util.handle_response(resp);
                 this.portfolio.name = "";
-                this.portfolio_list();
-                util.popover("body", "删除组合 " + name + " 成功");
+                return this.portfolio_list();
             }.bind(this));
         },
 
@@ -751,7 +750,7 @@ const vue = new Vue({
                 },
                 "snapshot" : {
                     "keyname" : "code",
-                    "fields" : [ "_u", "_u_history", "data" ]
+                    "fields" : [ "_u", "_u_khistory", "data" ]
                 },
                 "khistory" : {
                     "keyname" : "id",

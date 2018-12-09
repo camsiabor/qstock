@@ -19,7 +19,24 @@ Vue.component('vuetable-chart', {
 
     },
     methods: {
-        act : function (action, data, index) {
+        chart_request : function() {
+            let root = this.$root;
+            let kagi_count = root.setting.kagi.count || 20;
+            let to = new Date();
+            let from = util.date_add_day(to, -kagi_count);
+            let time_to = util.date_format(to, "");
+            let time_from = util.date_format(from, "");
+            let code = this.rowData.code;
+
+            return;
+            console.log("[chart] request", time_from, time_to, false);
+            root.stock_data_request([ code ], [], time_from, time_to, false, function (resp, stocks, khistory_map) {
+                let khistory = khistory_map[code];
+
+            }.bind(this));
+
+
+
         },
         chart_render : function () {
 

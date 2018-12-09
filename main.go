@@ -1,7 +1,13 @@
 package main
 
-// https://www.showapi.com/api/view/131
-// http://godoc.org/github.com/go-redis/redis
+
+/*
+// TODO daemon process
+// TODO actor, proactor
+// TODO micro service
+// TODO distribute
+// TODO elasticsearch mongodb
+ */
 
 import (
 	"encoding/json"
@@ -12,9 +18,10 @@ import (
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util/qconfig"
+	"github.com/camsiabor/qcom/util/qerr"
+	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qref"
 	"github.com/camsiabor/qcom/util/util"
-	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/sync"
@@ -91,6 +98,8 @@ func initSyncer(g * global.Global) {
 }
 
 func main() {
+
+	defer qerr.SimpleRecover(0);
 
 	var g = global.GetInstance();
 	g.Continue = true;

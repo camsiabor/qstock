@@ -57,6 +57,9 @@ const vue = new Vue({
                     page_size : 5,
                     fields : _columns_default
                 },
+                kagi : {
+                    count : 20
+                },
                 mode: "query",
                 exclude: "buy,sell",
                 script: {
@@ -143,7 +146,7 @@ const vue = new Vue({
                         khistory_sz: false,
                         khistory_sh: false
                     };
-                    // let current = new Date().getTime() / 1000;
+
                     let meta_prev = data[0];
                     if (meta_prev) {
                         try {
@@ -266,8 +269,19 @@ const vue = new Vue({
             }
         },
 
-        stock_get_data_by_code: function (resp) {
-            let codes = util.handle_response(resp);
+        stock_get_data_by_code: function (resp, refresh_table, fetch_khistory, time_from, time_to) {
+            let codes;
+            if (resp instanceof Array) {
+                codes = resp;
+            } else {
+                codes = util.handle_response(resp);
+            }
+            if (!codes || !(codes instanceof Array)) {
+                if (refresh_table) {
+                    this.table_init([]);
+                }
+                return;
+            }
             let has_sz = false;
             let has_sh = false;
             for(let i = 0; i < codes.length; i++) {
@@ -282,9 +296,13 @@ const vue = new Vue({
                     break;
                 }
             }
-            this.sync_meta_query(["def", "history"], function (need_refresh) {
+            if (typeof fetch_khistory === 'undefined') {
+                fetch_khistory = false;
+            }
+            this.sync_meta_query([ "def", "history" ], function (need_refresh) {
                 let may_i_refresh =
                     (has_sz && need_refresh.snapshot_sz) || (has_sh && need_refresh.snapshot_sh);
+
                 if (may_i_refresh) {
                     this.stock_data_request(codes);
                 } else {
@@ -305,29 +323,37 @@ const vue = new Vue({
                             }
                         }
                         if (codes_not_exist.length > 0) {
-                            this.stock_data_request(codes_not_exist, stocks_local)
+                            this.stock_data_request(codes_not_exist, stocks_local, time_from, time_to)
                         } else {
                             let resp = {data: {data: stocks_local}};
                             /* fake */
-                            this.stock_data_adapt(resp, true);
+                            this.stock_data_adapt(resp, false, true);
                         }
                     }.bind(this));
                 }
             }.bind(this));
         },
-        stock_data_request: function(codes, stocks, time_from, time_to, refresh_table, callback) {
+
+        stock_khistory_request: function(codes, stocks, time_from, time_to, callback) {
+            let sql = "SELECT code, count(1) from khistory where code = ? and date >= ? and date <= ? group by code";
+            this.db.query(sql, [])
+        },
+
+        stock_data_request: function(codes, stocks, time_from, time_to, fetch_khistory, refresh_table, callback) {
 
             if (typeof time_to === "string" && time_to.length === 0) {
                 let to = new Date();
-                time_to = util.format_date(to, "");
+                time_to = util.date_format(to, "");
             }
 
             if (typeof time_from === 'string' && time_from.length === 0) {
                 let now = new Date();
-                let from = util.add_day(now, -30);
-                time_from = util.format_date(from, "");
+                let from = util.date_add_day(now, -30);
+                time_from = util.date_format(from, "");
             }
-
+            if (typeof fetch_khistory === 'undefined') {
+                fetch_khistory = false;
+            }
             if (typeof refresh_table === 'undefined') {
                 refresh_table = true;
             }
@@ -341,57 +367,66 @@ const vue = new Vue({
                 if (stocks) {
                     resp.data.data = stocks_remote.concat(stocks);
                 }
-                this.stock_data_adapt(resp, refresh_table, callback);
+                this.stock_data_adapt(resp, fetch_khistory, refresh_table, callback);
             }.bind(this));
         },
 
-        stock_data_adapt: function (resp, refresh_table, callback) {
+        stock_data_adapt: function (resp, fetch_khistory, refresh_table, callback) {
             let stocks = util.handle_response(resp);
-            if (stocks instanceof Array) {
-                let adata = [];
-                let khistory = [];
-                let khistory_map = {};
+            if (!stocks instanceof Array) {
+                this.console.text = JSON.stringify(stocks);
+                return;
+            }
+            let adata = [];
+            let khistory = [];
+            let khistory_map = {};
+            let khistory_fetch = [];
+            for (let i = 0; i < stocks.length; i++) {
+                let stock = stocks[i];
+                let code = stock.code;
+                let stock_khistory = stock.khistory;
+                stock["turnover"] = util.get_val(stock, "turnover", "").replace("%", "");
+                stock["appointRate"] = util.get_val(stock, "appointRate", "").replace("%", "");
+                adata.push(stock);
+                if (stock_khistory && stock_khistory.length > 0) {
+                    for(let k = 0; k < stock_khistory.length; k++) {
+                        let onek = stock_khistory[k];
+                        onek.id = code + "-" + onek.date;
+                    }
+                    khistory = khistory.concat(stock_khistory);
+                    khistory_map[code] = stock_khistory;
+                    let max = util.array_most(stock_khistory, function (max, one) {
+                        return max.date * 1 > one.date * 1;
+                    });
+                    khistory_fetch.push({ code : code, date : max.date });
+                    stock.khistory = null;
+                }
+            }
+            this.db.update("snapshot", "code", [], stocks);
+
+            if (khistory.length > 0) {
                 for (let i = 0; i < stocks.length; i++) {
                     let stock = stocks[i];
                     let code = stock.code;
-                    let stock_khistory = stock.khistory;
-                    stock["turnover"] = util.get_val(stock, "turnover", "").replace("%", "");
-                    stock["appointRate"] = util.get_val(stock, "appointRate", "").replace("%", "");
-                    adata.push(stock);
-                    if (stock_khistory) {
-                        for(let k = 0; k < stock_khistory.length; k++) {
-                            let onek = stock_khistory[k];
-                            onek.id = code + "-" + onek.date;
-                        }
-                        khistory = khistory.concat(stock_khistory);
-                        khistory_map[code] = stock_khistory;
-                        stock.khistory = null;
-                    }
+                    stock.khistory = khistory_map[code];
                 }
-                this.db.update("snapshot", "code", [], stocks);
-
-                if (khistory.length > 0) {
-                    for (let i = 0; i < stocks.length; i++) {
-                        let stock = stocks[i];
-                        let code = stock.code;
-                        stock.khistory = khistory_map[code];
-                    }
-                }
-
-                if (refresh_table) {
-                    this.table_init(adata);
-                }
-
-                if (khistory.length > 0) {
-                    this.db.update("khistory", "id", ["code", "date"], khistory);
-                }
-
-            } else {
-                this.console.text = JSON.stringify(stocks);
             }
+
+            if (refresh_table) {
+                this.table_init(adata);
+            }
+
+            if (khistory.length > 0) {
+                this.db.update("khistory", "id", ["code", "date" ], khistory);
+            }
+            if (khistory_fetch.length > 0) {
+                this.db.update("khistory_fetch", "code", [ "date" ], khistory_fetch);
+            }
+
             if (callback) {
-                callback(resp);
+                callback(resp, stocks, khistory_map);
             }
+
         },
         script_query: function () {
             this.console.text = "";
@@ -627,8 +662,8 @@ const vue = new Vue({
             let children = vuetable.$children;
             for(let i = 0; i < children.length; i++) {
                 let one = children[i];
-                if (one.cid) {
-                    one.chart_render();
+                if (typeof one.chart_request === 'function') {
+                    one.chart_request();
                 }
             }
         },
@@ -769,9 +804,10 @@ const vue = new Vue({
             name: "stock",
             dbsize : 32 * 1024 * 1024
         });
-        this.db.createtable("meta", "id");
-        this.db.createtable("snapshot", "code");
-        this.db.createtable("khistory", "id", [ "code", "date", "data"]);
+        this.db.table_create("meta", "id");
+        this.db.table_create("snapshot", "code");
+        this.db.table_create("khistory", "id", [ "code", "date", "data"]);
+        this.db.table_create("khistory_fetch", "code", [ "date", "data"]);
 
         // local storage configuration
         this.config_load();

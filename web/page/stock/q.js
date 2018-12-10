@@ -285,8 +285,7 @@ vue_options.methods = {
                         if (_u_khistory) {
                             _u_khistory = _u_khistory.substring(0, 8);
                         }
-                        let _u_khistory_meta = (code.charAt(0) === '0') ? meta_khistory_last_id_sz : meta_khistory_last_id_sh;
-                        if (_u_khistory === _u_khistory_meta) {
+                        if (_u_khistory === meta_khistory_last_id_sz || _u_khistory === meta_khistory_last_id_sh) {
                             stay = true;
                         }
                     } else {

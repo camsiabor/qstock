@@ -201,12 +201,11 @@ vue_options.methods = {
     stock_sync : function() {
         let profiles = arguments;
         for(let i = 0; i < profiles.length; i++) {
-            if (confirm("going to sync? " + profiles[i])) {
-                for(let i = 0; i < profiles.length; i++) {
-                    axios.post("/stock/sync", {
-                        profile: profiles[i]
-                    }).then(util.handle_response)
-                }
+            let profile = profiles[i];
+            if (confirm("going to sync? " + profile)) {
+                axios.post("/stock/sync", {
+                    profile: profile
+                }).then(util.handle_response)
             }
         }
     },

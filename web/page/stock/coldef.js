@@ -161,7 +161,7 @@ const _columns_default = [
         "callback" : function (value, row) {
             row.pb = row.pb || 0;
             row.turnover = row.turnover || 0;
-            return (row.pb + "").substr(0, 4) + "<br/><span class='s-tiny s-grey'>" + (row.turnover).substring(0, 4) + "%</span>";
+            return (row.pb + "").substr(0, 4) + "<br/><span class='s-tiny s-grey'>" + (row.turnover + "").substring(0, 4) + "%</span>";
         }
     },
     {

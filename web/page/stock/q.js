@@ -28,7 +28,9 @@ vue_options.data = {
             fields : _columns_default
         },
         kagi : {
-            count : 16
+            count : 20,
+            height : -7,
+            scale_y : 5
         },
         mode: "query",
         exclude: "buy,sell",
@@ -298,17 +300,15 @@ vue_options.methods = {
             }
 
             if (fetch_khistory && khistorys && khistorys.length && stocks_stay.length) {
-                let stocks_stay_map = {};
-                for(let i = 0; i < stocks_stay.length; i++) {
-                    let one = stocks_stay[i];
-                    stocks_stay_map[one.code] = one;
-                }
+                let stocks_stay_map = QUtil.array_to_map(stocks_stay, "code");
                 for(let i = 0; i < khistorys.length; i++) {
                     let one = khistorys[i];
                     let code = one.code;
                     let stock = stocks_stay_map[code];
-                    stock.khistory = stock.khistory || [];
-                    stock.khistory.push(one);
+                    if (stock) {
+                        stock.khistory = stock.khistory || [];
+                        stock.khistory.push(one);
+                    }
                 }
             }
 
@@ -365,11 +365,7 @@ vue_options.methods = {
         let update_data = [];
         let khistorys = [];
         let khistorys_map = {};
-        let stocks_local_map = {};
-        for (let i = 0; i < stocks_local.length; i++) {
-            let stock_local = stocks_local[i];
-            stocks_local_map[stock_local.code] = stock_local;
-        }
+        let stocks_local_map = QUtil.array_to_map(stocks_local, "code");
         let meta = wrap.meta;
         let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "-");
         let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "-");
@@ -481,12 +477,13 @@ vue_options.methods = {
         }
         return false;
     },
-    column_setting_show: function () {
-        $('#div_column_setting').modal('toggle')
+    setting_show: function () {
+        $('#div_setting').modal('toggle');
     },
-    column_setting_do: function () {
-        this.table_init();
-        $('#div_column_setting').modal('hide')
+    setting_save: function () {
+        $('#div_setting').modal('hide');
+        // this.table_init(this.table.data);
+        this.table_paging();
     },
     /* [portfolio] ------------------------------------------------------------------- */
     table_get_selection: function (retrow) {
@@ -715,6 +712,7 @@ vue_options.methods = {
     },
 
     table_paging(data) {
+        data = data || this.table.pagination;
         this.$refs.pagination.setPaginationData(data);
         let stocks = this.table.data.slice(data.from - 1, data.to);
         let codes = QUtil.array_field(stocks, "code");
@@ -765,6 +763,8 @@ vue_options.methods = {
             data.length,
             page_size
         );
+
+        this.table.pagination = pagination;
 
         let from = pagination.from - 1;
         let to = from + page_size;

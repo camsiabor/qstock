@@ -138,6 +138,9 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 		var fails = make([]string, len(codes));
 		var failcount = 0;
 		for _, code := range codes {
+			if (len(code) == 0) {
+				continue;
+			}
 			rargs["ts_code"] = code + keysuffix;
 			rargs["start_date"] = from_date_str;
 			rargs["end_date"] = to_date_str;

@@ -27,10 +27,6 @@ Vue.component('vuetable-chart', {
                 console.log(this.cid, "no row data", this.rowData);
                 return;
             }
-
-            let kagi = stocks_map["kagi"] || {};
-            let kagi_count = kagi.count || 16;
-
             let code = this.rowData.code;
             let stock = stocks_map[code];
             if (!stock) {
@@ -38,6 +34,29 @@ Vue.component('vuetable-chart', {
                 return;
             }
             let data = stock.khistory;
+            if (!data) {
+                console.log(this.cid, "khistory null", stock);
+                return;
+            }
+            let nowdate = QUtil.date_format(new Date(), "");
+            let last = data[data.length - 1];
+            if (nowdate !== last.date) {
+                stock.date = nowdate;
+                data.push(stock);
+            }
+
+            let kagi = stocks_map["kagi"] || {};
+            let kagi_count = kagi.count || 16;
+            let kagi_height = kagi.height;
+            let kagi_scale_y = kagi.scale_y || 2;
+            if (!kagi.height) {
+                kagi_height = (window.innerHeight / 3);
+            }
+            if (kagi.height < 0) {
+                kagi_height = (window.innerHeight / (-kagi_height));
+            }
+            kagi_height = Math.floor(kagi_height);
+
 
             for(let i = 0; i < data.length; i++) {
                 let one = data[i];
@@ -84,7 +103,7 @@ Vue.component('vuetable-chart', {
             this.chart = new G2.Chart({
                 container: this.cid,
                 forceFit: true,
-                height: window.innerHeight / 3,
+                height: kagi_height,
                 animate: false
                 // padding: [10, 40, 40, 40]
             });
@@ -123,9 +142,11 @@ Vue.component('vuetable-chart', {
                 tickCount: 1
             });
 
-            this.chart.legend({
-                title : null
-            });
+            this.chart.legend('trend', false); // 不显示 cut 字段对应的图例
+            this.chart.legend('trend', {
+                // offset : 30,
+                position : 'right-center'
+            }); // 不显示 cut 字段对应的图例
             this.chart.tooltip({
                 showTitle: false,
                 itemTpl: '<li data-index={index}>' + '<span style="background-color:{color};" class="g2-tooltip-marker"></span>' + '{name}{value}</li>'
@@ -133,8 +154,8 @@ Vue.component('vuetable-chart', {
 
             let kView = this.chart.view({
                 end: {
-                    x: 1,
-                    y: 1
+                    x: 0.9,
+                    y: kagi_scale_y
                 }
             });
             kView.source(dv);
@@ -152,6 +173,7 @@ Vue.component('vuetable-chart', {
                     value: '<br><span style="padding-left: 16px">开盘价：' + open + '</span><br/>' + '<span style="padding-left: 16px">收盘价：' + close + '</span><br/>' + '<span style="padding-left: 16px">最高价：' + high + '</span><br/>' + '<span style="padding-left: 16px">最低价：' + low + '</span>'
                 };
             });
+
 
             this.chart.render();
 

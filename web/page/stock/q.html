@@ -106,7 +106,7 @@
                 <input type="search" id="input_script_name" class="form-control"  placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
                 <input type="button" value="测试" id="button_script_test" class="btn btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;"/>
                 <input type="button" value="保存" id="button_script_save" class="btn btn-outline-info"  v-on:click="script_save()" />
-                <input type="button" value="列设" class="btn btn-outline-secondary"  v-on:click="column_setting_show()"/>
+                <input type="button" value="列设" class="btn btn-outline-secondary"  v-on:click="setting_show()"/>
                 <input type="button" value="刪除" class="btn btn-outline-secondary" v-on:click="script_delete()"/>
             </div>
         </div>
@@ -154,7 +154,15 @@
 
 
     <div id="div_table_pagination" style="margin-top: 5px;" v-bind:class="{'row' :true, gone: table.data.length <= setting.table.page_size }">
-        <div class="col-md-3">
+        <div class="col-sm-3 align-self-start">
+            <div class="input-group sm-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" style="background-color: white">total</span>
+                </div>
+                <input class="form-control sm-2" type="search" v-model="table.data.length" disable style="background-color: white" >
+            </div>
+        </div>
+        <div class="col-sm-4 align-self-end" style="margin-left: 3px">
             <vuetable-pagination
                     ref="pagination"
                     :css="css.pagination"
@@ -162,11 +170,13 @@
             >
             </vuetable-pagination>
         </div>
-        <div class="col-md-1">
-            <input class="form-control mr-sm-2" type="search" v-model="table.data.length" disabled >
-        </div>
-        <div class="col-md-1">
-            <input class="form-control mr-sm-2" type="search" v-model="setting.table.page_size">
+        <div class="col-sm-2 align-self-end" style="margin-left: 10px">
+            <div class="input-group sm-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1" style="background-color: white">p</span>
+                </div>
+                <input class="form-control sm-1" type="search" v-model="setting.table.page_size">
+            </div>
         </div>
     </div>
 
@@ -194,7 +204,7 @@
 
     <!-- -->
 
-    <div class="modal fade" id="div_column_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+    <div class="modal fade" id="div_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
         <div class="modal-dialog" style="min-width: 600px">
             <div class="modal-content">
                 <div class="modal-header">
@@ -203,19 +213,40 @@
                 </div>
 
                 <div class="modal-body">
-                    <button type="button" class="btn btn-primary" v-on:click="column_setting_do()">ok</button>
+                    <button type="button" class="btn btn-primary" v-on:click="setting_save()">ok</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
                     <div style="margin: 5px">
-                        <input style="width: 75%"
-                               class="form-control mr-sm-2"
-                               type="search" placeholder="kagi count"
-                               aria-label="kagi count" v-model="setting.kagi.count">
+                        <div class="input-group sm-3" style="width: 75%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">kagi-count</span>
+                        </div>
+                        <input
+                                class="form-control mr-sm-2"
+                                type="search" placeholder="kagi count"
+                                aria-label="kagi count" v-model="setting.kagi.count">
+                    </div>
                     </div>
                     <div style="margin: 5px">
-                        <input style="width: 75%"
-                                class="form-control mr-sm-2"
-                                type="search" placeholder="exclude"
-                                aria-label="exclude" v-model="setting.exclude">
+                        <div class="input-group sm-3" style="width: 75%">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">kagi-height</span>
+                            </div>
+                            <input style="width: 75%"
+                                   class="form-control mr-sm-2"
+                                   type="search" placeholder="kagi height"
+                                   aria-label="kagi height" v-model="setting.kagi.height">
+                        </div>
+                    </div>
+                    <div style="margin: 5px">
+                        <div class="input-group sm-3" style="width: 75%">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">kagi-scale-y</span>
+                            </div>
+                            <input style="width: 75%"
+                                   class="form-control mr-sm-2"
+                                   type="search" placeholder="kagi scale y"
+                                   aria-label="kagi scale y" v-model="setting.kagi.scale_y">
+                        </div>
                     </div>
                     <div>
                         <table width="90%">

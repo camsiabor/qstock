@@ -66,7 +66,7 @@ const _columns_default = [
     {
         "name" : "name",
         "title" : "名字",
-        "width" : "15%",
+        "width" : "10%",
         "visible" : true,
         "callback": function (value, row, col, vuetable) {
             let _u = row._u;
@@ -81,16 +81,19 @@ const _columns_default = [
     {
         "name" : "now",
         "title" : "当前",
-        "width" : "18%",
+        "width" : "10%",
+        "sortField" : "change_rate",
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
-            let now_color = QUtil.stock_color(row.now * 1 - row.open * 1);
+            row.change_rate = row.change_rate * 1;
+            let now_color = QUtil.stock_color(row.change_rate);
             let open_color = QUtil.stock_color(row.open * 1 - row.pre_close * 1);
             let low_color = QUtil.stock_color(row.low * 1 - row.pre_close * 1);
             let high_color = QUtil.stock_color(row.high * 1 - row.pre_close * 1);
             let html = [];
+            html.push("<span class='s-bold' style='color:" + now_color + ";border:1px dotted " + now_color + ";border-radius: 3px; padding: 2px;'>" + row.change_rate + "%</span>");
             html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
-            html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.pre_close + " -> " + row.open + "</div>");
+            html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.pre_close + " > " + row.open + "</div>");
             html.push("<div class='s-bold s-tiny'>");
             html.push("<span style='color:" + low_color + "'>" + row.low + "</span>");
             html.push(" - ")
@@ -129,8 +132,8 @@ const _columns_default = [
         "name" : "change_rate",
         "title" : "涨跌",
         "sortField" : "change_rate",
-        "width" : "12%",
-        "visible" : true,
+        "width" : "10%",
+        "visible" : false,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
             let color = QUtil.stock_color(row.change_rate);
@@ -153,10 +156,12 @@ const _columns_default = [
         "name" : "pb", /* 巿淨 */
         "title" : "PB",
         "sortField" : "pb",
-        "width" : "12%",
+        "width" : "6%",
         "visible" : true,
-        "callback" : function (value) {
-            return (value + "").substr(0, 4);
+        "callback" : function (value, row) {
+            row.pb = row.pb || 0;
+            row.turnover = row.turnover || 0;
+            return (row.pb + "").substr(0, 4) + "<br/><span class='s-tiny s-grey'>" + (row.turnover).substring(0, 4) + "%</span>";
         }
     },
     {
@@ -169,7 +174,7 @@ const _columns_default = [
         "name" : "turnover",
         "title" : "换手",
         "sortField" : "turnover",
-        "visible" : true,
+        "visible" : false,
         "callback" : function (value) {
             return (value + "").substr(0, 4);
         }
@@ -221,101 +226,11 @@ const _columns_default = [
         "sortable" : true,
         "visible" : false
     },
-    /*
-    {
-        "name" : "buy1_n",
-        "title" : "#B1",
-        "visible" : false
-    },
-    {
-        "name" : "buy1_m",
-        "title" : "B1",
-        "visible" : false
-    },
-    {
-        "name" : "buy2_n",
-        "title" : "#B2",
-        "visible" : false
-    },
-    {
-        "name" : "buy2_m",
-        "title" : "B2",
-        "visible" : false
-    },
-    {
-        "name" : "buy3_n",
-        "title" : "#B3",
-        "visible" : false
-    },
-    {
-        "name" : "buy3_m",
-        "title" : "B3",
-        "visible" : false
-    },
-    {
-        "name" : "buy4_n",
-        "title" : "#B4"
-        ,"visible" : false
-    },
-    {
-        "name" : "buy4_m",
-        "title" : "B4",
-        "visible" : false
-    },
-    {
-        "name" : "buy5_n",
-        "title" : "#B5"
-    },
-    {
-        "name" : "buy5_m",
-        "title" : "B5"
-    },
-    {
-        "name" : "sell1_n",
-        "title" : "#S1"
-    },
-    {
-        "name" : "sell1_m",
-        "title" : "S1"
-    },
-    {
-        "name" : "sell2_n",
-        "title" : "#S2"
-    },
-    {
-        "name" : "sell2_m",
-        "title" : "S2"
-    },
-    {
-        "name" : "sell3_n",
-        "title" : "#S3"
-    },
-    {
-        "name" : "sell3_m",
-        "title" : "S3"
-    },
-    {
-        "name" : "sell4_n",
-        "title" : "#S4"
-    },
-    {
-        "name" : "sell4_m",
-        "title" : "S4"
-    },
-    {
-        "name" : "sell5_n",
-        "title" : "#S5"
-    },
-    {
-        "name" : "sell5_m",
-        "title" : "S5"
-    },
-    */
     {
         "name" : '__component:vuetable-actions',
         "title" : '',
         "visible" : true,
-        "width" : "10%"
+        "width" : "8%"
     },
     {
         "name" : '__component:vuetable-chart',

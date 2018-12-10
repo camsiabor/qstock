@@ -312,6 +312,14 @@
 <script type="text/javascript" src="q.js"></script>
 
 <script type="text/javascript">
+
+    ;(function () {
+        let src = '/js/eruda/eruda.js';
+        if (!/eruda/.test(window.location) && localStorage.getItem('active-eruda') != 'true') return;
+        document.write('<scr' + 'ipt src="' + src + '"></scr' + 'ipt>');
+        document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
+    })();
+
 </script>
 </body>
 </html>

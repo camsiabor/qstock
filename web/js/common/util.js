@@ -1,6 +1,13 @@
 
 QUtil.DAY_MILLI = 24 * 3600 * 1000;
 
+
+
+QUtil.COLOR_UP = '#f04864';
+QUtil.COLOR_EVEN = "#888888";
+QUtil.COLOR_DOWN =  '#2fc25b';
+
+
 function QUtil(opt) {
     opt = opt || {};
     for(let k in opt) {
@@ -284,11 +291,11 @@ QUtil.values = function (m, filter) {
 QUtil.stock_color = function (n) {
     n = n * 1;
     if (isNaN(n) || n === 0) {
-        return "grey";
+        return QUtil.COLOR_EVEN;
     } else if (n > 0) {
-        return "red";
+        return QUtil.COLOR_UP;
     } else {
-        return "green";
+        return QUtil.COLOR_DOWN;
     }
 };
 

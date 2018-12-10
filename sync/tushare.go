@@ -103,11 +103,21 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 	var metatoken = o.GetMetaToken(profilename);
 	//var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var market= util.GetStr(profile, "", "marker");
-	var fetcheach = util.GetInt(profile, 30, "each");
-	var from_date_str, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
-	if (len(from_date_str) <= 0) {
-		from_date_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102");
+	var fetcheach = util.GetInt(profile, 60, "each");
+
+	var from_date_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102");
+	var fetch_last_date_from, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", false));
+	if (len(fetch_last_date_from) > 0) {
+		var from_date_str_num = util.AsInt64(from_date_str, 0);
+		var fetch_last_date_from_num = util.AsInt64(fetch_last_date_from, 0);
+		if (from_date_str_num > fetch_last_date_from_num) {
+			var fetch_last_date, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
+			if (len(fetch_last_date) > 0) {
+				from_date_str = fetch_last_date;
+			}
+		}
 	}
+
 	var to_date = time.Now();
 	var from_date, _ = time.Parse("20060102", from_date_str);
 	var interval = qtime.TimeInterval(&to_date, &from_date, time.Hour * 24);
@@ -158,6 +168,7 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 			qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount, "retry", retry);
 		} else {
 			dao.Update(db, metatoken, "fetch_last_date", to_date_str, true, 0);
+			dao.Update(db, metatoken, "fetch_last_date_from", from_date_str, true, 0);
 			break;
 		}
 	}

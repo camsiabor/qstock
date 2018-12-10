@@ -1,6 +1,7 @@
 
 /* ===================== vue component vueable-chart ============================ */
 
+
 Vue.component('vuetable-chart', {
     template : "<div v-bind:id='cid' style='width: 99%; height: 99%;'></div>",
     props: {
@@ -17,11 +18,10 @@ Vue.component('vuetable-chart', {
             return 'vt-chart-' + this.rowIndex;
         }
     },
-    watch : {
-
-    },
     methods: {
         chart_render : function (stocks_map) {
+
+            this.chart && this.chart.destroy();
 
             if (!this.rowData || !this.rowData.code) {
                 console.log(this.cid, "no row data", this.rowData);
@@ -34,8 +34,8 @@ Vue.component('vuetable-chart', {
                 return;
             }
             let data = stock.khistory;
-            if (!data) {
-                console.log(this.cid, "khistory null", stock);
+            if (!data || !data.length) {
+                console.log(this.cid, "khistory null", stock, data);
                 return;
             }
 
@@ -49,6 +49,7 @@ Vue.component('vuetable-chart', {
             }
             if (no_today) {
                 stock.date = nowdate;
+                stock.close = stock.now;
                 data.push(stock);
             }
 
@@ -78,8 +79,7 @@ Vue.component('vuetable-chart', {
             let time_start = QUtil.date_add_day(time_end, -kagi_count);
             let time_end_str = QUtil.date_format(time_end, "");
             let time_start_str = QUtil.date_format(time_start, "");
-
-            this.chart && this.chart.destroy();
+;
             let ds = new DataSet({
                 state: {
                     end: time_end_str * 1,
@@ -88,23 +88,28 @@ Vue.component('vuetable-chart', {
             });
 
             let dv = ds.createView();
-            dv.source(data).transform({
-                type: 'filter',
-                callback: function callback(obj) {
-                    let date = obj.date * 1;
-                    if (isNaN(date)) {
-                        return false;
+            try {
+                dv.source(data).transform({
+                    type: 'filter',
+                    callback: function callback(obj) {
+                        let date = obj.date * 1;
+                        if (isNaN(date)) {
+                            return false;
+                        }
+                        return date >= ds.state.start && date <= ds.state.end;
                     }
-                    return date >= ds.state.start && date <= ds.state.end;
-                }
-            }).transform({
-                type: 'map',
-                callback: function callback(obj) {
-                    obj.trend = obj.open <= obj.close ? '上涨' : '下跌';
-                    obj.range = [obj.open, obj.close, obj.high, obj.low];
-                    return obj;
-                }
-            });
+                }).transform({
+                    type: 'map',
+                    callback: function callback(obj) {
+                        obj.trend = obj.open <= obj.close ? '上涨' : '下跌';
+                        obj.range = [obj.open, obj.close, obj.high, obj.low];
+                        return obj;
+                    }
+                });
+            } catch (e) {
+                console.error("[kagi]", e, code, stock, data);
+                return;
+            }
 
 
             this.chart = new G2.Chart({
@@ -145,6 +150,14 @@ Vue.component('vuetable-chart', {
                 }
             });
 
+            this.chart.axis('date2', {
+                label: {
+                    formatter: val => {
+                        return val.substring(5);
+                    }
+                }
+            });
+
             this.chart.scale('x', {
                 tickCount: 1
             });
@@ -169,15 +182,32 @@ Vue.component('vuetable-chart', {
 
             kView.schema().position('date2*range').color('trend', function(val) {
                 if (val === '上涨') {
-                    return '#f04864';
+                    return QUtil.COLOR_UP;
                 }
                 if (val === '下跌') {
-                    return '#2fc25b';
+                    return QUtil.COLOR_DOWN;
                 }
-            }).shape('candle').tooltip('date2*open*close*high*low', function(date2, open, close, high, low) {
+            }).shape('candle').tooltip('date2*open*close*high*low*change_rate', function(date2, open, close, high, low, change_rate) {
+                let html = [];
+                let color = QUtil.stock_color(change_rate);
+                html.push('<br><span style="padding-left: 1px">open ');
+                html.push(open);
+                html.push('</span><br/>');
+                html.push('<span style="padding-left: 1px">close ');
+                html.push(close);
+                html.push('</span><br/>');
+                html.push('<span style="padding-left: 1px">high ');
+                html.push(high);
+                html.push('</span><br/>');
+                html.push('<span style="padding-left: 1px">low ');
+                html.push(low);
+                html.push('</span><br/>');
+                html.push('<span style="padding-left: 1px;color:' + color + '">rate ');
+                html.push((change_rate+"").substring(0, 4) + "%");
+                html.push('</span>');
                 return {
-                    name: date2,
-                    value: '<br><span style="padding-left: 16px">开盘价：' + open + '</span><br/>' + '<span style="padding-left: 16px">收盘价：' + close + '</span><br/>' + '<span style="padding-left: 16px">最高价：' + high + '</span><br/>' + '<span style="padding-left: 16px">最低价：' + low + '</span>'
+                    name: date2.substring(5),
+                    value: html.join("")
                 };
             });
 
@@ -185,12 +215,6 @@ Vue.component('vuetable-chart', {
             this.chart.render();
 
         }
-    },
-    mounted : function () {
-        // this.chart_render();
-        // setTimeout(function () {
-        //     this.chart_render();
-        // }.bind(this), 100);
     }
 });
 

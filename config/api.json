@@ -4,7 +4,7 @@
   "shenjian" : {
     "active" : true,
     "domain": "http://api.shenjian.io",
-    "select_interval" : 30,
+    "select_interval" : 40,
     "concurrent" : 1,
     "nice" : 0,
     "profiles" : {
@@ -32,7 +32,7 @@
     "profiles" : {
       "k.history.sz" : {
         "api" : "daily",
-        "interval": 10800,
+        "interval": 7200,
         "dao" : "main",
         "db" : "history",
         "marker" : "sz",

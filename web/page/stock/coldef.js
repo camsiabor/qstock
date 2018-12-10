@@ -71,7 +71,7 @@ const _columns_default = [
         "callback": function (value, row, col, vuetable) {
             let _u = row._u;
             if (_u) {
-                _u = (_u + "").substring(8);
+                _u = (_u + "").substring(6);
             } else {
                 _u = "";
             }
@@ -84,10 +84,10 @@ const _columns_default = [
         "width" : "18%",
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
-            let now_color = util.stock_color(row.now * 1 - row.open * 1);
-            let open_color = util.stock_color(row.open * 1 - row.close * 1);
-            let low_color = util.stock_color(row.low * 1 - row.close * 1);
-            let high_color = util.stock_color(row.high * 1 - row.close * 1);
+            let now_color = QUtil.stock_color(row.now * 1 - row.open * 1);
+            let open_color = QUtil.stock_color(row.open * 1 - row.close * 1);
+            let low_color = QUtil.stock_color(row.low * 1 - row.close * 1);
+            let high_color = QUtil.stock_color(row.high * 1 - row.close * 1);
             let html = [];
             html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
             html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.close + " -> " + row.open + "</div>");
@@ -121,7 +121,7 @@ const _columns_default = [
         "visible" : false,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
-            let color = util.stock_color(row.change_rate);
+            let color = QUtil.stock_color(row.change_rate);
             return "<span style='color:'" + color + "'>" + row.change_rate + "</span>";
         }
     },
@@ -133,7 +133,7 @@ const _columns_default = [
         "visible" : true,
         "callback" : function(value, row, col, vuetable) {
             row.change_rate = row.change_rate * 1;
-            let color = util.stock_color(row.change_rate);
+            let color = QUtil.stock_color(row.change_rate);
             return "<span class='s-bold' style='color:" + color + "'>" + row.change_rate + "</span>";
         }
     },
@@ -325,7 +325,7 @@ const _columns_default = [
     }
 ];
 
-var _columns_default_map = { };
+const _columns_default_map = { };
 for(let i = 0; i < _columns_default.length; i++) {
     let one = _columns_default[i];
     let key = one.field;

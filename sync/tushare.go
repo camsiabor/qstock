@@ -154,6 +154,7 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 			codes = fails;
 			qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount, "retry", retry);
 		} else {
+			dao.Update(db, metatoken, "fetch_last_date", to_date_str, true, 0);
 			break;
 		}
 	}

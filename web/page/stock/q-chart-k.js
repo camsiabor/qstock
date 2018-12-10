@@ -21,46 +21,23 @@ Vue.component('vuetable-chart', {
 
     },
     methods: {
-        chart_request : function() {
-            let root = this.$root;
-            let kagi_count = root.setting.kagi.count || 20;
-            let to = new Date();
-            let from = util.date_add_day(to, -kagi_count);
-            let time_to = util.date_format(to, "");
-            let time_from = util.date_format(from, "");
-            let code = this.rowData.code;
+        chart_render : function (stocks_map) {
 
-            /*
-            if (typeof time_to === "string" && time_to.length === 0) {
-                let to = new Date();
-                time_to = util.date_format(to, "");
-            }
-
-            if (typeof time_from === 'string' && time_from.length === 0) {
-                let now = new Date();
-                let from = util.date_add_day(now, -30);
-                time_from = util.date_format(from, "");
-            }
-             */
-
-            return;
-            console.log("[chart] request", time_from, time_to, false);
-            root.stock_data_request([ code ], [], time_from, time_to, false, function (resp, stocks, khistory_map) {
-                let khistory = khistory_map[code];
-
-            }.bind(this));
-
-
-
-        },
-        chart_render : function () {
-
-            if (!this.rowData || !this.rowData.khistory) {
-                console.log(this.cid, "no khistory", this.rowData.khistory);
+            if (!this.rowData || !this.rowData.code) {
+                console.log(this.cid, "no row data", this.rowData);
                 return;
             }
 
-            let data = this.rowData.khistory;
+            let kagi = stocks_map["kagi"] || {};
+            let kagi_count = kagi.count || 16;
+
+            let code = this.rowData.code;
+            let stock = stocks_map[code];
+            if (!stock) {
+                console.log(this.cid, "no stock data", code, stocks_map);
+                return;
+            }
+            let data = stock.khistory;
 
             for(let i = 0; i < data.length; i++) {
                 let one = data[i];
@@ -71,11 +48,16 @@ Vue.component('vuetable-chart', {
 
             // console.log(this.cid, data, this.chart);
 
+            let time_end = new Date();
+            let time_start = QUtil.date_add_day(time_end, -kagi_count);
+            let time_end_str = QUtil.date_format(time_end, "");
+            let time_start_str = QUtil.date_format(time_start, "");
+
             this.chart && this.chart.destroy();
             let ds = new DataSet({
                 state: {
-                    start: 20181128,
-                    end: 20181208
+                    end: time_end_str * 1,
+                    start: time_start_str * 1
                 }
             });
 

@@ -94,7 +94,7 @@ let vue = new Vue({
 
         /* [init] ------------------------------------------------------------------- */
 
-        init_editor : function() {
+        editor_init : function() {
             this.editor =  ace.edit("editor", {
                 mode: "ace/mode/lua",
                 selectionStyle: "text",
@@ -113,7 +113,7 @@ let vue = new Vue({
     /* [mount] ------------------------------------------------------------------- */
     mounted : function() {
         this.config_load();
-        this.init_editor();
+        this.editor_init();
         this.cmd_select(this.cmd.type);
     }
 });

@@ -6,6 +6,9 @@ function QUtil(opt) {
     for(let k in opt) {
         this[k] = opt[k];
     }
+    for(let k in QUtil) {
+        this[k] = QUtil[k];
+    }
     this.context = this.context || window;
 }
 
@@ -106,7 +109,7 @@ QUtil.prototype.popover = function(selector, msg, position, dismisstime, options
     }, dismisstime);
 };
 
-QUtil.prototype.redis_hash_to_map = function(arr) {
+QUtil.redis_hash_to_map = function(arr) {
     let m = {};
     for(let i = 0; i < arr.length; i = i + 2) {
         let key = arr[i];
@@ -115,7 +118,7 @@ QUtil.prototype.redis_hash_to_map = function(arr) {
     return m;
 };
 
-QUtil.prototype.list_merge = function(arr1, arr2) {
+QUtil.list_merge = function(arr1, arr2) {
 
     if (!arr1) {
         arr1 = [];
@@ -140,7 +143,7 @@ QUtil.prototype.list_merge = function(arr1, arr2) {
     return finret;
 };
 
-QUtil.prototype.get_val = function (o, key, defval) {
+QUtil.get_val = function (o, key, defval) {
     if (!o) {
         return defval;
     }
@@ -151,7 +154,7 @@ QUtil.prototype.get_val = function (o, key, defval) {
     return r;
 };
 
-QUtil.prototype.date_add_day = function(d, delta, truncate) {
+QUtil.date_add_day = function(d, delta, truncate) {
     let to = d.getTime() + (delta * 24 * 3600 * 1000);
     let r = new Date();
     r.setTime(to);
@@ -163,7 +166,7 @@ QUtil.prototype.date_add_day = function(d, delta, truncate) {
 
 
 
-QUtil.prototype.date_list_interval = function(from, to, datesplitter, excludes) {
+QUtil.date_list_interval = function(from, to, datesplitter, excludes) {
 
     let ret = [];
     let middle = new Date();
@@ -195,7 +198,7 @@ QUtil.prototype.date_list_interval = function(from, to, datesplitter, excludes) 
     return ret;
 };
 
-QUtil.prototype.date_format = function (date, datesplitter) {
+QUtil.date_format = function (date, datesplitter) {
 
     if (typeof datesplitter === 'undefined') {
         datesplitter = "-";
@@ -221,7 +224,7 @@ QUtil.prototype.date_format = function (date, datesplitter) {
 };
 
 
-QUtil.prototype.time_format = function (date, datesplitter, timesplitter) {
+QUtil.time_format = function (date, datesplitter, timesplitter) {
     if (typeof timesplitter === 'undefined') {
         timesplitter = ":";
     }
@@ -248,7 +251,7 @@ QUtil.prototype.time_format = function (date, datesplitter, timesplitter) {
     return datestr + " " + tmp.join("");
 };
 
-QUtil.prototype.keys = function (m, filter) {
+QUtil.keys = function (m, filter) {
     let keys = [];
     for (let k in m) {
         if (filter) {
@@ -263,7 +266,7 @@ QUtil.prototype.keys = function (m, filter) {
     return keys;
 };
 
-QUtil.prototype.values = function (m, filter) {
+QUtil.values = function (m, filter) {
     let vals = [];
     for (let k in m) {
         let val = m[k];
@@ -278,7 +281,7 @@ QUtil.prototype.values = function (m, filter) {
     return vals;
 };
 
-QUtil.prototype.stock_color = function (n) {
+QUtil.stock_color = function (n) {
     n = n * 1;
     if (isNaN(n) || n === 0) {
         return "grey";
@@ -289,7 +292,21 @@ QUtil.prototype.stock_color = function (n) {
     }
 };
 
-QUtil.prototype.array_most = function (arr, callback) {
+QUtil.array_field = function(arr, fieldname, discard_null) {
+    let ret = [];
+    let len = arr.length;
+    for(let i = 0; i < len; i++) {
+        let one = arr[i];
+        let val = one[fieldname];
+        if (discard_null && !val) {
+            continue;
+        }
+        ret.push(val);
+    }
+    return ret;
+}
+
+QUtil.array_most = function (arr, callback) {
     let max = arr[0];
     for(let i = 1; i < arr.length; i++) {
         let one = arr[i];
@@ -298,4 +315,19 @@ QUtil.prototype.array_most = function (arr, callback) {
         }
     }
     return max;
+};
+
+QUtil.array_to_map = function (arr, keyname) {
+    let m = {};
+    let len = arr.length;
+    for(let i = 0; i < len; i++) {
+        let one = arr[i];
+        if (one) {
+            let key = one[keyname];
+            if (key) {
+              m[key] = one;
+            }
+        }
+    }
+    return m;
 };

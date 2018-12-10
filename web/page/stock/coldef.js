@@ -105,7 +105,7 @@ const _columns_default = [
         "visible" : false
     },
     {
-        "name" : "close",
+        "name" : "pre_close",
         "title" : "收盘",
         "visible" : false
     },

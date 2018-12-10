@@ -429,7 +429,7 @@ vue_options.methods = {
             return stocks;
         }.bind(this)).then(function () {
             return stocks;
-        }).finally(function () {
+        }).then(function () {
             if (khistorys.length > 0) {
                 for (let i = 0; i < stocks.length; i++) {
                     let stock = stocks[i];

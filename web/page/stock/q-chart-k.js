@@ -39,6 +39,7 @@ Vue.component('vuetable-chart', {
                 return;
             }
 
+            /*
             let no_today = true;
             let nowdate = QUtil.date_format(new Date(), "");
             for(let i = 0; i < data.length; i++) {
@@ -52,6 +53,7 @@ Vue.component('vuetable-chart', {
                 stock.close = stock.now;
                 data.push(stock);
             }
+            */
 
             let kagi = stocks_map["kagi"] || {};
             let kagi_count = kagi.count || 16;

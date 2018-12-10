@@ -21,7 +21,12 @@ Vue.component('vuetable-chart', {
     methods: {
         chart_render : function (stocks_map) {
 
-            this.chart && this.chart.destroy();
+            if (this.chart) {
+                try {
+                    this.chart.destroy();
+                } catch (e) {}
+                this.chart = null;
+            }
 
             if (!this.rowData || !this.rowData.code) {
                 console.log(this.cid, "no row data", this.rowData);

@@ -679,7 +679,11 @@ vue_options.methods = {
                 stocks_map.kagi = kagi_setting;
                 for(let i = 0; i < chart_children.length; i++) {
                     let one = chart_children[i];
-                    one.chart_render(stocks_map);
+                    try {
+                        one.chart_render(stocks_map);
+                    } catch (ex) {
+                        console.error(ex);
+                    }
                 }
             });
         }

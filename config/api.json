@@ -4,7 +4,7 @@
   "shenjian" : {
     "active" : true,
     "domain": "http://api.shenjian.io",
-    "select_interval" : 40,
+    "select_interval" : 30,
     "concurrent" : 1,
     "nice" : 0,
     "profiles" : {
@@ -32,6 +32,7 @@
     "profiles" : {
       "k.history.sz" : {
         "api" : "daily",
+        "each": 60,
         "interval": 7200,
         "dao" : "main",
         "db" : "history",
@@ -43,11 +44,23 @@
       },
       "k.history.sh" : {
         "api" : "daily",
-        "each": 30,
+        "each": 60,
         "interval": 3600,
         "dao" : "main",
         "db" : "history",
         "marker" : "sh",
+        "groupkey" : "code",
+        "key" : "date",
+        "mapper" : "tushare.khistory",
+        "handler" : "TuShare_khistory"
+      },
+      "k.history.ms" : {
+        "api" : "daily",
+        "each": 60,
+        "interval": 3600,
+        "dao" : "main",
+        "db" : "history",
+        "marker" : "ms",
         "groupkey" : "code",
         "key" : "date",
         "mapper" : "tushare.khistory",

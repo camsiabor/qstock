@@ -263,6 +263,7 @@ vue_options.methods = {
             let meta_snapshot_last_id = QUtil.get(meta, [ "meta.a.snapshot.sz", "last_id"] , 0) * 1;
             let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);
             let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "x").substring(0, 8);
+            let meta_khistory_last_id_ms = QUtil.get(meta, [ "meta.k.history.ms", "last_id"] , "x").substring(0, 8);
 
             let codes_map = {};
             for (let i = 0; i < codes.length; i++) {
@@ -285,8 +286,16 @@ vue_options.methods = {
                         if (_u_khistory) {
                             _u_khistory = _u_khistory.substring(0, 8);
                         }
-                        if (_u_khistory === meta_khistory_last_id_sz || _u_khistory === meta_khistory_last_id_sh) {
-                            stay = true;
+                        switch (code.charAt(0)) {
+                            case '0':
+                                stay = (_u_khistory === meta_khistory_last_id_sz);
+                                break;
+                            case '6':
+                                stay = (_u_khistory === meta_khistory_last_id_sh);
+                                break;
+                            default:
+                                stay = (_u_khistory === meta_khistory_last_id_ms);
+                                break;
                         }
                     } else {
                         stay = true;
@@ -368,6 +377,7 @@ vue_options.methods = {
         let meta = wrap.meta;
         let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "-");
         let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "-");
+        let meta_khistory_last_id_ms = QUtil.get(meta, [ "meta.k.history.ms", "last_id"] , "-");
         for (let i = 0; i < stocks.length; i++) {
             let stock = stocks[i];
             let code = stock.code;
@@ -387,7 +397,17 @@ vue_options.methods = {
                     //     });
                     //     max_date = max.date;
                     // }
-                    stock._u_khistory = (code.charAt(0) === '0') ? meta_khistory_last_id_sz : meta_khistory_last_id_sh;
+                    switch(code.charAt(0)) {
+                        case '0':
+                            stock._u_khistory = meta_khistory_last_id_sz;
+                            break;
+                        case '6':
+                            stock._u_khistory = meta_khistory_last_id_sh;
+                            break;
+                        default:
+                            stock._u_khistory = meta_khistory_last_id_ms;
+                            break;
+                    }
                     stock.khistory = null;
                 }
             }

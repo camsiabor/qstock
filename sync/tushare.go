@@ -9,6 +9,7 @@ import (
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -128,14 +129,19 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 	var to_date_str = to_date.Format("20060102");
 	var keyprefix string;
 	var keysuffix string;
+	market = strings.ToLower(market);
 	if (market == "sz") {
 		keyprefix = "00*";
+		keysuffix = ".SZ";
+	} else if (market == "ms") {
+		keyprefix = "3*";
 		keysuffix = ".SZ";
 	} else {
 		keyprefix = "60*";
 		keysuffix = ".SH";
 	}
-	codes, err := dao.Keys(dict.DB_DEFAULT, "",keyprefix);
+	// TODO middle little pan
+	codes, err := dao.Keys(dict.DB_DEFAULT, "", keyprefix);
 
 	if (err != nil) {
 		qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err);

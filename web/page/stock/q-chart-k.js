@@ -38,9 +38,16 @@ Vue.component('vuetable-chart', {
                 console.log(this.cid, "khistory null", stock);
                 return;
             }
+
+            let no_today = true;
             let nowdate = QUtil.date_format(new Date(), "");
-            let last = data[data.length - 1];
-            if (nowdate !== last.date) {
+            for(let i = 0; i < data.length; i++) {
+                let one = data[i];
+                if (one.date === nowdate) {
+                    no_today = false;
+                }
+            }
+            if (no_today) {
                 stock.date = nowdate;
                 data.push(stock);
             }

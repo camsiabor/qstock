@@ -321,7 +321,7 @@ const _columns_default = [
         "name" : '__component:vuetable-chart',
         "title" : '',
         "visible" : true,
-        "width" : "50%"
+        "width" : "70%"
     }
 ];
 

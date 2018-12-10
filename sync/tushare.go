@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/camsiabor/qcom/util/qlog"
-	"github.com/camsiabor/qcom/util/qtime"
 	"github.com/camsiabor/qcom/util/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
@@ -111,7 +110,7 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 	if (len(fetch_last_date_from) > 0) {
 		var from_date_str_num = util.AsInt64(from_date_str, 0);
 		var fetch_last_date_from_num = util.AsInt64(fetch_last_date_from, 0);
-		if (from_date_str_num > fetch_last_date_from_num) {
+		if (from_date_str_num >= fetch_last_date_from_num) {
 			var fetch_last_date, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
 			if (len(fetch_last_date) > 0) {
 				from_date_str = fetch_last_date;
@@ -120,13 +119,18 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 	}
 
 	var to_date = time.Now();
-	var from_date, _ = time.Parse("20060102", from_date_str);
-	var interval = qtime.TimeInterval(&to_date, &from_date, time.Hour * 24);
-	if (interval > 60) {
-		from_date = to_date.AddDate(0, 0, -60);
-		from_date_str = from_date.Format("20060102");
-	}
 	var to_date_str = to_date.Format("20060102");
+	if (from_date_str == to_date_str) {
+		if (to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday) {
+			qlog.Log(qlog.INFO, o.Name, "sync", "sunday & saturday need a rest");
+			return;
+		}
+		if (to_date.Hour() < 15) {
+			qlog.Log(qlog.INFO, o.Name, "sync", "wait for the market to rest ", to_date.Hour());
+			return;
+		}
+	}
+
 	var keyprefix string;
 	var keysuffix string;
 	market = strings.ToLower(market);

@@ -29,8 +29,9 @@ vue_options.data = {
         },
         kagi : {
             count : 20,
-            height : -7,
-            scale_y : 5
+            width : -1,
+            height : 100,
+            scale_y : 1
         },
         mode: "query",
         exclude: "buy,sell",

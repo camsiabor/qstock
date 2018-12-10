@@ -62,7 +62,7 @@ Vue.component('vuetable-chart', {
 
             let kagi = stocks_map["kagi"] || {};
             let kagi_count = kagi.count || 16;
-            let kagi_height = kagi.height;
+            let kagi_height = kagi.height * 1 || 100;
             let kagi_scale_y = kagi.scale_y || 2;
             if (!kagi.height) {
                 kagi_height = (window.innerHeight / 3);
@@ -71,7 +71,14 @@ Vue.component('vuetable-chart', {
                 kagi_height = (window.innerHeight / (-kagi_height));
             }
             kagi_height = Math.floor(kagi_height);
+            let kagi_width = kagi.width * 1 ||  0;
 
+            if (isNaN(kagi_width)) {
+                kagi_width = 0;
+            }
+            if (isNaN(kagi_height)) {
+                kagi_height = 100;
+            }
 
             for(let i = 0; i < data.length; i++) {
                 let one = data[i];
@@ -119,13 +126,20 @@ Vue.component('vuetable-chart', {
             }
 
 
-            this.chart = new G2.Chart({
+            let chart_opt  = {
                 container: this.cid,
-                forceFit: true,
-                height: kagi_height,
-                animate: false
-                // padding: [10, 40, 40, 40]
-            });
+                animate: false,
+                height: kagi_height
+            };
+            if (kagi_width === 0) {
+                chart_opt.forceFit = true;
+            } else if (kagi_width > 0) {
+                chart_opt.width = kagi_width;
+            } else {
+                chart_opt.width = window.innerWidth / (-kagi_width);
+            }
+
+            this.chart = new G2.Chart(chart_opt);
             this.chart.source(dv, {
                 'date2': {
                     type: 'timeCat',

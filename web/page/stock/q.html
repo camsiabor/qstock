@@ -216,9 +216,9 @@
                     <button type="button" class="btn btn-primary" v-on:click="setting_save()">ok</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
                     <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 75%">
+                        <div class="input-group sm-3" style="width: 90%">
                         <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1">kagi-count</span>
+                            <span class="input-group-text" id="basic-addon1">k-count</span>
                         </div>
                         <input
                                 class="form-control mr-sm-2"
@@ -227,9 +227,20 @@
                     </div>
                     </div>
                     <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 75%">
+                        <div class="input-group sm-3" style="width: 90%">
                             <div class="input-group-prepend">
-                                <span class="input-group-text" id="basic-addon1">kagi-height</span>
+                                <span class="input-group-text" id="basic-addon1">k-width</span>
+                            </div>
+                            <input style="width: 75%"
+                                   class="form-control mr-sm-2"
+                                   type="search" placeholder="kagi width"
+                                   aria-label="kagi height" v-model="setting.kagi.width">
+                        </div>
+                    </div>
+                    <div style="margin: 5px">
+                        <div class="input-group sm-3" style="width: 90%">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">k-height</span>
                             </div>
                             <input style="width: 75%"
                                    class="form-control mr-sm-2"
@@ -238,9 +249,9 @@
                         </div>
                     </div>
                     <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 75%">
+                        <div class="input-group sm-3" style="width: 90%">
                             <div class="input-group-prepend">
-                                <span class="input-group-text" id="basic-addon1">kagi-scale-y</span>
+                                <span class="input-group-text" id="basic-addon1">k-scale-y</span>
                             </div>
                             <input style="width: 75%"
                                    class="form-control mr-sm-2"

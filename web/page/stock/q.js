@@ -653,7 +653,9 @@ vue_options.methods = {
     },
 
     chart_kagi_init: function (codes) {
-
+        if (!codes) {
+            codes = QUtil.array_field(this.table.stocks_view, "code");
+        }
         let vuetable = this.$refs.vuetable;
         let children = vuetable.$children;
         let chart_children = [];
@@ -714,9 +716,9 @@ vue_options.methods = {
     table_paging(data) {
         data = data || this.table.pagination;
         this.$refs.pagination.setPaginationData(data);
-        let stocks = this.table.data.slice(data.from - 1, data.to);
-        let codes = QUtil.array_field(stocks, "code");
-        this.chart_kagi_init(codes);
+        // let stocks = this.table.data.slice(data.from - 1, data.to);
+        // let codes = QUtil.array_field(stocks, "code");
+        this.chart_kagi_init();
     },
 
     table_paging_change(page) {
@@ -730,7 +732,7 @@ vue_options.methods = {
         }
 
         // sortOrder can be empty, so we have to check for that as well
-        let clone = [].concat(data);
+        let dataview = [].concat(data);
         let sortlen = sortOrder.length;
         if (sortlen > 0) {
             /*
@@ -742,7 +744,7 @@ vue_options.methods = {
                 one.asc = one.direction === 'asc';
             }
 
-            clone = clone.sort(function(a , b){
+            dataview = dataview.sort(function(a , b){
                 let r = 0;
                 for(let i = 0; i < sortlen; i++) {
                     let one = sortOrder[i];
@@ -764,14 +766,15 @@ vue_options.methods = {
             page_size
         );
 
-        this.table.pagination = pagination;
-
         let from = pagination.from - 1;
         let to = from + page_size;
-        clone = clone.slice(from, to);
+        dataview = dataview.slice(from, to);
+
+        this.table.stocks_view = dataview;
+        this.table.pagination = pagination;
         return {
             pagination: pagination,
-            data: clone
+            data: dataview
         };
     }
 }; /* methods end */

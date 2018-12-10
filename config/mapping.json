@@ -1,0 +1,47 @@
+{
+
+  "not_all" : {
+  },
+
+  "shenjian.snapshot" : {
+    "changepercent" : "change_rate",
+    "mktcap" : "vtotal",
+    "nmc" : "vcir",
+    "trade" : "now",
+    "turnoverratio" : "turnover",
+    "volume" : "vol",
+    "settlement" : "pre_close"
+  },
+
+  "showapi.snapshot" : {
+    "nowPrice" : "now",
+    "openPrice" : "open",
+    "closePrice" : "close",
+    "diff_money" : "change",
+    "diff_rate" : "change_rate",
+    "todayMax" : "max",
+    "todayMin" : "min",
+    "value_total" : "vtotal",
+    "value_circulation" : "vcir"
+  },
+
+  "tushare.khistory" : {
+    "ts_code" : {
+      "nameto" : "code",
+      "acts" : [{
+        "act" : "Replace",
+        "args": [ [".SZ", ".SH" ], ""]
+      }]
+    },
+    "trade_date" : "date",
+    "open" : null,
+    "high" : null,
+    "low" : null,
+    "close" : null,
+    "pre_close" : null,
+    "change" : null,
+    "pct_chg" : "change_rate",
+    "vol" : null,
+    "amount" : null
+  }
+}

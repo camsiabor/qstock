@@ -1,0 +1,57 @@
+{
+  "database": {
+    "main": {
+      "type": "redis",
+      "host" : "127.0.0.1",
+      "host2": "47.96.153.71",
+      "port": 6379,
+      "max_idle" : 3,
+      "mapping" : {
+        "def" : 0,
+        "history" : 1,
+        "common" : 2
+      }
+    }
+  },
+
+  "http": {
+    "active": true,
+    "port": 80,
+    "root": "../src/github.com/camsiabor/qstock/web",
+    "refresh_interval": 300,
+    "log": {
+      "file": "console"
+    },
+    "script" : {
+      "include" : "res/include.lua"
+    }
+  },
+
+  "agenda" : {
+    "stock" : {
+      "week" : [ 1, 2, 3, 4, 5 ],
+      "slice" : [{
+          "start" : 915, "end" : 1000, "factor" : 0.5
+        }, {
+          "start" : 1001, "end" : 1145, "factor" : 1
+        }, {
+          "start" : 1255, "end" : 1330, "factor" : 0.5
+        }, {
+          "start" : 1331, "end" : 1430, "factor" : 1
+        }, {
+          "start" : 1431, "end" : 1505, "factor" : 0.5
+        }
+      ]
+    }
+  },
+
+  "global": {
+    "timezone": "Asia/Shanghai"
+  },
+
+  "includes" : {
+    "api" : "api.json",
+    "mapping" : "mapping.json"
+  }
+
+}

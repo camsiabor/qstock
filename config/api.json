@@ -1,0 +1,120 @@
+{
+
+
+  "shenjian" : {
+    "active" : true,
+    "domain": "http://api.shenjian.io",
+    "select_interval" : 30,
+    "concurrent" : 1,
+    "nice" : 0,
+    "profiles" : {
+      "a.snapshot.sz" : {
+        "api" : "?appid=c0c0d935f29c6d1fd97b28069a539f1f",
+        "interval": 180,
+        "dao" : "main",
+        "db" : "def",
+        "key" : "code",
+        "cacher" : "stock.snapshot",
+        "mapper" : "shenjian.snapshot",
+        "handler" : "ShenJian_snapshot"
+      }
+    }
+  },
+
+  "tushare" : {
+    "active" : true,
+    "appsecret" : "f113afc39e582231631b3eabd61174397a25e2a6c56176d076f1a7ad",
+    "domain" : "http://api.tushare.pro",
+    "nice" : 250,
+    "timeout" : 20,
+    "concurrent" : 1,
+    "select_interval" : 120,
+    "profiles" : {
+      "k.history.sz" : {
+        "api" : "daily",
+        "interval": 10800,
+        "dao" : "main",
+        "db" : "history",
+        "marker" : "sz",
+        "groupkey" : "code",
+        "key" : "date",
+        "mapper" : "tushare.khistory",
+        "handler" : "TuShare_khistory"
+      },
+      "k.history.sh" : {
+        "api" : "daily",
+        "each": 30,
+        "interval": 3600,
+        "dao" : "main",
+        "db" : "history",
+        "marker" : "sh",
+        "groupkey" : "code",
+        "key" : "date",
+        "mapper" : "tushare.khistory",
+        "handler" : "TuShare_khistory"
+      }
+    }
+  },
+
+
+  "showapi": {
+    "active" : false,
+    "appid": 79916,
+    "appsecret": "2f2ad80cda1442ccacf6975c6d0b2788",
+    "domain": "http://route.showapi.com",
+    "select_interval" : 30,
+    "concurrent" : 1,
+    "nice" : 100,
+    "profiles" : {
+      "a.snapshot.sz" : {
+        "api" : "131-46",
+        "each": 50,
+        "limit": 5000,
+        "interval": 360,
+        "dao" : "main",
+        "db" : "def",
+        "marker" : "sz",
+        "key" : "code",
+        "cacher" : "stock.snapshot",
+        "mapper" : "showapi.snapshot",
+        "handler" : "ShowAPI_snapshot"
+      },
+      "a.snapshot.sh" : {
+        "api" : "131-46",
+        "each": 50,
+        "limit": 5000,
+        "interval": 360,
+        "dao" : "main",
+        "db" : "def",
+        "marker" : "sh",
+        "key" : "code",
+        "cacher" : "stock.snapshot",
+        "mapper" : "showapi.snapshot",
+        "handler" : "ShowAPI_snapshot"
+      },
+      "k.history.sz" : {
+        "nice" : 100,
+        "api" : "131-47",
+        "each": 30,
+        "colddown" : 600,
+        "interval": 0,
+        "dao" : "main",
+        "db" : "history",
+        "marker" : "sz",
+        "handler" : "ShowAPI_khistory"
+      },
+      "k.history.sh" : {
+        "nice" : 100,
+        "api" : "131-47",
+        "each": 30,
+        "colddown" : 600,
+        "interval": 0,
+        "dao" : "main",
+        "db" : "history",
+        "marker" : "sh",
+        "handler" : "ShowAPI_khistory"
+      }
+    }
+  }
+
+}

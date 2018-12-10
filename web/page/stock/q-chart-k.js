@@ -157,12 +157,20 @@ Vue.component('vuetable-chart', {
                 }
             });
 
+            // this.chart.axis('date2', {
+            //     label: {
+            //         formatter: val => {
+            //             return val.substring(5);
+            //         }
+            //     }
+            // });
+
             this.chart.axis('date2', {
-                label: {
-                    formatter: val => {
-                        return val.substring(5);
-                    }
-                }
+                label: null
+            });
+
+            this.chart.axis('range', {
+                label: null
             });
 
             this.chart.scale('x', {

@@ -63,7 +63,7 @@ func (o * Syncer) Run(name string) {
 	o.channelWorkProfile = make(chan * global.Cmd, 64);
 	o.profileRunInfos = make(map[string]*ProfileRunInfo);
 	o.doContinue = true;
-	o.concurrent = 0;
+	o.concurrent = util.GetInt64(g.Config, 1, "api", o.Name, "concurrent");
 
 	var profiles = util.GetMap(config, true, "profiles");
 	for _, one := range profiles {
@@ -73,7 +73,10 @@ func (o * Syncer) Run(name string) {
 		}
 		util.MapMerge(profile, config, false);
 	}
-
+	var i int64;
+	for i = 0; i < o.concurrent; i++ {
+		go o.worker();
+	}
 	go o.heartbeat();
 }
 
@@ -103,11 +106,7 @@ func (o * Syncer) heartbeat() {
 	var select_interval = 1;
 	for {
 		var timeout = time.After(time.Duration(select_interval) * time.Second)
-		var concurrent = util.GetInt64(g.Config, 1, "api", o.Name, "concurrent");
-		for (concurrent > o.concurrent) {
-			o.concurrent = o.concurrent + 1;
-			go o.worker();
-		}
+
 		var ok bool;
 		var cmd * global.Cmd;
 		select {
@@ -166,47 +165,32 @@ func (o * Syncer) heartbeat() {
 }
 
 func (o * Syncer) worker() {
-	qlog.Log(qlog.INFO, "api", "worker start", o.concurrent);
+	qlog.Log(qlog.INFO, "api", o.Name, "worker start");
 	var g = global.GetInstance();
-	for {
-		var profilename string = "";
-		var concurrent = util.GetInt64(g.Config, 1, "api", o.Name, "concurrent");
-		if (concurrent < o.concurrent) {
+	for cmd := range o.channelWorkProfile {
+		if (!o.doContinue) {
 			break;
 		}
-		var timeout = time.After(time.Duration(60) * time.Second)
-		select {
-		case cmd, ok := <- o.channelWorkProfile:
-			if !ok {
-				qlog.Log(qlog.INFO, o.Name, "worker", "channel close");
-				break;
-			}
-			profilename = cmd.Name;
-			factor := util.AsFloat64(cmd.GetData("factor"), 1);
-			force := strings.Contains(cmd.Cmd, "force");
-			qlog.Log(qlog.INFO, o.Name, "worker", "receive profilename", profilename);
-			var profile = util.GetMap(g.Config, false, "api", o.Name, "profiles", profilename);
-			if (profile == nil) {
-				qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);
-			} else {
-				var work = &ProfileWork{
-					Profile: profile,
-					ProfileName: profilename,
-					Force: force,
-					Factor: factor,
-				};
-				o.DoProfile(work)
-			}
-		case <-timeout:
-
+		var profilename = cmd.Name;
+		factor := util.AsFloat64(cmd.GetData("factor"), 1);
+		force := strings.Contains(cmd.Cmd, "force");
+		qlog.Log(qlog.INFO, o.Name, "worker", "receive profilename", profilename);
+		var profile = util.GetMap(g.Config, false, "api", o.Name, "profiles", profilename);
+		if (profile == nil) {
+			qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);
+		} else {
+			var work = &ProfileWork{
+				Profile: profile,
+				ProfileName: profilename,
+				Force: force,
+				Factor: factor,
+			};
+			o.DoProfile(work)
 		}
 		if (!o.doContinue) {
 			break;
 		}
-
 	}
-
-	o.concurrent = o.concurrent - 1;
 	qlog.Log(qlog.INFO, "api", "worker end", o.concurrent);
 }
 

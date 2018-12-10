@@ -446,6 +446,10 @@ func (o * HttpServer) Run() {
 			gin.DefaultWriter =io.MultiWriter(logfile);
 			gin.DefaultErrorWriter = io.MultiWriter(logfile);
 		}
+		var mode = util.GetStr(config_http, gin.ReleaseMode, "mode");
+		mode = strings.ToLower(mode);
+		gin.SetMode(mode);
+		qlog.Log(qlog.INFO, "http", "mode", mode);
 
 		o.Engine = gin.Default()
 		o.Engine.Use(Recovery(func( c *gin.Context, err interface{}) {
@@ -463,6 +467,7 @@ func (o * HttpServer) Run() {
 
 		var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
 		go GinRefreshPage(refresh_interval);
+
 
 		err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
 		if (err != nil) {

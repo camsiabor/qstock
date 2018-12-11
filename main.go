@@ -100,12 +100,13 @@ func initSyncer(g * global.Global) {
 func main() {
 
 	defer qerr.SimpleRecover(0);
-
 	var g = global.GetInstance();
 	g.Continue = true;
 	g.PanicHandler = func(pan interface{}) {
 		qlog.Log(qlog.ERROR, pan);
 	}
+	g.SetData("global", g);
+	g.SetData("cachem", scache.GetCacheManager());
 	g.Run();
 
 	flag.StringVar(&g.LogPath,  "log", "log", "log file path");
@@ -145,9 +146,11 @@ func main() {
 	// [mapper] ------------------------------------------------------------------------------------------------
 	var mapperConfig = util.GetMap(g.Config, true, "mapping");
 	qref.GetMapperManager().Init(mapperConfig);
+	g.SetData("mapperm", qref.GetMapperManager());
 
 	// [redis] ------------------------------------------------------------------------------------------------
 	qdao.GetDaoManager().Init();
+	g.SetData("daom", qdao.GetDaoManager());
 
 	// [gin] ------------------------------------------------------------------------------------------------
 	httpv.GetInstance().Run();

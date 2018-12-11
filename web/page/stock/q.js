@@ -248,6 +248,7 @@ vue_options.methods = {
             return this.db.query_by_id("snapshot",  codes );
         }.bind(this)).then(function(stocks_local_data) {
             stocks_local = stocks_local_data;
+            // TODO khistory cache determine
             if (fetch_khistory) {
                 let qs = this.db.args_flatten_qs(codes);
                 let sql = "SELECT * from khistory where code in (" + qs+ ") AND date >= ? AND date <= ?";

@@ -1,21 +1,21 @@
 package run
 
 import (
-	"github.com/aarzilli/golua/lua"
-	"github.com/stevedonovan/luar"
+"github.com/aarzilli/golua/lua"
+"github.com/stevedonovan/luar"
 )
 
 func LuaGetVal(L * lua.State, idx int) (interface{}, error) {
 	if (L.IsNoneOrNil(idx)) {
 		return nil, nil;
 	}
-	var ltype = L.Type(idx);
+	var ltype = int(L.Type(idx));
 	switch ltype {
-	case lua.LUA_TNUMBER:
+	case int(lua.LUA_TNUMBER):
 		return L.ToNumber(idx), nil;
-	case lua.LUA_STRLIBNAME:
+	case int(lua.LUA_TSTRING):
 		return L.ToString(idx), nil;
-	case lua.LUA_TBOOLEAN:
+	case int(lua.LUA_TBOOLEAN):
 		return L.ToBoolean(idx), nil;
 	}
 	var r interface{};

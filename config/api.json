@@ -54,7 +54,7 @@
         "mapper" : "tushare.khistory",
         "handler" : "TuShare_khistory"
       },
-      "k.history.ms" : {
+      "k.history.su" : {
         "api" : "daily",
         "each": 60,
         "interval": 3600,

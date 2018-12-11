@@ -1,7 +1,13 @@
 package dict
 
+
+const SHENZHEN = "sz";
+const SHANGHAI = "sh";
+const STARTUP = "su";
+
 const CACHE_STOCK_SNAPSHOT = "stock.snapshot";
 const CACHE_STOCK_KHISTORY = "stock.khistory";
+const CACHE_STOCK_CODE = "stock.code";
 
 const DAO_MAIN = "main";
 

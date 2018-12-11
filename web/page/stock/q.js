@@ -262,7 +262,7 @@ vue_options.methods = {
             let meta_snapshot_last_id = QUtil.get(meta, [ "meta.a.snapshot.sz", "last_id"] , 0) * 1;
             let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);
             let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "x").substring(0, 8);
-            let meta_khistory_last_id_ms = QUtil.get(meta, [ "meta.k.history.ms", "last_id"] , "x").substring(0, 8);
+            let meta_khistory_last_id_su = QUtil.get(meta, [ "meta.k.history.su", "last_id"] , "x").substring(0, 8);
 
             let codes_map = {};
             for (let i = 0; i < codes.length; i++) {
@@ -293,7 +293,7 @@ vue_options.methods = {
                                 stay = (_u_khistory === meta_khistory_last_id_sh);
                                 break;
                             default:
-                                stay = (_u_khistory === meta_khistory_last_id_ms);
+                                stay = (_u_khistory === meta_khistory_last_id_su);
                                 break;
                         }
                     } else {
@@ -376,7 +376,7 @@ vue_options.methods = {
         let meta = wrap.meta;
         let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "-");
         let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "-");
-        let meta_khistory_last_id_ms = QUtil.get(meta, [ "meta.k.history.ms", "last_id"] , "-");
+        let meta_khistory_last_id_su = QUtil.get(meta, [ "meta.k.history.su", "last_id"] , "-");
         for (let i = 0; i < stocks.length; i++) {
             let stock = stocks[i];
             let code = stock.code;
@@ -404,7 +404,7 @@ vue_options.methods = {
                             stock._u_khistory = meta_khistory_last_id_sh;
                             break;
                         default:
-                            stock._u_khistory = meta_khistory_last_id_ms;
+                            stock._u_khistory = meta_khistory_last_id_su;
                             break;
                     }
                     stock.khistory = null;
@@ -449,15 +449,26 @@ vue_options.methods = {
     script_query: function () {
         this.console.text = "";
         let script = this.editor.getValue().trim();
+        /*
+        return axios.post("/cmd/go", {
+            type : 'lua',
+            cmd : 'run',
+            script : script
+        }).then(this.stock_get_data_by_code)
+        */
         return axios.post("/cmd/query", {
-            script: script
+            type : 'db',
+            cmd : 'run',
+            script : script
         }).then(this.stock_get_data_by_code)
     },
 
     script_test: function () {
         let script = this.editor.getValue().trim();
-        return axios.post("/cmd/query", {
-            script: script
+        return axios.post("/cmd/go", {
+            type : 'lua',
+            cmd : 'run',
+            script : script
         }).then(function (resp) {
             let data = util.handle_response(resp);
             if (typeof data === 'object') {

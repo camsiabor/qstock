@@ -177,12 +177,11 @@ func (o * HttpServer) routeCmd() {
 			return;
 		}
 		var cmdtype = util.GetStr(m, "db", "type");
-
 		defer o.handlePanicCmd(c, cmdtype, cmd, m);
 		switch cmdtype {
-		case "db" :
+		case "db":
 			o.handleDBCmd(cmd, m, c);
-		case "redis" :
+		case "redis":
 			o.handleRedisCmd(cmd, m, c);
 		case "lua":
 			o.handleLuaCmd(cmd, m, c);

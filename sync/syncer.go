@@ -144,7 +144,7 @@ func (o * Syncer) heartbeat() {
 					if (slice == nil) {
 						continue;
 					}
-					factor = util.GetFloat64(slice, 1, factor);
+					factor = util.GetFloat64(slice, 1, "factor");
 				}
 				var interval = util.GetInt64(profile, 0, "interval");
 				if (interval <= 0 || factor <= 0) {

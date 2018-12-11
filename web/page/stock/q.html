@@ -32,8 +32,8 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">
-            <span v-if="setting.mode=='query'">查询模式</span>
-            <span v-if="setting.mode=='portfolio'">组合模式</span>
+            <span v-if="setting.mode=='query'">查询．{{script.name}} ． {{portfolio.name}}</span>
+            <span v-if="setting.mode=='portfolio'">组合．{{script.name}} ． {{portfolio.name}}</span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>

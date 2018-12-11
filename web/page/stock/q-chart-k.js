@@ -44,21 +44,18 @@ Vue.component('vuetable-chart', {
                 return;
             }
 
-            /*
-            let no_today = true;
             let nowdate = QUtil.date_format(new Date(), "");
-            for(let i = 0; i < data.length; i++) {
-                let one = data[i];
-                if (one.date === nowdate) {
-                    no_today = false;
-                }
+            let data_newest = QUtil.array_most(data, function (most, one) {
+                return one.date * 1 > most.date * 1;
+            });
+
+            let has_current = QUtil.map_is_same_by_field_val(stock, data_newest, [ "open", "high", "low" ], 0.01);
+            if (!has_current) {
+                let clone = QUtil.map_clone(stock);
+                clone.date = nowdate;
+                clone.close = stock.now;
+                data.push(clone);
             }
-            if (no_today) {
-                stock.date = nowdate;
-                stock.close = stock.now;
-                data.push(stock);
-            }
-            */
 
             let kagi = stocks_map["kagi"] || {};
             let kagi_count = kagi.count || 16;
@@ -192,10 +189,10 @@ Vue.component('vuetable-chart', {
             });
 
             this.chart.legend('trend', false); // 不显示 cut 字段对应的图例
-            this.chart.legend('trend', {
-                // offset : 30,
-                position : 'right-center'
-            }); // 不显示 cut 字段对应的图例
+            // this.chart.legend('trend', {
+            //     // offset : 30,
+            //     position : 'right-center'
+            // }); // 不显示 cut 字段对应的图例
             this.chart.tooltip({
                 showTitle: false,
                 itemTpl: '<li data-index={index}>' + '<span style="background-color:{color};" class="g2-tooltip-marker"></span>' + '{name}{value}</li>'

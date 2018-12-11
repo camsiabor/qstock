@@ -314,14 +314,71 @@ QUtil.array_field = function(arr, fieldname, discard_null) {
 }
 
 QUtil.array_most = function (arr, callback) {
-    let max = arr[0];
+    let most = arr[0];
     for(let i = 1; i < arr.length; i++) {
         let one = arr[i];
-        if (callback(max, one)) {
-            max = one;
+        if (callback(most, one)) {
+            most = one;
         }
     }
-    return max;
+    return most;
+};
+
+
+QUtil.map_clone = function(m, opt) {
+    let clone = {};
+    opt = opt || {};
+    for(let k in m) {
+        let v = m[k];
+        let type = typeof v;
+        if (type === 'object' && !opt.obj) {
+            continue;
+        }
+        if (type === 'function' && !opt.func) {
+            continue;
+        }
+        clone[k] = v;
+    }
+    return clone;
+};
+
+QUtil.map_is_same_by_field_val = function(m1, m2, fields, nrange) {
+
+    if (typeof nrange === 'undefined') {
+        nrange = 0.01;
+    }
+
+    let same = true;
+    for(let i = 0; i < fields.length; i++) {
+        let field = fields[i];
+        let v1 = m1[field];
+        let v2 = m2[field];
+        if (!v1 && v2) {
+            same = false;
+            break;
+        }
+        let v1n = v1 * 1;
+        let v2n = v2 * 1;
+        let v1nan = isNaN(v1n);
+        let v2nan = isNaN(v2n);
+        if ((v1nan && !v2nan) || (v2nan && v1nan)) {
+            same = false;
+            break;
+        }
+        if (v1nan && v2nan) {
+            if (v1n !== v2n) {
+                same = false;
+                break;
+            }
+        } else {
+            let delta = Math.abs(v1n - v2n);
+            if (delta > nrange) {
+                same = false;
+                break;
+            }
+        }
+    }
+    return same;
 };
 
 QUtil.array_to_map = function (arr, keyname) {

@@ -203,11 +203,10 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 	var now = time.Now();
 	var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var interval = util.GetInt64(profile, 3600, "interval");
-	var colddown = util.GetInt64(profile, 600, "colddown");
 	interval = int64(float64(interval) * work.Factor);
-	colddown = int64(float64(colddown) * work.Factor);
+	var colddown = interval / 10;
 	if (!work.Force) {
-		if (now.Unix()-profileRunInfo.LastRunTime < colddown) {
+		if (now.Unix() - profileRunInfo.LastRunTime < colddown) {
 			//qlog.Log(qlog.INFO, o.Name, "current running", profilename, profileRunInfo.LastRunTime, "/", now.Unix());
 			return nil;
 		}
@@ -238,12 +237,11 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 	if (work.Force) {
 		qlog.Log(qlog.INFO, o.Name, profilename, "force!", "current", timestamp, "last", last);
 	} else {
-		qlog.Log(qlog.INFO, o.Name, profilename, "current", timestamp, "last", last, "interval", interval, "delta", timestamp -last, "factor", work.Factor);
 		if (timestamp - last < interval) {
-			//qlog.Log(qlog.INFO, o.Name, profilename, "fetch in cooldown");
 			return nil;
 		}
 	}
+	qlog.Log(qlog.INFO, o.Name, profilename, "current", timestamp, "last", last, "interval", interval, "delta", timestamp -last, "factor", work.Factor);
 
 	var sync_record_cacher = scache.GetCacheManager().Get("sync");
 

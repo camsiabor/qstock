@@ -449,18 +449,19 @@ vue_options.methods = {
     script_query: function () {
         this.console.text = "";
         let script = this.editor.getValue().trim();
-        /*
+
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
             script : script
         }).then(this.stock_get_data_by_code)
-        */
-        return axios.post("/cmd/query", {
+        /*
+         return axios.post("/cmd/query", {
             type : 'db',
             cmd : 'run',
             script : script
-        }).then(this.stock_get_data_by_code)
+        }).then(this.stock_get_data_by_code);
+        */
     },
 
     script_test: function () {

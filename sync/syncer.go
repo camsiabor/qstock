@@ -87,7 +87,7 @@ func (o * Syncer) Run(name string) {
 		if (embed_profile == nil) {
 			continue;
 		}
-		util.MapMerge(profile, embed_name, false);
+		util.MapMerge(profile, embed_profile, false);
 	}
 
 	var i int64;

@@ -14,6 +14,7 @@
         "dao" : "main",
         "db" : "def",
         "key" : "code",
+        "agenda" : "stock.snapshot",
         "cacher" : "stock.snapshot",
         "mapper" : "shenjian.snapshot",
         "handler" : "ShenJian_snapshot"
@@ -32,39 +33,33 @@
     "profiles" : {
       "k.history.sz" : {
         "api" : "daily",
-        "each": 60,
-        "interval": 7200,
+        "each": 90,
+        "interval": 10800,
         "dao" : "main",
         "db" : "history",
         "marker" : "sz",
         "groupkey" : "code",
         "key" : "date",
+        "agenda" : "stock.khistory",
+        "cacher" : "stock.khistory",
         "mapper" : "tushare.khistory",
         "handler" : "TuShare_khistory"
       },
       "k.history.sh" : {
-        "api" : "daily",
-        "each": 60,
-        "interval": 3600,
-        "dao" : "main",
-        "db" : "history",
-        "marker" : "sh",
-        "groupkey" : "code",
-        "key" : "date",
-        "mapper" : "tushare.khistory",
-        "handler" : "TuShare_khistory"
+        "embed" : "k.history.sz",
+        "marker" : "sh"
       },
-      "k.history.su" : {
-        "api" : "daily",
-        "each": 60,
-        "interval": 3600,
+      "k.history.ms" : {
+        "embed" : "k.history.sz",
+        "marker" : "ms"
+      },
+      "trade.calendar" : {
+        "api" : "trade_cal",
+        "interval" : 86400,
         "dao" : "main",
-        "db" : "history",
-        "marker" : "ms",
-        "groupkey" : "code",
-        "key" : "date",
-        "mapper" : "tushare.khistory",
-        "handler" : "TuShare_khistory"
+        "db" : "calendar",
+        "cacher" : "stock.calendar",
+        "handler" : "TuShare_trade_calendar"
       }
     }
   },
@@ -88,22 +83,14 @@
         "db" : "def",
         "marker" : "sz",
         "key" : "code",
+        "agenda" : "stock.snapshot",
         "cacher" : "stock.snapshot",
         "mapper" : "showapi.snapshot",
         "handler" : "ShowAPI_snapshot"
       },
       "a.snapshot.sh" : {
-        "api" : "131-46",
-        "each": 50,
-        "limit": 5000,
-        "interval": 360,
-        "dao" : "main",
-        "db" : "def",
-        "marker" : "sh",
-        "key" : "code",
-        "cacher" : "stock.snapshot",
-        "mapper" : "showapi.snapshot",
-        "handler" : "ShowAPI_snapshot"
+        "embed" : "a.snapshot.sz",
+        "marker" : "sh"
       },
       "k.history.sz" : {
         "nice" : 100,
@@ -114,18 +101,13 @@
         "dao" : "main",
         "db" : "history",
         "marker" : "sz",
+        "agenda" : "stock.khistory",
+        "cacher" : "stock.khistory",
         "handler" : "ShowAPI_khistory"
       },
       "k.history.sh" : {
-        "nice" : 100,
-        "api" : "131-47",
-        "each": 30,
-        "colddown" : 600,
-        "interval": 0,
-        "dao" : "main",
-        "db" : "history",
-        "marker" : "sh",
-        "handler" : "ShowAPI_khistory"
+        "embed" : "k.history.sz",
+        "marker" : "sh"
       }
     }
   }

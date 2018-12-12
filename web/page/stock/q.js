@@ -91,10 +91,10 @@ vue_options.watch = {
     },
     setting : {
         handler(n, o) {
-            if (!n.table.page_size) { n.table.page_size = 5; }
-            if (isNaN(n.table.page_size * 1)) { n.table.page_size = 5; }
-            if (n.table.page_size < 0) { n.table.page_size = -n.table.page_size; }
-            if (n.table.page_size >= 50) { n.table.page_size = 50; }
+            // if (!n.table.page_size) { n.table.page_size = 5; }
+            // if (isNaN(n.table.page_size * 1)) { n.table.page_size = 5; }
+            // if (n.table.page_size < 0) { n.table.page_size = -n.table.page_size; }
+            if (n.table.page_size >= 100) { n.table.page_size = 100; }
             this.config_persist();
         },
         deep: true

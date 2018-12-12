@@ -21,12 +21,15 @@ import (
 	"github.com/camsiabor/qcom/util/qerr"
 	"github.com/camsiabor/qcom/util/qlog"
 	"github.com/camsiabor/qcom/util/qref"
+	"github.com/camsiabor/qcom/util/qtime"
 	"github.com/camsiabor/qcom/util/util"
+	"github.com/camsiabor/qcom/util/wrap"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/sync"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -55,6 +58,16 @@ func initCacher(g * global.Global) {
 
 	var cache_manager = scache.GetCacheManager();
 	g.SetData("cachem", cache_manager);
+
+	var cache_timestamp = cache_manager.Get(dict.CACHE_TIMESTAMP);
+	cache_timestamp.Loader = func(scache *scache.SCache, keys ...string) (v interface{}, err error) {
+		var key = keys[0];
+		if (strings.Contains(key, "@")) {
+			return qtime.Time2Int64(nil), nil;
+		}
+		return time.Now().Format("20060102150405"), nil;
+	}
+
 
 	var scache_code = cache_manager.Get(dict.CACHE_STOCK_CODE);
 	scache_code.Dao = dict.DAO_MAIN;
@@ -164,6 +177,7 @@ func main() {
 		qlog.Log(qlog.ERROR, pan);
 	}
 	g.SetData("global", g);
+	g.SetData("u", wrap.U);
 	g.SetData("cachem", scache.GetCacheManager());
 	g.Run();
 

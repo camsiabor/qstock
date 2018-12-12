@@ -163,6 +163,28 @@ func (o * HttpServer) handlePanicCmd(c * gin.Context, cmdtype string, cmd string
 	o.RespJson(500, info, c);
 }
 
+func (o * HttpServer) handleTimeCmd(cmd string, m map[string]interface{}, c * gin.Context) {
+
+	var key = util.GetStr(m, "js", "key");
+	var cache = scache.GetCacheManager().Get("timestamp");
+	cmd = strings.ToLower(cmd);
+	switch cmd {
+	case "now":
+		var val = qtime.Time2Int64(nil);
+		o.RespJsonEx(val, nil, c);
+	case "get":
+		var val, err = cache.Get(true, key);
+		o.RespJsonEx(val, err, c);
+	case "set":
+		var val = util.Get(m, nil, "val");
+		if (val == nil) {
+			val = time.Now().Format("20060102150405")
+		}
+		cache.Set(val, key);
+		o.RespJson(0, key + " set", c);
+	}
+}
+
 func (o * HttpServer) routeCmd() {
 	var group = o.Engine.Group("/cmd");
 	group.GET("/ping", func(c *gin.Context) {
@@ -187,6 +209,8 @@ func (o * HttpServer) routeCmd() {
 			o.handleLuaCmd(cmd, m, c);
 		case "os":
 			o.handleOSCmd(cmd, m, c);
+		case "time":
+			o.handleTimeCmd(cmd, m, c);
 		}
 	});
 
@@ -214,11 +238,7 @@ func (o * HttpServer) routeCmd() {
 func (o * HttpServer) routeQuery() {
 	var group = o.Engine.Group("/stock");
 
-	group.POST("/timestamp", func(c * gin.Context) {
-		var cache = scache.GetCacheManager().Get("sync");
-		var retm, err = cache.GetAll();
-		o.RespJsonEx(retm, err, c);
-	});
+
 
 	group.POST("/sync", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c);
@@ -422,53 +442,62 @@ func (o * HttpServer) Run() {
 		qlog.Log(qlog.INFO, "http", "not active");
 		return;
 	}
-	go func() {
-		var err error;
 
-		var port = util.GetStr(config_http, "8080",  "port");
-		o.Root = util.GetStr(config_http, "../web",  "root");
-		o.Rootabs, err = filepath.Abs(o.Root);
-		if (err != nil) {
-			qlog.Log(qlog.ERROR, "http", "root", err);
-			return;
+	var err error;
+
+	var port = util.GetStr(config_http, "8080",  "port");
+	o.Root = util.GetStr(config_http, "../web",  "root");
+	o.Rootabs, err = filepath.Abs(o.Root);
+	if (err != nil) {
+		qlog.Log(qlog.ERROR, "http", "root", err);
+		return;
+	}
+	qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root);
+
+	var logfilepath =util.GetStr(config_http, "log/http.log", "log", "file");
+	if (!strings.Contains(logfilepath, "console")) {
+		var logfile, err = os.OpenFile(logfilepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		if (err == nil) {
+			qlog.Log(qlog.INFO, "http", "log", logfilepath);
+		} else {
+			qlog.Log(qlog.ERROR, "http", "log", logfilepath, err);
 		}
-		qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root);
+		gin.DefaultWriter =io.MultiWriter(logfile);
+		gin.DefaultErrorWriter = io.MultiWriter(logfile);
+	}
+	var mode = util.GetStr(config_http, gin.ReleaseMode, "mode");
+	mode = strings.ToLower(mode);
+	gin.SetMode(mode);
+	qlog.Log(qlog.INFO, "http", "mode", mode);
 
-		var logfilepath =util.GetStr(config_http, "log/http.log", "log", "file");
-		if (!strings.Contains(logfilepath, "console")) {
-			var logfile, err = os.OpenFile(logfilepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-			if (err == nil) {
-				qlog.Log(qlog.INFO, "http", "log", logfilepath);
-			} else {
-				qlog.Log(qlog.ERROR, "http", "log", logfilepath, err);
+
+	var cache_timestamp = scache.GetCacheManager().Get(dict.CACHE_TIMESTAMP);
+	o.Engine = gin.Default();
+	o.Engine.Use(func(c *gin.Context) {
+		if (c.Request.Method == "GET") {
+			var path = c.Request.URL.Path;
+			if (path[len(path) - 1] == 'l') { // html, last char is l
+				var v, _ = cache_timestamp.Get(true, "js");
+				c.SetCookie("_u_js", v.(string), 0, "/", "/", false, false);
 			}
-			gin.DefaultWriter =io.MultiWriter(logfile);
-			gin.DefaultErrorWriter = io.MultiWriter(logfile);
 		}
-		var mode = util.GetStr(config_http, gin.ReleaseMode, "mode");
-		mode = strings.ToLower(mode);
-		gin.SetMode(mode);
-		qlog.Log(qlog.INFO, "http", "mode", mode);
+	});
+	o.Engine.Use(Recovery(func( c *gin.Context, err interface{}) {
+		var info = qref.StackInfo(2);
+		info["err"] = err;
+		o.RespJson(500, info, c);
+	}))
 
-		o.Engine = gin.Default()
-		o.Engine.Use(Recovery(func( c *gin.Context, err interface{}) {
-			var info = qref.StackInfo(2);
-			info["err"] = err;
-			o.RespJson(500, info, c);
-		}))
+	o.routeStatic();
+	o.routeCmd();
+	o.routeQuery();
+	o.routeScript();
 
-		o.routeStatic();
-		o.routeCmd();
-		o.routeQuery();
-		o.routeScript();
-
+	//var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
+	//go GinRefreshPage(refresh_interval);
+	go func() {
 		qlog.Log(qlog.INFO, "http", "ready to run");
-
-		var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
-		go GinRefreshPage(refresh_interval);
-
-
-		err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
+		var err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
 		if (err != nil) {
 			qlog.Log(qlog.ERROR, "http", "run", err);
 		}

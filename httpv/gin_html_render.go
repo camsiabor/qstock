@@ -80,7 +80,6 @@ func GinRefreshPage(refresh_interval int) {
 	for {
 		time.Sleep(time.Duration(refresh_interval) * time.Second)
 		_cache_mutex.RLock();
-		defer _cache_mutex.RUnlock();
 		for _, one := range _html_cache {
 			stat, err := os.Stat(one.Path);
 			if (err == nil) {
@@ -94,5 +93,6 @@ func GinRefreshPage(refresh_interval int) {
 				}
 			}
 		}
+		_cache_mutex.RUnlock();
 	}
 }

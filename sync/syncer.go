@@ -73,6 +73,23 @@ func (o * Syncer) Run(name string) {
 		}
 		util.MapMerge(profile, config, false);
 	}
+
+	for _, one := range profiles {
+		var profile = util.AsMap(one, false);
+		if (profile == nil) {
+			continue;
+		}
+		var embed_name = util.GetStr(profile, "", "embed");
+		if (len(embed_name) == 0) {
+			continue;
+		}
+		var embed_profile =  util.GetMap(profiles, false, embed_name);
+		if (embed_profile == nil) {
+			continue;
+		}
+		util.MapMerge(profile, embed_name, false);
+	}
+
 	var i int64;
 	for i = 0; i < o.concurrent; i++ {
 		go o.worker();

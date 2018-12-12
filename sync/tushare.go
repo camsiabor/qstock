@@ -82,7 +82,12 @@ func (o Syncer) TuShare_request(
 
 }
 
-
+func (o * Syncer) TuShare_trade_calendar(phrase string, work * ProfileWork) (err error) {
+	if (phrase != "work") {
+		return nil;
+	}
+	return nil;
+}
 
 func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error) {
 

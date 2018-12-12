@@ -91,9 +91,6 @@ vue_options.watch = {
     },
     setting : {
         handler(n, o) {
-            // if (!n.table.page_size) { n.table.page_size = 5; }
-            // if (isNaN(n.table.page_size * 1)) { n.table.page_size = 5; }
-            // if (n.table.page_size < 0) { n.table.page_size = -n.table.page_size; }
             if (n.table.page_size >= 100) { n.table.page_size = 100; }
             this.config_persist();
         },
@@ -140,15 +137,15 @@ vue_options.methods = {
             "dbs": dbs,
             "keys" : "meta*"
         })
-            .then(function (resp) {
-                meta = util.handle_response(resp);
-                if (meta) {
-                    meta.id = "0";
-                    this.db.update("meta", [], meta).then();
-                }
-                return meta;
-            }.bind(this))
-            .catch(util.handle_error.bind(this));
+        .then(function (resp) {
+            meta = util.handle_response(resp);
+            if (meta) {
+                meta.id = "0";
+                this.db.update("meta", [], meta).then();
+            }
+            return meta;
+        }.bind(this))
+        .catch(util.handle_error.bind(this));
     },
 
     script_list: function () {
@@ -658,6 +655,15 @@ vue_options.methods = {
     /* [clear] ------------------------------------------------------------------- */
     clear_cache: function (type, target) {
         switch (type) {
+            case "js":
+                axios.post("/cmd/go", {
+                    "type" : "time",
+                    "cmd" : "set",
+                    "key" : "js"
+                }).then(function () {
+                    window.location.href = window.location.href + "";
+                });
+                break;
             case "local" :
                 window.localStorage.clear();
                 this.console.text = "local storage clear";

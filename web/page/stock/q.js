@@ -142,7 +142,10 @@ vue_options.methods = {
         })
             .then(function (resp) {
                 meta = util.handle_response(resp);
-                this.db.update("meta",  [], meta).then();
+                if (meta) {
+                    meta.id = "0";
+                    this.db.update("meta", [], meta).then();
+                }
                 return meta;
             }.bind(this))
             .catch(util.handle_error.bind(this));

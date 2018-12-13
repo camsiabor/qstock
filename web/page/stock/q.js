@@ -235,8 +235,8 @@ vue_options.methods = {
         }
 
         let meta;
-        let fetch_khistory = time_from && time_from.length;
-        if (fetch_khistory) {
+        let do_fetch_khistory = time_from && time_from.length;
+        if (do_fetch_khistory) {
             if (!time_to || !time_to.length) {
                 let to = new Date();
                 time_to = QUtil.date_format(to, "");
@@ -250,7 +250,7 @@ vue_options.methods = {
         }.bind(this)).then(function(stocks_local_data) {
             stocks_local = stocks_local_data;
             // TODO khistory cache determine
-            if (fetch_khistory) {
+            if (do_fetch_khistory) {
                 let qs = this.db.args_flatten_qs(codes);
                 let sql = "SELECT * from khistory where code in (" + qs+ ") AND date >= ? AND date <= ?";
                 let args = codes.concat([ time_from, time_to ]);
@@ -261,53 +261,79 @@ vue_options.methods = {
             console.log("[meta]", meta);
 
             let meta_snapshot_last_id = QUtil.get(meta, [ "meta.a.snapshot.sz", "last_id"] , 0) * 1;
-            let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);
-            let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "x").substring(0, 8);
-            let meta_khistory_last_id_su = QUtil.get(meta, [ "meta.k.history.su", "last_id"] , "x").substring(0, 8);
+            // let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);
+            // let meta_khistory_last_id_sh = QUtil.get(meta, [ "meta.k.history.sh", "last_id"] , "x").substring(0, 8);
+            // let meta_khistory_last_id_su = QUtil.get(meta, [ "meta.k.history.su", "last_id"] , "x").substring(0, 8);
 
             let codes_map = {};
             for (let i = 0; i < codes.length; i++) {
                 let code = codes[i];
-                codes_map[code] = true;
+                codes_map[code] = {
+                    "do" : true,
+                    "code" : code
+                };
             }
 
             // let nowday = new Date().getDay();
             // let is_stock_day = nowday >= 1 && nowday <= 5;
             let stocks_stay = [];
-            let codes_fetch = [];
+            let fetch_pending = [];
+            let time_to_num = time_to * 1;
+            let time_from_num = time_from * 1;
             for (let i = 0; i < stocks_local.length; i++) {
                 let stock = stocks_local[i];
                 let code = stock["code"];
                 let _u = stock["_u"] * 1;
-                let stay = false;
-                if (meta_snapshot_last_id === _u) {
-                    if (fetch_khistory) {
-                        let _u_khistory = stock["_u_khistory"];
-                        if (_u_khistory) {
-                            _u_khistory = _u_khistory.substring(0, 8);
-                        }
-                        switch (code.charAt(0)) {
-                            case '0':
-                                stay = (_u_khistory === meta_khistory_last_id_sz);
-                                break;
-                            case '6':
-                                stay = (_u_khistory === meta_khistory_last_id_sh);
-                                break;
-                            default:
-                                stay = (_u_khistory === meta_khistory_last_id_su);
-                                break;
-                        }
+                let stay = true;
+                let fetch_time_from, fetch_time_to;
+                if (meta_snapshot_last_id !== _u) {
+                    stay = false;
+                }
+                if (do_fetch_khistory) {
+                    let khistory_to = (stock["khistory_to"] || time_to_num) * 1;
+                    let khistory_from = (stock["khistory_from"] || time_from_num) * 1;
+                    if (khistory_from <= time_from_num && khistory_to >= time_to_num) {
+                        fetch_time_from = "x";
                     } else {
-                        stay = true;
+                        stay = false;
+                        fetch_time_to = time_to;
+                        fetch_time_from = time_from;
+                        if (khistory_to > time_to_num) {
+                            fetch_time_to = khistory_from + "";
+                        }
+                        if (khistory_from < time_from_num) {
+                            fetch_time_from = khistory_to + "";
+                        }
                     }
                 }
+
+                let fetch_one = codes_map[code];
                 if (stay) {
+                    fetch_one.do = false;
                     stocks_stay.push(stock);
-                    codes_map[code] = false;
+                } else {
+                    fetch_one.do = true;
+                    if (do_fetch_khistory) {
+                        if (fetch_time_from) {
+                            fetch_one.from = fetch_time_from;
+                        }
+                        if (fetch_time_to) {
+                            fetch_one.to = fetch_time_to;
+                        }
+                    }
                 }
             }
 
-            if (fetch_khistory && khistorys && khistorys.length && stocks_stay.length) {
+            for(let code in codes_map) {
+                let fetch_one = codes_map[code];
+                if (fetch_one.do) {
+                    delete fetch_one.do;
+                    fetch_pending.push(fetch_one);
+                }
+            }
+
+            let khistory_map ={};
+            if (do_fetch_khistory && khistorys && khistorys.length) {
                 let stocks_stay_map = QUtil.array_to_map(stocks_stay, "code");
                 for(let i = 0; i < khistorys.length; i++) {
                     let one = khistorys[i];
@@ -316,25 +342,23 @@ vue_options.methods = {
                     if (stock) {
                         stock.khistory = stock.khistory || [];
                         stock.khistory.push(one);
+                        khistory_map[code] = stock.khistory;
                     }
                 }
             }
 
-            for(let code in codes_map) {
-                if (codes_map[code]) {
-                    codes_fetch.push(code);
-                }
-            }
             let wrap = {
                 stocks : stocks_stay,
                 stocks_local : stocks_stay,
-                codes_fetch : codes_fetch,
+                fetch_pending : fetch_pending,
                 time_from : time_from,
                 time_to : time_to,
                 meta : meta,
-                refresh_view : refresh_view
+                refresh_view : refresh_view,
+                khistory_local : khistorys,
+                khistory_map : khistory_map
             };
-            if (codes_fetch.length > 0) {
+            if (fetch_pending.length > 0) {
                 return this.stock_data_request(wrap);
             } else {
                 return this.stock_data_adapt(wrap);
@@ -343,14 +367,13 @@ vue_options.methods = {
     },
 
     stock_data_request: function(wrap) {
-
         return axios.post("/stock/gets", {
-            "codes": wrap.codes_fetch,
+            "fetchs": wrap.fetch_pending,
             "time_from" : wrap.time_from,
             "time_to" : wrap.time_to
         }).then(function (resp) {
             wrap.stocks = util.handle_response(resp);
-            if (wrap.stocks_local) {
+            if (wrap.stocks_local && wrap.stocks_local.length) {
                 wrap.stocks = wrap.stocks.concat(wrap.stocks_local);
             }
             return this.stock_data_adapt(wrap);
@@ -371,8 +394,8 @@ vue_options.methods = {
         // let max_date = "";
         let view_data = [];
         let update_data = [];
-        let khistorys = [];
-        let khistorys_map = {};
+        let khistory = [];
+        let khistory_map = wrap.khistory_map;
         let stocks_local_map = QUtil.array_to_map(stocks_local, "code");
         let meta = wrap.meta;
         let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "-");
@@ -381,22 +404,26 @@ vue_options.methods = {
         for (let i = 0; i < stocks.length; i++) {
             let stock = stocks[i];
             let code = stock.code;
-            let stock_khistory = stock.khistory;
+            if (!code) {
+                continue;
+            }
             if (!stocks_local_map[code]) {
                 update_data.push(stock);
-                if (stock_khistory && stock_khistory.length > 0) {
+                if (wrap.time_from) {
+                    let stock_khistory = stock.khistory || [];
                     for(let k = 0; k < stock_khistory.length; k++) {
                         let onek = stock_khistory[k];
                         onek.id = code + "-" + onek.date;
                     }
-                    khistorys = khistorys.concat(stock_khistory);
-                    khistorys_map[code] = stock_khistory;
-                    // if (!max_date) {
-                    //     let max = util.array_most(stock_khistory, function (max, one) {
-                    //         return max.date * 1 > one.date * 1;
-                    //     });
-                    //     max_date = max.date;
-                    // }
+                    if (stock_khistory.length) {
+                        khistory = khistory.concat(stock_khistory);
+                    }
+                    let stock_khistory_local = khistory_map[code];
+                    if (stock_khistory_local) {
+                        stock_khistory = stock_khistory_local.concat(stock_khistory);
+                    } else {
+                        khistory_map[code] = stock_khistory;
+                    }
                     switch(code.charAt(0)) {
                         case '0':
                             stock._u_khistory = meta_khistory_last_id_sz;
@@ -418,7 +445,9 @@ vue_options.methods = {
         let promise;
         if (update_data.length) {
             let fields_update = [ "_u" ];
-            if (khistorys.length) {
+            if (khistory.length) {
+                fields_update.push("khistory_to");
+                fields_update.push("khistory_from");
                 fields_update.push("_u_khistory");
             }
             promise = this.db.update("snapshot", fields_update, update_data);
@@ -426,18 +455,18 @@ vue_options.methods = {
             promise = Promise.resolve(stocks);
         }
         return promise.then(function () {
-            if (khistorys.length > 0) {
-                return this.db.update("khistory", ["code", "date" ], khistorys);
+            if (khistory.length > 0) {
+                return this.db.update("khistory", ["code", "date" ], khistory);
             }
             return stocks;
         }.bind(this)).then(function () {
             return stocks;
         }).then(function () {
-            if (khistorys.length > 0) {
+            if (khistory.length > 0) {
                 for (let i = 0; i < stocks.length; i++) {
                     let stock = stocks[i];
                     let code = stock.code;
-                    stock.khistory = khistorys_map[code];
+                    stock.khistory = khistory_map[code];
                 }
             }
             if (refresh_view) {
@@ -834,7 +863,7 @@ DB.new_db_promise({
         },
         "snapshot" : {
             "keyname" : "code",
-            "fields" : [ "_u", "_u_khistory", "data" ]
+            "fields" : [ "_u", "_u_khistory", "khistory_from", "khistory_to", "data" ]
         },
         "khistory" : {
             "keyname" : "id",

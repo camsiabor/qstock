@@ -14,6 +14,7 @@ import (
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/sync"
+	"net"
 	"strings"
 	"time"
 )
@@ -23,6 +24,18 @@ func master(g * global.G) {
 
 	var jsonstr, _ = json.Marshal(g.Config)
 	qlog.Log(qlog.INFO, "config", string(jsonstr[:]));
+
+	var master_listen = util.GetStr(g.Config, "127.0.0.1:65000", "master", "listen");
+	if (!strings.Contains(master_listen, ":")) {
+		master_listen = ":" + master_listen;
+	}
+	var lerr error;
+	g.Listener, lerr = net.Listen("tcp", master_listen);
+	if (lerr != nil) {
+		qlog.Log(qlog.INFO, "establish master listen fail ", master_listen, lerr);
+		panic(lerr);
+	}
+	qlog.Log(qlog.INFO, "master", "listener establish", master_listen);
 
 	var timezone = util.GetStr(g.Config, "Asia/Shanghai", "global", "timezone");
 	time.LoadLocation(timezone)

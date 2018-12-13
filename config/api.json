@@ -2,7 +2,7 @@
 
 
   "shenjian" : {
-    "active" : true,
+    "active" : false,
     "domain": "http://api.shenjian.io",
     "select_interval" : 30,
     "concurrent" : 1,
@@ -23,7 +23,7 @@
   },
 
   "tushare" : {
-    "active" : true,
+    "active" : false,
     "appsecret" : "f113afc39e582231631b3eabd61174397a25e2a6c56176d076f1a7ad",
     "domain" : "http://api.tushare.pro",
     "nice" : 250,

@@ -334,7 +334,9 @@
     QLoader.fetch_if('/js/eruda/eruda.js', "", {
         "url" : "eruda"
     }).then(function () {
-        eruda && eruda.init();
+        if (typeof eruda !== 'undefined') {
+            eruda.init();
+        }
     });
 
 </script>

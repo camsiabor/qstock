@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/camsiabor/qcom/util/qlog"
-	"github.com/camsiabor/qcom/util/util"
+	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"time"
 )

@@ -150,7 +150,8 @@ vue_options.methods = {
 
     script_list: function () {
         return axios.post("/script/list").then(function (json) {
-            this.script_names = util.handle_response(json, this.console, "");
+            let names = util.handle_response(json, this.console, "");
+            this.script_names = names.sort();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
@@ -544,7 +545,7 @@ vue_options.methods = {
                 name = name.replace("portf_", "");
                 data[i] = name;
             }
-            this.portfolio_names = data;
+            this.portfolio_names = data.sort();
         }.bind(this));
     },
 

@@ -3,7 +3,7 @@ package httpv
 import (
 	"github.com/aarzilli/golua/lua"
 	"github.com/camsiabor/qcom/global"
-	"github.com/camsiabor/qcom/util/util"
+	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/run"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"

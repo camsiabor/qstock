@@ -3,8 +3,8 @@ package sync
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/camsiabor/qcom/util/qlog"
-	"github.com/camsiabor/qcom/util/util"
+	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"github.com/pkg/errors"

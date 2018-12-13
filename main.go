@@ -16,6 +16,7 @@ import (
 	"github.com/camsiabor/qcom/qconfig"
 	"github.com/camsiabor/qcom/qerr"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/wrap"
 	"github.com/camsiabor/qstock/dict"
@@ -37,7 +38,7 @@ func main() {
 	flag.StringVar(&g.LogPath,  "log", "log", "log file path");
 	flag.StringVar(&g.ConfigPath,  "config", "config.json", "configuration file path");
 	flag.StringVar(&g.TimeZone,  "timezone", "Asia/Shanghai", "timezone");
-	flag.StringVar(&g.Mode,  "mode", "master", "run mode");
+	flag.StringVar(&g.Mode,  "mode", dict.MODE_MASTER, "run mode");
 
 	time.LoadLocation(g.TimeZone)
 
@@ -73,6 +74,15 @@ func main() {
 
 	var workingDir, _ = os.Getwd();
 	qlog.Log(qlog.INFO, g.Mode, "init", workingDir);
+
+	var pidfilename = g.Mode + ".pid";
+	var pidfilelock = qos.NewFileLock(pidfilename);
+	if err := pidfilelock.Lock(); err != nil {
+		qlog.Log(qlog.ERROR, g.Mode, "pid file locked", pidfilename);
+		os.Exit(1);
+	}
+	pidfilelock.WriteString(os.Getpid());
+	defer pidfilelock.UnLock();
 
 
 	// [Config] ------------------------------------------------------------------------------------------------

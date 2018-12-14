@@ -298,10 +298,10 @@ vue_options.methods = {
                         stay = false;
                         fetch_time_to = time_to;
                         fetch_time_from = time_from;
-                        if (khistory_to > time_to_num) {
+                        if (khistory_to >= time_to_num) {
                             fetch_time_to = khistory_from + "";
                         }
-                        if (khistory_from < time_from_num) {
+                        if (khistory_from <= time_from_num) {
                             fetch_time_from = khistory_to + "";
                         }
                     }

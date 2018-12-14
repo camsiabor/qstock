@@ -364,11 +364,10 @@ func (o * Syncer) DoProfileWithRecord(work * ProfileWork) (ferr error) {
 	}
 
 	if (err == nil) {
-		start = time.Now();
-		profile["last"] = start.Unix();
-		dao.Update(database, metatoken, "last", start.Unix(), true, -1);
+		profile["last"] = end.Unix();
+		dao.Update(database, metatoken, "last", end.Unix(), true, -1);
 		dao.Update(database, metatoken, "last_id", work.Id, true, -1);
-		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
+		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&end), true, -1);
 		dao.Update(database, metatoken, "last_count", count, true, -1);
 
 		profileRunInfo.LastEndTime = end.Unix();

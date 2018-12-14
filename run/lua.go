@@ -24,6 +24,9 @@ func LuaGetVal(L * lua.State, idx int) (interface{}, error) {
 	return r, err;
 }
 
+
+
+
 func LuaFormatStack(stacks []lua.LuaStackEntry) []lua.LuaStackEntry {
 	var count = len(stacks);
 	var clones = make([]lua.LuaStackEntry, count);
@@ -43,6 +46,28 @@ func LuaFormatStack(stacks []lua.LuaStackEntry) []lua.LuaStackEntry {
 		}
 		clone.Source = "";
 		clone.CurrentLine = linenum;
+		clones[i] = clone;
+	}
+	return clones;
+}
+
+func LuaFormatStackToMap(stacks []lua.LuaStackEntry) []map[string]interface{} {
+	var count = len(stacks);
+	var clones = make([]map[string]interface{}, count);
+	for i := 0; i < count; i++ {
+		var stack = stacks[i];
+		var clone = make(map[string]interface{});
+		var linenum = stack.CurrentLine;
+		if (linenum >= 0) {
+			var lines = strings.Split(stack.Source, "\n");
+			if (linenum < len(lines)) {
+				clone["linesrc"] = lines[linenum - 1];
+			} else {
+				clone["linesrc"] = stack.ShortSource;
+			}
+		}
+		clone["line"] = linenum;
+		clone["func"] = stack.Name;
 		clones[i] = clone;
 	}
 	return clones;

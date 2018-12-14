@@ -346,6 +346,16 @@ QUtil.map_clone = function(m, opt) {
     return clone;
 };
 
+QUtil.map_merge = function(des, src, override) {
+    for(let k in src) {
+        let original = des[k];
+        if (original && !override) {
+            continue;
+        }
+        des[k] = src[k];
+    }
+};
+
 QUtil.map_is_same_by_field_val = function(m1, m2, fields, nrange) {
 
     if (typeof nrange === 'undefined') {

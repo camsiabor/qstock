@@ -290,8 +290,8 @@ vue_options.methods = {
                     stay = false;
                 }
                 if (do_fetch_khistory) {
-                    let khistory_to = (stock["khistory_to"] || time_to_num) * 1;
-                    let khistory_from = (stock["khistory_from"] || time_from_num) * 1;
+                    let khistory_to = (stock["khistory_to"] || (time_to_num - 1) ) * 1;
+                    let khistory_from = (stock["khistory_from"] || (time_from_num + 1)) * 1;
                     if (khistory_from <= time_from_num && khistory_to >= time_to_num) {
                         fetch_time_from = "x";
                     } else {

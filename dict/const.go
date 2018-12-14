@@ -2,6 +2,8 @@ package dict
 
 const MODE_MASTER = "master";
 const MODE_DAEMON = "daemon";
+const MODE_MOCKEE = "mockee";
+
 
 const SHENZHEN = "sz";
 const SHANGHAI = "sh";

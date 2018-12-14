@@ -12,8 +12,11 @@ import (
 // https://github.com/stevedonovan/luar/
 
 
+
+
+
 func BenchmarkGolua(b *testing.B) {
-	TestGolua(nil);
+	TestMockee(nil);
 }
 
 func BenchmarkGoluaRaw(b *testing.B) {
@@ -26,7 +29,7 @@ func BenchmarkGoluaRaw(b *testing.B) {
 	}
 }
 
-func TestGolua(t *testing.T) {
+func TestMockee(t *testing.T) {
 	const script =
 `
 local v;

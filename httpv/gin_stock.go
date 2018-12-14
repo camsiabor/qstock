@@ -23,9 +23,9 @@ func (o * HttpServer) routeStock() {
 		var profileName = util.GetStr(m, "", "profile");
 		var cmd = util.GetStr(m, "force", "cmd");
 		var _, err = global.GetInstance().SendCmd(&global.Cmd{
-			Service: "sync",
+			Service:  "sync",
 			Function: profileName,
-			Cmd: cmd,
+			SFlag:    cmd,
 		});
 		o.RespJsonEx("cmd sent", err, c);
 	});

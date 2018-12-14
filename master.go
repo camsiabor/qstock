@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/camsiabor/qcom/agenda"
 	"github.com/camsiabor/qcom/global"
-	"github.com/camsiabor/qcom/qconfig"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
@@ -62,33 +61,7 @@ func master(g * global.G) {
 	// [api puller] --------------------------------------------------------------------------------------------
 	initSyncer(g);
 
-	// [cmd] --------------------------------------------------------------------------------------------
-	handleCmd();
 
-	// [release] --------------------------------------------------------------------------------------------
-
-	qlog.Log(qlog.INFO, "main", "fin")
-}
-
-func handleCmd() {
-	var chCmd = make(chan string, 256);
-	var g = global.GetInstance();
-	for {
-		var cmd, ok = <- chCmd;
-		if (!ok || cmd == "exit") {
-			qlog.Log(qlog.INFO, "main", "exit");
-			break;
-		}
-		qlog.Log(qlog.INFO, "main", "receive cmd", cmd);
-		if (cmd == "config reload") {
-			var config, err = qconfig.ConfigLoad(g.ConfigPath, "includes");
-			if (err != nil) {
-				qlog.Log(qlog.FATAL, "config", "load failure", err);
-			} else {
-				g.Config = config;
-			}
-		}
-	}
 }
 
 func initCacher(g * global.G) {
@@ -109,7 +82,6 @@ func initCacher(g * global.G) {
 	var scache_code = cache_manager.Get(dict.CACHE_STOCK_CODE);
 	scache_code.Dao = dict.DAO_MAIN;
 	scache_code.Db = dict.DB_DEFAULT;
-
 	scache_code.Loader = func(scache *scache.SCache, keys ...string) (interface{}, error) {
 		var dao, err = qdao.GetDaoManager().Get(dict.DAO_MAIN);
 		if (err != nil) {
@@ -163,10 +135,6 @@ func initCacher(g * global.G) {
 	var scache_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT);
 	scache_snapshot.Dao = dict.DAO_MAIN;
 	scache_snapshot.Db = dict.DB_DEFAULT;
-
-	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY);
-	scache_khistory.Dao = dict.DAO_MAIN;
-	scache_khistory.Db = dict.DB_HISTORY;
 	scache_snapshot.Loader = func(scache * scache.SCache, keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
@@ -176,6 +144,11 @@ func initCacher(g * global.G) {
 		return conn.Get(scache.Db, "", code, true);
 	}
 
+
+	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY);
+	scache_khistory.Dao = dict.DAO_MAIN;
+	scache_khistory.Db = dict.DB_HISTORY;
+	scache_khistory.Timeout = time.Second * time.Duration(20);
 	scache_khistory.Loader = func(scache *scache.SCache, keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
@@ -183,7 +156,23 @@ func initCacher(g * global.G) {
 		}
 		var code = keys[0];
 		var datestr = keys[1];
-		return conn.Get(scache.Db, code, datestr, true);
+		data, err := conn.Get(scache.Db, code, datestr, true);
+		if (data != nil) {
+			return data, err;
+		}
+		var g = global.GetInstance();
+		var cmd = &global.Cmd {
+			Service: "sync",
+			Function: "k.history.sz",
+			Data : map[string]interface{} {
+				"codes" : []string { code },
+				"from" : datestr,
+				"to" : datestr,
+			},
+			Timeout: scache.Timeout,
+		};
+		data, err = g.SendCmd(cmd);
+		return data, err;
 	};
 }
 

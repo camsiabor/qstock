@@ -58,6 +58,7 @@ func (o * ProfileWork) GetDao() (dao qdao.D, err error) {
 }
 
 
+
 type ProfileRunInfo struct {
 	RunCount int;
 	LastRunTime int64;
@@ -161,7 +162,7 @@ func (o * Syncer) heartbeat() {
 			var force = false;
 			if (cmd != nil) {
 				if (strings.Contains(cmd.Function, profilename)) {
-					force = strings.Contains(cmd.Cmd, "force");
+					force = strings.Contains(cmd.SFlag, "force");
 				} else {
 					continue;
 				}
@@ -203,7 +204,7 @@ func (o * Syncer) worker() {
 		}
 		var profilename = cmd.Function;
 		factor := util.AsFloat64(cmd.GetData("factor"), 1);
-		force := strings.Contains(cmd.Cmd, "force");
+		force := strings.Contains(cmd.SFlag, "force");
 		qlog.Log(qlog.DEBUG, o.Name, "worker", "receive profilename", profilename);
 		var profile = o.GetProfile(profilename);
 		if (profile == nil) {

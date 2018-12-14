@@ -102,8 +102,37 @@ func main() {
 	case dict.MODE_DAEMON:
 		daemon(g);
 	}
+
+	// [cmd] --------------------------------------------------------------------------------------------
+	handleCmd();
+
+	// [release] --------------------------------------------------------------------------------------------
+	qlog.Log(qlog.INFO, g.Mode, "fin")
+
 }
 
 func signalHandle() {
 
+}
+
+
+func handleCmd() {
+	var chCmd = make(chan string, 256);
+	var g = global.GetInstance();
+	for {
+		var cmd, ok = <- chCmd;
+		if (!ok || cmd == "exit") {
+			qlog.Log(qlog.INFO, "main", "exit");
+			break;
+		}
+		qlog.Log(qlog.INFO, "main", "receive cmd", cmd);
+		if (cmd == "config reload") {
+			var config, err = qconfig.ConfigLoad(g.ConfigPath, "includes");
+			if (err != nil) {
+				qlog.Log(qlog.FATAL, "config", "load failure", err);
+			} else {
+				g.Config = config;
+			}
+		}
+	}
 }

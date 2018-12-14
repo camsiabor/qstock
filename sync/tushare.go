@@ -3,6 +3,7 @@ package sync
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
@@ -21,7 +22,7 @@ curl -X POST -d '{"api_name": "trade_cal", "token": "xxxxxxxx", "params": {"exch
 func (o Syncer) TuShare_request(
 	work * ProfileWork,
 	fields []string,
-	requestargs map[string]interface{}) (ret interface{}, err error) {
+	requestargs map[string]interface{}) (ret []interface{}, err error) {
 
 	if (!o.doContinue) {
 		return;
@@ -37,11 +38,11 @@ func (o Syncer) TuShare_request(
 		reqm["fields"] = fields;
 	}
 	reqm["params"] = requestargs;
-	ret, err = json.Marshal(reqm);
+	reqbody, err := json.Marshal(reqm);
 	if (err != nil) {
 		return
 	}
-	req.Body(ret);
+	req.Body(reqbody);
 	var timeout = util.GetInt64(profile, 20, "timeout");
 	var nice = util.GetInt64(profile, 250, "nice");
 	req.SetTimeout(time.Duration(10) * time.Second, time.Duration(timeout) * time.Second);
@@ -77,9 +78,8 @@ func (o Syncer) TuShare_request(
 	if (err != nil) {
 		return nil, err;
 	}
-	maps, _, err = o.PersistAndCache(work, maps);
+	_, _, err = o.PersistAndCache(work, maps);
 	return maps, err;
-
 }
 
 func (o * Syncer) TuShare_trade_calendar(phrase string, work * ProfileWork) (err error) {
@@ -89,55 +89,62 @@ func (o * Syncer) TuShare_trade_calendar(phrase string, work * ProfileWork) (err
 	return nil;
 }
 
-func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error) {
+func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (interface{}, error) {
 
-	if (phrase != "work") {
-		return nil;
+
+	var codes []string;
+	var metatoken string;
+	var date_to_str string;
+	var date_from_str string;
+	if (work.GCmd != nil && work.GCmd.Data != nil) {
+		codes = util.GetStringSlice(work.GCmd.Data, "codes");
+		date_to_str = util.GetStr(work.GCmd.Data, "", "to");
+		date_from_str = util.GetStr(work.GCmd.Data, "", "from");
+		if (codes == nil || len(codes) == 0) {
+			return nil, fmt.Errorf("codes is null %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data);
+		}
+		if (len(date_to_str) == 0 || len(date_from_str) == 0) {
+			return nil, fmt.Errorf("need to specify date from & to %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data);
+		}
 	}
 
-
-	if (err != nil) {
-		qlog.Log(qlog.ERROR, err);
-		return err;
-	}
 	var dao = work.Dao;
 	var profile = work.Profile;
 	var profilename = work.ProfileName;
-
-	var db = util.GetStr(profile, dict.DB_HISTORY, "db");
-	var metatoken = o.GetMetaToken(profilename);
-
-	var market= util.GetStr(profile, "", "marker");
-	var fetcheach = util.GetInt(profile, 60, "each");
-
-	var from_date_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102");
-	var fetch_last_date_from, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", false));
-	if (len(fetch_last_date_from) > 0) {
-		var from_date_str_num = util.AsInt64(from_date_str, 0);
-		var fetch_last_date_from_num = util.AsInt64(fetch_last_date_from, 0);
-		if (from_date_str_num >= fetch_last_date_from_num) {
-			var fetch_last_date, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
-			if (len(fetch_last_date) > 0) {
-				from_date_str = fetch_last_date;
+	var db= util.GetStr(profile, dict.DB_HISTORY, "db");
+	if (len(date_to_str) == 0) {
+		var metatoken= o.GetMetaToken(profilename);
+		var fetcheach= util.GetInt(profile, 60, "each");
+		date_from_str= time.Now().AddDate(0, 0, -fetcheach).Format("20060102");
+		var fetch_last_date_from, _= util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", false));
+		if (len(fetch_last_date_from) > 0) {
+			var date_from_str_num= util.AsInt64(date_from_str, 0);
+			var fetch_last_date_from_num= util.AsInt64(fetch_last_date_from, 0);
+			if (date_from_str_num >= fetch_last_date_from_num) {
+				var fetch_last_date, _= util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date", false));
+				if (len(fetch_last_date) > 0) {
+					date_from_str = fetch_last_date;
+				}
 			}
 		}
-	}
 
-	var to_date = time.Now();
-	var to_date_str = to_date.Format("20060102");
-	if (from_date_str == to_date_str) {
-		if (to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday) {
-			qlog.Log(qlog.INFO, o.Name, "sync", "sunday & saturday need a rest");
-			return;
-		}
-		if (to_date.Hour() < 15) {
-			qlog.Log(qlog.INFO, o.Name, "sync", "wait for the market to rest ", to_date.Hour());
-			return;
+		var to_date= time.Now();
+		var date_to_str= to_date.Format("20060102");
+		if (date_from_str == date_to_str) {
+			if (to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday) {
+				qlog.Log(qlog.INFO, o.Name, "sync", "sunday & saturday need a rest");
+				return nil, nil;
+			}
+			if (to_date.Hour() < 15) {
+				qlog.Log(qlog.INFO, o.Name, "sync", "wait for the market to rest ", to_date.Hour());
+				return nil, nil;
+			}
 		}
 	}
 
 	var keyprefix string;
 	var keysuffix string;
+	var market = util.GetStr(profile, "", "marker");
 	market = strings.ToLower(market);
 	if (market == "sz") {
 		keyprefix = "00*";
@@ -149,16 +156,18 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 		keyprefix = "60*";
 		keysuffix = ".SH";
 	}
-	// TODO middle little pan
-	codes, err := dao.Keys(dict.DB_DEFAULT, "", keyprefix);
 
-	if (err != nil) {
-		qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err);
-		return err;
+	var err error;
+	if (codes == nil || len(codes) == 0) {
+		codes, err = dao.Keys(dict.DB_DEFAULT, "", keyprefix);
+		if (err != nil) {
+			qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err);
+			return nil, err;
+		}
 	}
 
-	var perr error;
-	var rargs= make(map[string]interface{});
+	var data []interface{};
+	var rargs = make(map[string]interface{});
 	for retry := 1; retry <= 3; retry++ {
 		var fails = make([]string, len(codes));
 		var failcount = 0;
@@ -167,13 +176,19 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 				continue;
 			}
 			rargs["ts_code"] = code + keysuffix;
-			rargs["start_date"] = from_date_str;
-			rargs["end_date"] = to_date_str;
-			_, err := o.TuShare_request(work, nil, rargs);
+			rargs["start_date"] = date_from_str;
+			rargs["end_date"] = date_to_str;
+			data_part, err := o.TuShare_request(work, nil, rargs);
+			if (data_part != nil && len(data_part) > 0) {
+				if (data == nil) {
+					data = data_part;
+				}
+				data = append(data, data_part...);
+			}
 			if (err == nil) {
-				qlog.Log(qlog.INFO, profilename, "persist", code, from_date_str, to_date_str);
+				qlog.Log(qlog.INFO, profilename, "persist", code, date_from_str, date_to_str);
 			} else {
-				qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, from_date_str, to_date_str, err.Error());
+				qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, date_from_str, date_to_str, err.Error());
 				fails[failcount] = code;
 				failcount++;
 			}
@@ -182,10 +197,12 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 			codes = fails;
 			qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount, "retry", retry);
 		} else {
-			dao.Update(db, metatoken, "fetch_last_date", to_date_str, true, 0);
-			dao.Update(db, metatoken, "fetch_last_date_from", from_date_str, true, 0);
+			if (len(metatoken) > 0) {
+				dao.Update(db, metatoken, "fetch_last_date", date_to_str, true, 0);
+				dao.Update(db, metatoken, "fetch_last_date_from", date_from_str, true, 0);
+			}
 			break;
 		}
 	}
-	return perr;
+	return data, err;
 }

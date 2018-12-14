@@ -186,8 +186,8 @@ func (o * HttpServer) routeStock() {
 			if (fetch_to_index <= 0) {
 				fetch_to_index = time_array_len - 1;
 			}
-			fetch_from = time_n_array[fetch_from_index];
-			fetch_to = time_n_array[fetch_to_index];
+			//fetch_from = time_n_array[fetch_from_index];
+			//fetch_to = time_n_array[fetch_to_index];
 			var time_include = time_array[fetch_from_index:fetch_to_index + 1];
 			if (len(time_include) > 0) {
 				khistory, err := khistory_subcache.List(true, time_include...);

@@ -41,6 +41,14 @@ const stock_methods = {
         if (do_fetch_khistory) {
             if (!time_to || !time_to.length) {
                 let to = new Date();
+                while(true) {
+                    let dayofweek = to.getDay()
+                    if (dayofweek === 6 || dayofweek === 0) {
+                        to.setTime(to.getTime() - (24 * 3600 * 1000));
+                    } else {
+                        break;
+                    }
+                }
                 time_to = QUtil.date_format(to, "");
             }
         }
@@ -210,7 +218,7 @@ const stock_methods = {
                 continue;
             }
             if (!stocks_local_map[code]) {
-                update_data.push(stock);
+
                 if (wrap.time_from) {
                     let stock_khistory = stock.khistory || [];
                     for(let k = 0; k < stock_khistory.length; k++) {
@@ -237,8 +245,16 @@ const stock_methods = {
                             stock._u_khistory = meta_khistory_last_id_su;
                             break;
                     }
-                    stock.khistory = null;
+                    let clone = QUtil.map_clone(stock, {
+                        ignore : {
+                            "khistory" : true
+                        }
+                    });
+                    update_data.push(clone);
+                } else {
+                    update_data.push(stock);
                 }
+
             }
             view_data.push(stock);
         }
@@ -264,6 +280,7 @@ const stock_methods = {
         }.bind(this)).then(function () {
             return stocks;
         }).then(function () {
+            /*
             if (khistory.length > 0) {
                 for (let i = 0; i < stocks.length; i++) {
                     let stock = stocks[i];
@@ -271,6 +288,7 @@ const stock_methods = {
                     stock.khistory = khistory_map[code];
                 }
             }
+            */
             if (refresh_view) {
                 this.table_init(view_data);
             }

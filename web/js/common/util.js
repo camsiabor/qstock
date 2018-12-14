@@ -328,11 +328,14 @@ QUtil.array_most = function (arr, callback) {
     return most;
 };
 
-
 QUtil.map_clone = function(m, opt) {
     let clone = {};
     opt = opt || {};
+    let ignore = opt.ignore || false;
     for(let k in m) {
+        if (ignore && ignore[k]) {
+            continue;
+        }
         let v = m[k];
         let type = typeof v;
         if (type === 'object' && !opt.obj) {

@@ -7,11 +7,6 @@ const datamock = [{
     name: "redis",
     now: 1, open: 1, min: 1, max: 1, close: 1,
     change_rate: 1
-},{
-    code: "greetings",
-    name: "lua",
-    now: 3, open: 1, min: 1, max: 1, close: 1,
-    change_rate: 1
 }];
 
 

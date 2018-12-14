@@ -52,14 +52,32 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c * gin.C
 	if (err != nil) {
 		code = 500;
 		var luastacks = L.StackTrace();
+		luastacks = run.LuaFormatStack(luastacks[:]);
 		var r = make(map[string]interface{});
-		if (luastacks != nil && len(luastacks) > 0) {
-			r["func"] = luastacks[0].Name;
-			r["line"] = luastacks[0].CurrentLine;
-			r["file"] = luastacks[0].ShortSource;
+
+		var linenum = -1;
+		var funcname = "";
+		for n := 0; n < len(luastacks); n++ {
+			luastacks[n].Source = "";
+			if (linenum < 0) {
+				linenum = luastacks[n].CurrentLine;
+			}
+			if (len(funcname) == 0) {
+				funcname = luastacks[n].Name;
+			}
 		}
+
+		if (luastacks != nil && len(luastacks) > 0) {
+
+		}
+
+		r["func"] = luastacks[0].Name;
+		r["line"] = luastacks[0].CurrentLine;
+		r["file"] = luastacks[0].ShortSource;
+
 		r["stack"] = luastacks;
 		r["err"] = err.Error();
+		r["type"] = "lua";
 		data = r;
 	}
 	o.RespJson(code, data, c);

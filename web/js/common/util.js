@@ -69,9 +69,13 @@ QUtil.prototype.handle_response = function(resp, printer, msg) {
             }
         }
         if (r.data.stack) {
+            let stack = r.data.stack;
+            if (typeof stack !== 'string') {
+                stack = JSON.stringify(stack, null, 2);
+            }
             msg = r.data.err
                 + "\n\n" + JSON.stringify(rdataclone, null, 2)
-                + "\n\n" + r.data.stack;
+                + "\n\n@stack:\n" + stack;
         } else {
             msg = JSON.stringify(r.data, null, 2);
         }

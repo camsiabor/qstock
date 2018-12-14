@@ -204,7 +204,7 @@ func (o * Syncer) worker() {
 		var profilename = cmd.Function;
 		factor := util.AsFloat64(cmd.GetData("factor"), 1);
 		force := strings.Contains(cmd.Cmd, "force");
-		qlog.Log(qlog.INFO, o.Name, "worker", "receive profilename", profilename);
+		qlog.Log(qlog.DEBUG, o.Name, "worker", "receive profilename", profilename);
 		var profile = o.GetProfile(profilename);
 		if (profile == nil) {
 			qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);

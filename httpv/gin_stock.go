@@ -20,11 +20,11 @@ func (o * HttpServer) routeStock() {
 
 	group.POST("/sync", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c);
-		var profile = util.GetStr(m, "", "profile");
+		var profileName = util.GetStr(m, "", "profile");
 		var cmd = util.GetStr(m, "force", "cmd");
 		var _, err = global.GetInstance().SendCmd(&global.Cmd{
 			Service: "sync",
-			Name: profile,
+			Function: profileName,
 			Cmd: cmd,
 		});
 		o.RespJsonEx("cmd sent", err, c);

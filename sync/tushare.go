@@ -106,7 +106,7 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (err error
 
 	var db = util.GetStr(profile, dict.DB_HISTORY, "db");
 	var metatoken = o.GetMetaToken(profilename);
-	//var profileRunInfo = o.GetProfileRunInfo(profilename);
+
 	var market= util.GetStr(profile, "", "marker");
 	var fetcheach = util.GetInt(profile, 60, "each");
 

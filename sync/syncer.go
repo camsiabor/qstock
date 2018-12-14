@@ -4,13 +4,14 @@ import (
 	"github.com/camsiabor/qcom/agenda"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
-	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/qerr"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/qtime"
+	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
@@ -42,7 +43,20 @@ type ProfileWork struct {
 	Force bool;
 	Factor float64;
 	Context * Syncer;
+	GCmd * global.Cmd;
+	Args map[string]interface{};
 }
+
+func (o * ProfileWork) GetDao() (dao qdao.D, err error) {
+	if (o.Dao == nil) {
+		if (o.Profile != nil) {
+			daoname := util.GetStr(o.Profile, dict.DAO_MAIN, "dao");
+			o.Dao, err = qdao.GetDaoManager().Get(daoname);
+		}
+	}
+	return o.Dao, err;
+}
+
 
 type ProfileRunInfo struct {
 	RunCount int;
@@ -107,12 +121,12 @@ func (o * Syncer) stop() {
 	}
 }
 
-
-func (o *Syncer) FilterCmd(cmd *global.Cmd) bool {
-	return cmd.Service == "sync";
-}
-
 func (o * Syncer) HandleCmd(cmd * global.Cmd) (interface{}, error) {
+	var profileName = cmd.Function;
+	if (len(profileName) == 0) {
+		return nil, errors.New("profile name is null");
+	}
+
 	o.channelFetchCmd <- cmd;
 	return cmd.RetVal, cmd.RetErr;
 }
@@ -146,7 +160,7 @@ func (o * Syncer) heartbeat() {
 			}
 			var force = false;
 			if (cmd != nil) {
-				if (strings.Contains(cmd.Name, profilename)) {
+				if (strings.Contains(cmd.Function, profilename)) {
 					force = strings.Contains(cmd.Cmd, "force");
 				} else {
 					continue;
@@ -170,7 +184,7 @@ func (o * Syncer) heartbeat() {
 			}
 			var dcmd * global.Cmd;
 			if (cmd == nil) {
-				dcmd = &global.Cmd{ Name : profilename }
+				dcmd = &global.Cmd{ Function : profilename }
 			} else {
 				dcmd = cmd;
 			}
@@ -183,16 +197,15 @@ func (o * Syncer) heartbeat() {
 
 func (o * Syncer) worker() {
 	qlog.Log(qlog.INFO, "api", o.Name, "worker start");
-	var g = global.GetInstance();
 	for cmd := range o.channelWorkProfile {
 		if (!o.doContinue) {
 			break;
 		}
-		var profilename = cmd.Name;
+		var profilename = cmd.Function;
 		factor := util.AsFloat64(cmd.GetData("factor"), 1);
 		force := strings.Contains(cmd.Cmd, "force");
 		qlog.Log(qlog.INFO, o.Name, "worker", "receive profilename", profilename);
-		var profile = util.GetMap(g.Config, false, "api", o.Name, "profiles", profilename);
+		var profile = o.GetProfile(profilename);
 		if (profile == nil) {
 			qlog.Log(qlog.ERROR, o.Name, "worker", "profile not found", profilename);
 		} else {
@@ -201,8 +214,9 @@ func (o * Syncer) worker() {
 				ProfileName: profilename,
 				Force: force,
 				Factor: factor,
+				GCmd : cmd,
 			};
-			o.DoProfile(work)
+			o.DoProfileWithRecord(work)
 		}
 		if (!o.doContinue) {
 			break;
@@ -211,12 +225,70 @@ func (o * Syncer) worker() {
 	qlog.Log(qlog.INFO, "api", "worker end", o.concurrent);
 }
 
+func (o * Syncer) DoProfileRecover(work * ProfileWork) {
+	var err = recover();
+	if (err == nil) {
+		return;
+	}
+	if (work != nil && work.GCmd != nil && work.GCmd.RetChan != nil) {
+		work.GCmd.RetErr = util.AsError(err);
+		work.GCmd.RetChan <- work.GCmd;
+	}
+}
 
-func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
+func (o * Syncer) GetProfile(name string) map[string]interface{} {
+	var g  = global.GetInstance();
+	return util.GetMap(g.Config, false, "api", o.Name, "profiles", name);
+}
+
+func (o * Syncer) DoProfile(work * ProfileWork) ([]interface{}, error) {
+
+	defer o.DoProfileRecover(work);
+
+	if (work.Dao == nil) {
+		work.Dao, _ = work.GetDao();
+	}
+
+	if (work.Profile == nil) {
+		work.Profile = o.GetProfile(work.ProfileName);
+	}
+
+	var now = time.Now();
+	work.StartTime = now.Unix();
+	work.Id = qtime.Time2Int64(&now);
+
+	var retvalwrap []interface{};
+	var funcname = util.GetStr(work.Profile, "", "handler");
+	var retvals, err = qref.FuncCallByName(o, funcname, "work", work);
+	if (retvals != nil) {
+		retvalwrap = make([]interface{}, len(retvals));
+		for i, retval := range retvals {
+			if (retval.IsValid()) {
+				retvalwrap[i] = retval.Interface();
+			}
+		}
+	}
+
+	work.EndTime = time.Now().Unix();
+
+	if (work.GCmd != nil) {
+		if (work.GCmd.RetChan != nil) {
+			work.GCmd.RetErr = err;
+			work.GCmd.RetVal = retvals;
+			work.GCmd.RetChan <- work.GCmd;
+		}
+	}
+	return retvalwrap, err;
+}
+
+func (o * Syncer) DoProfileWithRecord(work * ProfileWork) (ferr error) {
+
+	defer qerr.SimpleRecover(0);
+
 	work.Context = o;
 	var profile = work.Profile;
 	var profilename = work.ProfileName;
-	defer qerr.SimpleRecover(0);
+
 	var now = time.Now();
 	var profileRunInfo = o.GetProfileRunInfo(profilename);
 	var interval = util.GetInt64(profile, 3600, "interval");
@@ -229,22 +301,15 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 		}
 	}
 	profileRunInfo.LastRunTime = now.Unix();
-
-	daoname := util.GetStr(profile, dict.DAO_MAIN, "dao");
 	database := util.GetStr(profile, dict.DB_DEFAULT, "db");
 
-	//marker := util.GetStr(profile, "", "marker");
-	dao, cerr := qdao.GetDaoManager().Get(daoname);
+	dao, cerr := work.GetDao();
 	if (dao == nil) {
 		return cerr;
 	}
 
 	start := now;
 	timestamp := now.Unix();
-
-	work.Dao = dao;
-	work.StartTime = timestamp;
-	work.Id = qtime.Time2Int64(&start);
 
 	metatoken := o.GetMetaToken(profilename);
 
@@ -269,11 +334,15 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 	sync_record_cacher.SetSubVal(timestamp, profilename, "start");
 	sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&start), profilename, "start_str");
 
-	var funcname = util.GetStr(profile, "", "handler");
-
-	var _, err = qref.FuncCallByName(o, funcname, "work", work);
 	var end = time.Now();
 	var elapse = end.Unix() - start.Unix();
+	var data, err = o.DoProfile(work);
+	var count int;
+	if (data == nil) {
+		count = 0;
+	} else {
+		count = len(data);
+	}
 
 	if (err == nil) {
 		start = time.Now();
@@ -281,11 +350,11 @@ func (o * Syncer) DoProfile(work * ProfileWork) (ferr error) {
 		dao.Update(database, metatoken, "last", start.Unix(), true, -1);
 		dao.Update(database, metatoken, "last_id", work.Id, true, -1);
 		dao.Update(database, metatoken, "last_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
+		dao.Update(database, metatoken, "last_count", count, true, -1);
 
 		profileRunInfo.LastEndTime = end.Unix();
 		profileRunInfo.RunCount = profileRunInfo.RunCount + 1;
 
-		work.EndTime = end.Unix();
 		sync_record_cacher.SetSubVal(work.EndTime, profilename, "last");
 		sync_record_cacher.SetSubVal(work.Id, profilename, "last_id");
 		sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&end), profilename, "last_str");

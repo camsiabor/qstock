@@ -195,7 +195,7 @@ func initSyncer(g * global.G) {
 			continue;
 		}
 		var syncer = new(sync.Syncer);
-		g.CmdHandlerRegister(apiname, syncer);
+		g.CmdHandlerRegister("sync", syncer);
 		syncer.Run(apiname);
 	}
 }

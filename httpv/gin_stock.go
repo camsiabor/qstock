@@ -8,6 +8,7 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"strconv"
 	"time"
 )
@@ -82,9 +83,13 @@ func (o * HttpServer) routeStock() {
 		var time_to_str = util.GetStr(m, "", "time_to");
 
 		var index = 0;
-		var fetchs = ofetchs.([]interface{});
+		var fetchs = util.AsSlice(ofetchs, 0);
 		var cacher_stock_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT);
 		var cacher_stock_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY);
+		if (fetchs == nil || len(fetchs) == 0) {
+			o.RespJsonEx(nil, errors.New("fetchs is null"), c);
+			return;
+		}
 
 		var time_array_len = 0;
 		var time_array []string = nil;

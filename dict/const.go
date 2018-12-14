@@ -20,3 +20,5 @@ const DB_DEFAULT = "def";
 const DB_HISTORY = "history";
 const DB_COMMON = "common";
 const DB_CALENDAR = "calendar";
+
+const SERVICE_SYNC = "sync";

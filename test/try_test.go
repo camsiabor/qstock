@@ -2,6 +2,7 @@ package test
 
 import (
 	"github.com/teivah/gosiris/gosiris"
+	"github.com/apache/thrift/lib/go/thrif"
 	"testing"
 	"time"
 )

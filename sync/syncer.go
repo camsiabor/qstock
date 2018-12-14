@@ -122,14 +122,16 @@ func (o * Syncer) stop() {
 	}
 }
 
-func (o * Syncer) HandleCmd(cmd * global.Cmd) (interface{}, error) {
+func (o * Syncer) HandleCmd(cmd * global.Cmd) (* global.Cmd, bool, error) {
 	var profileName = cmd.Function;
 	if (len(profileName) == 0) {
-		return nil, errors.New("profile name is null");
+		return nil, false, errors.New("profile name is null");
 	}
-
-	o.channelFetchCmd <- cmd;
-	return cmd.RetVal, cmd.RetErr;
+	var profile = o.GetProfile(profileName);
+	if (profile != nil) {
+		o.channelWorkProfile <- cmd;
+	}
+	return nil, false, nil;
 }
 
 
@@ -185,7 +187,9 @@ func (o * Syncer) heartbeat() {
 			}
 			var dcmd * global.Cmd;
 			if (cmd == nil) {
-				dcmd = &global.Cmd{ Function : profilename }
+				dcmd = &global.Cmd{
+					Function : profilename, SFlag: "record",
+				};
 			} else {
 				dcmd = cmd;
 			}
@@ -217,7 +221,11 @@ func (o * Syncer) worker() {
 				Factor: factor,
 				GCmd : cmd,
 			};
-			o.DoProfileWithRecord(work)
+			if (strings.Contains(cmd.SFlag, "record")) {
+				o.DoProfileWithRecord(work)
+			} else {
+				o.DoProfile(work);
+			}
 		}
 		if (!o.doContinue) {
 			break;
@@ -227,13 +235,13 @@ func (o * Syncer) worker() {
 }
 
 func (o * Syncer) DoProfileRecover(work * ProfileWork) {
-	var err = recover();
-	if (err == nil) {
+	var pan = recover();
+	if (pan == nil) {
 		return;
 	}
-	if (work != nil && work.GCmd != nil && work.GCmd.RetChan != nil) {
-		work.GCmd.RetErr = util.AsError(err);
-		work.GCmd.RetChan <- work.GCmd;
+	if (work != nil && work.GCmd != nil) {
+		var err = util.AsError(pan);
+		work.GCmd.ReplySelf(nil, err);
 	}
 }
 
@@ -242,7 +250,7 @@ func (o * Syncer) GetProfile(name string) map[string]interface{} {
 	return util.GetMap(g.Config, false, "api", o.Name, "profiles", name);
 }
 
-func (o * Syncer) DoProfile(work * ProfileWork) ([]interface{}, error) {
+func (o * Syncer) DoProfile(work * ProfileWork) (data []interface{}, err error) {
 
 	defer o.DoProfileRecover(work);
 
@@ -260,7 +268,7 @@ func (o * Syncer) DoProfile(work * ProfileWork) ([]interface{}, error) {
 
 	var retvalwrap []interface{};
 	var funcname = util.GetStr(work.Profile, "", "handler");
-	var retvals, err = qref.FuncCallByName(o, funcname, "work", work);
+	retvals, err := qref.FuncCallByName(o, funcname, "work", work);
 	if (retvals != nil) {
 		retvalwrap = make([]interface{}, len(retvals));
 		for i, retval := range retvals {
@@ -268,18 +276,21 @@ func (o * Syncer) DoProfile(work * ProfileWork) ([]interface{}, error) {
 				retvalwrap[i] = retval.Interface();
 			}
 		}
-	}
-
-	work.EndTime = time.Now().Unix();
-
-	if (work.GCmd != nil) {
-		if (work.GCmd.RetChan != nil) {
-			work.GCmd.RetErr = err;
-			work.GCmd.RetVal = retvals;
-			work.GCmd.RetChan <- work.GCmd;
+		if (len(retvalwrap) >= 2) {
+			err = util.AsError(retvalwrap[1]);
+		}
+		if (len(retvalwrap) >= 1) {
+			data = util.AsSlice(retvalwrap[0], 0);
 		}
 	}
-	return retvalwrap, err;
+
+
+	work.EndTime = time.Now().Unix();
+	if (work.GCmd != nil) {
+		work.GCmd.ReplySelf(data, err);
+	}
+
+	return data, err;
 }
 
 func (o * Syncer) DoProfileWithRecord(work * ProfileWork) (ferr error) {
@@ -326,14 +337,13 @@ func (o * Syncer) DoProfileWithRecord(work * ProfileWork) (ferr error) {
 	}
 	qlog.Log(qlog.INFO, o.Name, profilename, "current", timestamp, "last", last, "interval", interval, "delta", timestamp -last, "factor", work.Factor);
 
-	var sync_record_cacher = scache.GetCacheManager().Get("sync");
+
 
 	dao.Update(database, metatoken, "start", timestamp, true, -1);
 	dao.Update(database, metatoken, "start_id", work.Id, true, -1);
 	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1);
 
-	sync_record_cacher.SetSubVal(timestamp, profilename, "start");
-	sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&start), profilename, "start_str");
+
 
 	var end = time.Now();
 	var elapse = end.Unix() - start.Unix();
@@ -356,9 +366,6 @@ func (o * Syncer) DoProfileWithRecord(work * ProfileWork) (ferr error) {
 		profileRunInfo.LastEndTime = end.Unix();
 		profileRunInfo.RunCount = profileRunInfo.RunCount + 1;
 
-		sync_record_cacher.SetSubVal(work.EndTime, profilename, "last");
-		sync_record_cacher.SetSubVal(work.Id, profilename, "last_id");
-		sync_record_cacher.SetSubVal(qtime.YYYY_MM_dd_HH_mm_ss(&end), profilename, "last_str");
 
 		qlog.Log(qlog.INFO, "profile", profilename, "done", "consume", elapse);
 

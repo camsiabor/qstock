@@ -70,7 +70,7 @@ func initCacher(g * global.G) {
 	g.SetData("cachem", cache_manager);
 
 	var cache_timestamp = cache_manager.Get(dict.CACHE_TIMESTAMP);
-	cache_timestamp.Loader = func(scache *scache.SCache, keys ...string) (v interface{}, err error) {
+	cache_timestamp.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (v interface{}, err error) {
 		var key = keys[0];
 		if (strings.Contains(key, "@")) {
 			return qtime.Time2Int64(nil), nil;
@@ -82,13 +82,13 @@ func initCacher(g * global.G) {
 	var scache_code = cache_manager.Get(dict.CACHE_STOCK_CODE);
 	scache_code.Dao = dict.DAO_MAIN;
 	scache_code.Db = dict.DB_DEFAULT;
-	scache_code.Loader = func(scache *scache.SCache, keys ...string) (interface{}, error) {
+	scache_code.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
 		var dao, err = qdao.GetDaoManager().Get(dict.DAO_MAIN);
 		if (err != nil) {
 			qlog.Error(0, err);
 			go func() {
 				time.Sleep(time.Duration(10) * time.Second);
-				scache.Loader(scache);
+				scache.Loader(scache, factor, timeout, keys...);
 			}();
 			return nil, err;
 		}
@@ -130,12 +130,12 @@ func initCacher(g * global.G) {
 		qlog.Log(qlog.INFO, "cache", "code", "shenzhen", szn, "shanghai", shn, "startup", sun, "all", alln);
 		return scache, nil;
 	}
-	scache_code.Loader(scache_code);
+	scache_code.Loader(scache_code, 1, 0);
 
 	var scache_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT);
 	scache_snapshot.Dao = dict.DAO_MAIN;
 	scache_snapshot.Db = dict.DB_DEFAULT;
-	scache_snapshot.Loader = func(scache * scache.SCache, keys ... string) (interface{}, error) {
+	scache_snapshot.Loader = func(scache * scache.SCache, factor int, timeout time.Duration,  keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;
@@ -148,8 +148,8 @@ func initCacher(g * global.G) {
 	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY);
 	scache_khistory.Dao = dict.DAO_MAIN;
 	scache_khistory.Db = dict.DB_HISTORY;
-	scache_khistory.Timeout = time.Second * time.Duration(20);
-	scache_khistory.Loader = func(scache *scache.SCache, keys ... string) (interface{}, error) {
+	scache_khistory.Timeout = -1; //time.Second * time.Duration(20);
+	scache_khistory.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ... string) (interface{}, error) {
 		conn, err := qdao.GetDaoManager().Get(scache.Dao);
 		if (err != nil) {
 			return nil, err;
@@ -160,18 +160,23 @@ func initCacher(g * global.G) {
 		if (data != nil) {
 			return data, err;
 		}
+		if (factor <= 0) {
+			return data, err;
+		}
 		var g = global.GetInstance();
 		var cmd = &global.Cmd {
-			Service: "sync",
+			Service: dict.SERVICE_SYNC,
 			Function: "k.history.sz",
 			Data : map[string]interface{} {
 				"codes" : []string { code },
 				"from" : datestr,
-				"to" : datestr,
 			},
-			Timeout: scache.Timeout,
 		};
-		data, err = g.SendCmd(cmd);
+		var reply, _ = g.SendCmd(cmd, timeout);
+		if (reply != nil) {
+			err = reply.RetErr;
+			data = reply.RetVal;
+		}
 		return data, err;
 	};
 }
@@ -184,7 +189,7 @@ func initSyncer(g * global.G) {
 			continue;
 		}
 		var syncer = new(sync.Syncer);
-		g.CmdHandlerRegister("sync", syncer);
+		g.CmdHandlerRegister(dict.SERVICE_SYNC, syncer);
 		syncer.Run(apiname);
 	}
 }

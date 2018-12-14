@@ -103,8 +103,8 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (interface
 		if (codes == nil || len(codes) == 0) {
 			return nil, fmt.Errorf("codes is null %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data);
 		}
-		if (len(date_to_str) == 0 || len(date_from_str) == 0) {
-			return nil, fmt.Errorf("need to specify date from & to %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data);
+		if (len(date_from_str) == 0) {
+			return nil, fmt.Errorf("need to specify date from %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data);
 		}
 	}
 
@@ -132,11 +132,11 @@ func (o * Syncer) TuShare_khistory(phrase string, work * ProfileWork) (interface
 		var date_to_str= to_date.Format("20060102");
 		if (date_from_str == date_to_str) {
 			if (to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday) {
-				qlog.Log(qlog.INFO, o.Name, "sync", "sunday & saturday need a rest");
+				qlog.Log(qlog.DEBUG, o.Name, "sunday & saturday need a rest");
 				return nil, nil;
 			}
 			if (to_date.Hour() < 15) {
-				qlog.Log(qlog.INFO, o.Name, "sync", "wait for the market to rest ", to_date.Hour());
+				qlog.Log(qlog.DEBUG, o.Name, "wait for the market to rest ", to_date.Hour());
 				return nil, nil;
 			}
 		}

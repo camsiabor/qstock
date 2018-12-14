@@ -21,12 +21,12 @@ func (o * HttpServer) routeStock() {
 	group.POST("/sync", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c);
 		var profileName = util.GetStr(m, "", "profile");
-		var cmd = util.GetStr(m, "force", "cmd");
+		var cmd = util.GetStr(m, "force,record", "cmd");
 		var _, err = global.GetInstance().SendCmd(&global.Cmd{
-			Service:  "sync",
+			Service:  dict.SERVICE_SYNC,
 			Function: profileName,
 			SFlag:    cmd,
-		});
+		}, 0);
 		o.RespJsonEx("cmd sent", err, c);
 	});
 

@@ -171,6 +171,7 @@ func initCacher(g * global.G) {
 				"codes" : []string { code },
 				"from" : datestr,
 			},
+			SFlag: "go",
 		};
 		var reply, _ = g.SendCmd(cmd, timeout);
 		if (reply != nil) {

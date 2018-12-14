@@ -222,9 +222,17 @@ func (o * Syncer) worker() {
 				GCmd : cmd,
 			};
 			if (strings.Contains(cmd.SFlag, "record")) {
-				o.DoProfileWithRecord(work)
+				if (strings.Contains(cmd.SFlag, "go")) {
+					go o.DoProfileWithRecord(work)
+				} else {
+					o.DoProfileWithRecord(work)
+				}
 			} else {
-				o.DoProfile(work);
+				if (strings.Contains(cmd.SFlag, "go")) {
+					go o.DoProfile(work);
+				} else {
+					o.DoProfile(work);
+				}
 			}
 		}
 		if (!o.doContinue) {

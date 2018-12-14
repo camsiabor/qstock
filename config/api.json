@@ -10,7 +10,7 @@
     "profiles" : {
       "a.snapshot.sz" : {
         "api" : "?appid=c0c0d935f29c6d1fd97b28069a539f1f",
-        "interval": 180,
+        "interval": 120,
         "dao" : "main",
         "db" : "def",
         "key" : "code",
@@ -29,7 +29,7 @@
     "nice" : 250,
     "timeout" : 20,
     "concurrent" : 1,
-    "select_interval" : 120,
+    "select_interval" : 180,
     "profiles" : {
       "k.history.sz" : {
         "api" : "daily",

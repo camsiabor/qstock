@@ -1,4 +1,14 @@
 {
+
+  "master" : {
+    "listen" : ":65000"
+  },
+
+  "daemon" : {
+    "listen" : ":65001",
+    "active" : false
+  },
+
   "database": {
     "main": {
       "type": "redis",
@@ -22,7 +32,7 @@
     "root": "../../src/github.com/camsiabor/qstock/web",
     "refresh_interval": 300,
     "log": {
-      "file": "console"
+      "file": "log/gin.log"
     },
     "script" : {
       "include" : "res/include.lua"
@@ -52,13 +62,19 @@
     "timezone": "Asia/Shanghai"
   },
 
+
+
+  "debug" : {
+    "active" : false,
+    "debugger" : "dlv",
+    "port" : 2345,
+    "args" : ""
+  },
+
   "includes" : {
     "api" : "api.json",
     "mapping" : "mapping.json"
-  },
-
-  "schedule" : {
-
   }
+
 
 }

@@ -84,5 +84,38 @@ const script_methods = {
             this.console.text = data;
             return data;
         }.bind(this))
+    },
+
+    params_list: function() {
+        return axios.post("/cmd/go", {
+            "type": "db",
+            "cmd": "Gets",
+            "args": ["common", "", "params"],
+        }).then(function (resp) {
+            let data = util.handle_response(resp);
+            for (let i = 0; i < data.length; i++) {
+                let name = data[i];
+                name = name.replace("portf_", "");
+                data[i] = name;
+            }
+            this.portfolio_names = data.sort();
+        }.bind(this));
+    },
+
+    params_select: function() {
+
+    },
+
+    params_setting : function () {
+
+    },
+
+    params_save : function () {
+
+    },
+
+    params_delete : function () {
+
     }
+
 };

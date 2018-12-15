@@ -1,8 +1,8 @@
 package run
 
 import (
-"github.com/aarzilli/golua/lua"
-"github.com/stevedonovan/luar"
+"github.com/camsiabor/golua/lua"
+"github.com/camsiabor/luar"
 	"strings"
 )
 

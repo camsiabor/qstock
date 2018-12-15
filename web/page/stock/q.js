@@ -38,6 +38,9 @@ vue_options.data = {
         script: {
             last: ""
         },
+        params : {
+            last: ""
+        },
         portfolio_last: "",
         portfolio: {
             last: ""
@@ -45,6 +48,7 @@ vue_options.data = {
         display: {
             editor: true,
             script: true,
+            params: true,
             portfolio: true
         }
     },
@@ -52,6 +56,11 @@ vue_options.data = {
     script: {
         name: "",
         script: "--lua.redis"
+    },
+    params_names: [],
+    params_map : {},
+    params: {
+        name: ""
     },
     portfolio_names: [],
     portfolios: {},

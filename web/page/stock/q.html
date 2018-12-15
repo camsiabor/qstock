@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
     <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
     <link rel="stylesheet" href="/css/vue/vuetable-2.css"/>
+    <link ref="stylesheet" href="/css/fontawe/all.min.css"/>
+    <link ref="stylesheet" href="/css/fontawe/v4-shims.min.css"/>
 
     <style>
 
@@ -43,6 +45,14 @@
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        设置
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="" >
+                        <a class="dropdown-item" href="#" v-on:click="setting_show()">列表</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         显示
                     </a>
                     <div class="dropdown-menu" aria-labelledby="" >
@@ -61,6 +71,7 @@
                         <a class="dropdown-item" href="#" v-on:click="toggle('silent', 'mode')">静默</a>
                     </div>
                 </li>
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         动作
@@ -91,12 +102,14 @@
 
     <div id="div_tool" class="row" style="margin-top: 10px">
 
-        <div v-bind:class="{'col-md-6' :true, gone: !setting.display.script}" style="margin-top: 3px;">
+        <div aria-details="脚本" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
             <div class="input-group-prepend">
 
-                <input type="button" value="查询" class="btn btn-info "  v-on:click="script_query()"/>
+                <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_query(); script_save()">
+                    <i class="fa fa-search-dollar"></i>
+                </button>
                 <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="sr-only">Toggle Dropdown</span>
+                    <span class="sr-only"></span>
                 </button>
                 <div class="dropdown-menu" id="dropdown_script">
                     <a class="dropdown-item" href="#" v-for="name in script_names" v-on:click="script_select(name)">
@@ -105,18 +118,50 @@
                 </div>
 
                 <input type="search" id="input_script_name" class="form-control"  placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
-                <input type="button" value="测试" id="button_script_test" class="btn btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;"/>
-                <input type="button" value="保存" id="button_script_save" class="btn btn-outline-info"  v-on:click="script_save()" />
-                <input type="button" value="列设" class="btn btn-outline-secondary"  v-on:click="setting_show()"/>
-                <input type="button" value="刪除" class="btn btn-outline-secondary" v-on:click="script_delete()"/>
+                <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;">
+                    <i class="fa fa-running"></i>
+                </button>
+                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
+                    <i class="fa fa-save"></i>
+                </button>
+                <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="script_delete()">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <div aria-details="脚本参数" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
+            <div class="input-group-prepend">
+
+                <button ar type="button" value="设置" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_setting()" style="margin-left: 3px;">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="sr-only"></span>
+                </button>
+                <div class="dropdown-menu" id="dropdown_script">
+                    <a class="dropdown-item" href="#" v-for="name in params_names" v-on:click="params_select(name)">
+                    {{name}}
+                    </a>
+                </div>
+
+                <input type="search" id="input_script_name" class="form-control"  placeholder="查询参数" aria-label="script" aria-describedby="script" v-model="script.name" >
+                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="params_save()" >
+                    <i class="fa fa-save"></i>
+                </button>
+                <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="params_delete()">
+                    <i class="fa fa-trash"></i>
+                </button>
             </div>
         </div>
 
 
-        <div v-bind:class="{'col-md-6' :true, gone: !setting.display.portfolio}" style="margin-top: 3px;">
+        <div v-bind:class="{'col-md-4' :true, gone: !setting.display.portfolio}" style="margin-top: 3px;">
             <div class="input-group-prepend">
                 
-                <input type="button" id="button_portfolio_add" value="加入" class="btn btn-danger "  v-on:click="portfolio_update()"/>
+                <button type="button" id="button_portfolio_add" class="btn btn-sm btn-danger "  v-on:click="portfolio_view()">
+                    <i class="fa fa-search-location"></i>
+                </button>
                 <button type="button" class="btn btn-outline-danger dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="sr-only"></span>
                 </button>
@@ -132,12 +177,18 @@
 
                 <input type="search"  class="form-control" placeholder="自选组合" aria-label="portfolio" aria-describedby="portfolio"
                        v-model="portfolio.name" >
-                <input type="button" value="显示" class="btn btn-outline-info"  v-on:click="portfolio_view()" style="margin-left: 3px;"/>
-                <input type="button" value="移出" class="btn btn-outline-secondary"  v-on:click="portfolio_unadd()" />
-                <input type="button" value="刪除" class="btn btn-outline-secondary" v-on:click="portfolio_delete()" />
+                <button type="button" value="显示" class="btn btn-sm btn-outline-info"  v-on:click="portfolio_update()" style="margin-left: 3px;">
+                    <i class="fa fa-plus-circle"></i>
+                </button>
+                <button type="button" value="移出" class="btn btn-sm btn-outline-secondary"  v-on:click="portfolio_unadd()" >
+                    <i class="fa fa-minus-circle"></i>
+                </button>
+
+                <button type="button" value="刪除" class="btn btn-sm btn-outline-secondary" v-on:click="portfolio_delete()" >
+                    <i class="fa fa-trash"></i>
+                </button>
             </div>
         </div>
-
 
     </div>
 

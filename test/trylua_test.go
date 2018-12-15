@@ -3,13 +3,13 @@ package test
 import (
 	"fmt"
 	"github.com/camsiabor/qcom/scache"
-	"github.com/stevedonovan/luar"
+	"github.com/camsiabor/luar"
 	"testing"
 )
 
 // https://colobu.com/
-// https://github.com/aarzilli/golua
-// https://github.com/stevedonovan/luar/
+// https://github.com/camsiabor/golua
+// https://github.com/camsiabor/luar/
 
 
 func BenchmarkGolua(b *testing.B) {

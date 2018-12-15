@@ -1,6 +1,7 @@
 
 
 
+// noinspection JSUnusedGlobalSymbols
 const stock_methods = {
     stock_sync : function() {
         let profiles = arguments;
@@ -68,7 +69,7 @@ const stock_methods = {
                 return promise;
             }
         }.bind(this)).then(function (khistorys) {
-            console.log("[meta]", meta);
+            // console.log("[meta]", meta);
 
             let meta_snapshot_last_id = QUtil.get(meta, [ "meta.a.snapshot.sz", "last_id"] , 0) * 1;
             // let meta_khistory_last_id_sz = QUtil.get(meta, [ "meta.k.history.sz", "last_id"] , "x").substring(0, 8);

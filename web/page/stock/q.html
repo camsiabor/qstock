@@ -117,7 +117,8 @@
                     </a>
                 </div>
 
-                <input type="search" id="input_script_name" class="form-control"  placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
+                <input type="search" id="input_script_name" class="form-control"
+                       placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
                 <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;">
                     <i class="fa fa-running"></i>
                 </button>
@@ -133,10 +134,10 @@
         <div aria-details="脚本参数" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
             <div class="input-group-prepend">
 
-                <button ar type="button" value="设置" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_setting()" style="margin-left: 3px;">
+                <button ar type="button" value="设置" id="button_script_test" class="btn btn-sm btn-outline-warning"  v-on:click="script_setting()" style="margin-left: 3px;">
                     <i class="fa fa-edit"></i>
                 </button>
-                <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-outline-warning dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="sr-only"></span>
                 </button>
                 <div class="dropdown-menu" id="dropdown_script">
@@ -145,8 +146,10 @@
                     </a>
                 </div>
 
-                <input type="search" id="input_script_name" class="form-control"  placeholder="查询参数" aria-label="script" aria-describedby="script" v-model="script.name" >
-                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="params_save()" >
+                <input type="search" id="input_script_name" class="form-control"
+                       placeholder="查询参数" aria-label="script" aria-describedby="script" v-model="params.name" >
+
+                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_save()" >
                     <i class="fa fa-save"></i>
                 </button>
                 <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="params_delete()">
@@ -177,7 +180,7 @@
 
                 <input type="search"  class="form-control" placeholder="自选组合" aria-label="portfolio" aria-describedby="portfolio"
                        v-model="portfolio.name" >
-                <button type="button" value="显示" class="btn btn-sm btn-outline-info"  v-on:click="portfolio_update()" style="margin-left: 3px;">
+                <button type="button" value="新加" class="btn btn-sm btn-outline-danger"  v-on:click="portfolio_update()" style="margin-left: 3px;">
                     <i class="fa fa-plus-circle"></i>
                 </button>
                 <button type="button" value="移出" class="btn btn-sm btn-outline-secondary"  v-on:click="portfolio_unadd()" >

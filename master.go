@@ -115,7 +115,7 @@ func initCacher(g *global.G) {
 			}()
 			return nil, err
 		}
-		var codes, _ = dao.Keys(dict.DB_DEFAULT, "", "*")
+		var codes, _ = dao.Keys(dict.DB_DEFAULT, "", "*", nil)
 		var sz, szn = make([]string, 5000), 0
 		var sh, shn = make([]string, 5000), 0
 		var su, sun = make([]string, 5000), 0
@@ -164,7 +164,7 @@ func initCacher(g *global.G) {
 			return nil, err
 		}
 		var code = keys[0]
-		return conn.Get(scache.Db, "", code, true)
+		return conn.Get(scache.Db, "", code, 1, nil)
 	}
 
 	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY)
@@ -178,7 +178,7 @@ func initCacher(g *global.G) {
 		}
 		var code = keys[0]
 		var datestr = keys[1]
-		data, err := conn.Get(scache.Db, code, datestr, true)
+		data, err := conn.Get(scache.Db, code, datestr, 1, nil)
 		if data != nil {
 			return data, err
 		}

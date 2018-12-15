@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
-	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/qtime"
+	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/gin-gonic/gin"
@@ -25,88 +25,88 @@ import (
 // https://godoc.org/github.com/gin-gonic/gin#Context.AbortWithError
 
 type HttpServer struct {
-	Root string;
-	Rootabs string;
-	Engine * gin.Engine;
-	Data map[string]interface{};
+	Root    string
+	Rootabs string
+	Engine  *gin.Engine
+	Data    map[string]interface{}
 }
 
-var _instance * HttpServer = &HttpServer{}
+var _instance *HttpServer = &HttpServer{}
 
-func  GetInstance() (* HttpServer) {
-	return _instance;
+func GetInstance() *HttpServer {
+	return _instance
 }
 
-func (o * HttpServer) RespJsonEx(data interface{}, err error, c * gin.Context) {
-	if (err == nil) {
-		o.RespJson(0, data, c);
+func (o *HttpServer) RespJsonEx(data interface{}, err error, c *gin.Context) {
+	if err == nil {
+		o.RespJson(0, data, c)
 	} else {
-		o.RespJson(500, err.Error(), c);
+		o.RespJson(500, err.Error(), c)
 	}
 }
 
-func (o * HttpServer) RespJson(code int, data interface{}, c *gin.Context) {
-	var jstr, ok = data.(string);
-	if (ok) {
-		var slen = len(jstr);
-		var first = jstr[0];
-		var last = jstr[slen - 1];
-		if ((first == '[' && last == ']') || (first == '{' && last == '}' )) {
-			json.Unmarshal([]byte(jstr), &data);
+func (o *HttpServer) RespJson(code int, data interface{}, c *gin.Context) {
+	var jstr, ok = data.(string)
+	if ok {
+		var slen = len(jstr)
+		var first = jstr[0]
+		var last = jstr[slen-1]
+		if (first == '[' && last == ']') || (first == '{' && last == '}') {
+			json.Unmarshal([]byte(jstr), &data)
 		}
 	}
-	var fr = map[string]interface{} {
-		"code" : code,
-		"data" : data,
-	};
-	c.JSON(200, fr);
+	var fr = map[string]interface{}{
+		"code": code,
+		"data": data,
+	}
+	c.JSON(200, fr)
 }
 
-func (o * HttpServer) ReqParse(c * gin.Context) (map[string]interface{}, error) {
-	var bytes, err = ioutil.ReadAll(c.Request.Body);
-	if (err != nil) {
-		o.RespJsonEx(nil, err, c);
-		return nil, err;
+func (o *HttpServer) ReqParse(c *gin.Context) (map[string]interface{}, error) {
+	var bytes, err = ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		o.RespJsonEx(nil, err, c)
+		return nil, err
 	}
-	var m map[string]interface{};
-	err = json.Unmarshal(bytes, &m);
-	if (err != nil) {
-		o.RespJsonEx(nil, err, c);
+	var m map[string]interface{}
+	err = json.Unmarshal(bytes, &m)
+	if err != nil {
+		o.RespJsonEx(nil, err, c)
 	}
-	return m, err;
+	return m, err
 }
 
-func (o * HttpServer) handleDBCmd(cmd string, m map[string]interface{}, c * gin.Context) {
-	var daoname = util.GetStr(m, dict.DAO_MAIN, "dao");
-	var dao, err = qdao.GetDaoManager().Get(daoname);
-	if (err != nil) {
-		o.RespJsonEx(nil, err, c);
-		return;
+func (o *HttpServer) handleDBCmd(cmd string, m map[string]interface{}, c *gin.Context) {
+	var daoname = util.GetStr(m, dict.DAO_MAIN, "dao")
+	var dao, err = qdao.GetDaoManager().Get(daoname)
+	if err != nil {
+		o.RespJsonEx(nil, err, c)
+		return
 	}
 	//var db = util.GetStr(m, pers.DB_DEFAULT, "db");
-	var args = util.GetSlice(m,  "args");
-	var rvals, rerr = qref.FuncCallByName(dao, cmd, args...);
-	if (rerr != nil) {
-		o.RespJsonEx(nil, rerr, c);
-		return;
+	var args = util.GetSlice(m, "args")
+	var rvals, rerr = qref.FuncCallByName(dao, cmd, args...)
+	if rerr != nil {
+		o.RespJsonEx(nil, rerr, c)
+		return
 	}
-	var rets = qref.ReflectValuesToList(rvals);
-	var retslen = len(rets);
-	if (retslen > 0) {
+	var rets = qref.ReflectValuesToList(rvals)
+	var retslen = len(rets)
+	if retslen > 0 {
 		for i := 0; i < retslen; i++ {
-			var serr, ok = rets[i].(error);
-			if (ok) {
-				o.RespJsonEx(rets, serr, c);
-				return;
+			var serr, ok = rets[i].(error)
+			if ok {
+				o.RespJsonEx(rets, serr, c)
+				return
 			}
 		}
-		o.RespJsonEx(rets[0], nil, c);
+		o.RespJsonEx(rets[0], nil, c)
 	} else {
-		o.RespJsonEx("success", nil, c);
+		o.RespJsonEx("success", nil, c)
 	}
 }
 
-func (o * HttpServer) handleRedisCmd(cmd string, m map[string]interface{}, c * gin.Context) {
+func (o *HttpServer) handleRedisCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
 	//var db = util.GetStr(m, pers.DB_DEFAULT, "db");
 	//var args = util.GetList(m,  "args");
@@ -120,255 +120,249 @@ func (o * HttpServer) handleRedisCmd(cmd string, m map[string]interface{}, c * g
 
 }
 
-func (o * HttpServer) handleOSCmd(cmd string, m map[string]interface{}, c * gin.Context) {
-	var args = util.GetSlice(m,  "args");
-	var sargs []string;
-	if (args == nil) {
-		sargs = make([]string, 0);
+func (o *HttpServer) handleOSCmd(cmd string, m map[string]interface{}, c *gin.Context) {
+	var args = util.GetSlice(m, "args")
+	var sargs []string
+	if args == nil {
+		sargs = make([]string, 0)
 	} else {
-		sargs = make([]string, len(args));
+		sargs = make([]string, len(args))
 		for index, one := range args {
-			var sone = util.AsStr(one, "");
-			sargs[index] = sone;
+			var sone = util.AsStr(one, "")
+			sargs[index] = sone
 		}
 	}
-	var timeout = util.GetInt(m, 15, "timeout");
-	if (timeout <= 0) {
-		timeout = 1;
+	var timeout = util.GetInt(m, 15, "timeout")
+	if timeout <= 0 {
+		timeout = 1
 	}
 
-	stdoutstr, stderrstr, dotimeout, err := qos.ExecCmd(timeout, cmd, sargs...);
-	if (err != nil) {
-		o.RespJsonEx(nil, err, c);
-		return;
+	stdoutstr, stderrstr, dotimeout, err := qos.ExecCmd(timeout, cmd, sargs...)
+	if err != nil {
+		o.RespJsonEx(nil, err, c)
+		return
 	}
 	o.RespJson(0, map[string]interface{}{
-		"stdout" : stdoutstr,
-		"stderr" : stderrstr,
-		"timeout" : dotimeout,
-	}, c);
+		"stdout":  stdoutstr,
+		"stderr":  stderrstr,
+		"timeout": dotimeout,
+	}, c)
 }
 
-func (o * HttpServer) handlePanicCmd(c * gin.Context, cmdtype string, cmd string, m map[string]interface{}) {
-	var err = util.AsError(recover());
-	if (err == nil) {
-		panic(err);
-		return;
+func (o *HttpServer) handlePanicCmd(c *gin.Context, cmdtype string, cmd string, m map[string]interface{}) {
+	var err = util.AsError(recover())
+	if err == nil {
+		panic(err)
+		return
 	}
-	var info = qref.StackInfo(3);
-	info["err"] = err.Error();
-	info["a.cmdtype"] = cmdtype;
-	info["a.cmd"] = cmd;
-	info["a.m"] = m;
-	o.RespJson(500, info, c);
+	var info = qref.StackInfo(3)
+	info["err"] = err.Error()
+	info["a.cmdtype"] = cmdtype
+	info["a.cmd"] = cmd
+	info["a.m"] = m
+	o.RespJson(500, info, c)
 }
 
-func (o * HttpServer) handleTimeCmd(cmd string, m map[string]interface{}, c * gin.Context) {
+func (o *HttpServer) handleTimeCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
-	var key = util.GetStr(m, "js", "key");
-	var cache = scache.GetCacheManager().Get("timestamp");
-	cmd = strings.ToLower(cmd);
+	var key = util.GetStr(m, "js", "key")
+	var cache = scache.GetCacheManager().Get("timestamp")
+	cmd = strings.ToLower(cmd)
 	switch cmd {
 	case "now":
-		var val = qtime.Time2Int64(nil);
-		o.RespJsonEx(val, nil, c);
+		var val = qtime.Time2Int64(nil)
+		o.RespJsonEx(val, nil, c)
 	case "get":
-		var val, err = cache.Get(true, key);
-		o.RespJsonEx(val, err, c);
+		var val, err = cache.Get(true, key)
+		o.RespJsonEx(val, err, c)
 	case "set":
-		var val = util.Get(m, nil, "val");
-		if (val == nil) {
+		var val = util.Get(m, nil, "val")
+		if val == nil {
 			val = time.Now().Format("20060102150405")
 		}
-		cache.Set(val, key);
-		o.RespJson(0, key + " set", c);
+		cache.Set(val, key)
+		o.RespJson(0, key+" set", c)
 	}
 }
 
-func (o * HttpServer) routeCmd() {
-	var group = o.Engine.Group("/cmd");
+func (o *HttpServer) routeCmd() {
+	var group = o.Engine.Group("/cmd")
 	group.GET("/ping", func(c *gin.Context) {
-		o.RespJson(0, "pong", c);
-	});
+		o.RespJson(0, "pong", c)
+	})
 
-	group.POST("/go", func(c * gin.Context) {
-		var m, _ = o.ReqParse(c);
-		var cmd = util.GetStr(m, "", "cmd");
-		if (len(cmd) == 0) {
-			o.RespJson(500, "give me a command", c);
-			return;
+	group.POST("/go", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var cmd = util.GetStr(m, "", "cmd")
+		if len(cmd) == 0 {
+			o.RespJson(500, "give me a command", c)
+			return
 		}
-		var cmdtype = util.GetStr(m, "db", "type");
-		defer o.handlePanicCmd(c, cmdtype, cmd, m);
+		var cmdtype = util.GetStr(m, "db", "type")
+		defer o.handlePanicCmd(c, cmdtype, cmd, m)
 		switch cmdtype {
 		case "db":
-			o.handleDBCmd(cmd, m, c);
+			o.handleDBCmd(cmd, m, c)
 		case "redis":
-			o.handleRedisCmd(cmd, m, c);
+			o.handleRedisCmd(cmd, m, c)
 		case "lua":
-			o.handleLuaCmd(cmd, m, c);
+			o.handleLuaCmd(cmd, m, c)
 		case "os":
-			o.handleOSCmd(cmd, m, c);
+			o.handleOSCmd(cmd, m, c)
 		case "time":
-			o.handleTimeCmd(cmd, m, c);
+			o.handleTimeCmd(cmd, m, c)
 		}
-	});
+	})
 
-	var include string;
-	var g = global.GetInstance();
-	var includefile = util.GetStr(g.Config, "res/include.lua", "http", "script", "include");
-	var fcontent, ferr = ioutil.ReadFile(o.Rootabs + "/" + includefile);
-	if (ferr == nil) {
-		include = string(fcontent[:]) + "\n";
+	var include string
+	var g = global.GetInstance()
+	var includefile = util.GetStr(g.Config, "res/include.lua", "http", "script", "include")
+	var fcontent, ferr = ioutil.ReadFile(o.Rootabs + "/" + includefile)
+	if ferr == nil {
+		include = string(fcontent[:]) + "\n"
 	} else {
-		include = "";
+		include = ""
 	}
-	o.Data["include"] = include;
-	group.POST("/query", func(c * gin.Context) {
-		var m, _ = o.ReqParse(c);
-		var script = util.GetStr(m, "", "script");
-		var values = util.GetSlice(m,  "values");
-		var include = o.Data["include"].(string);
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var data, err = dao.Script(dict.DB_DEFAULT, "", "", include + script, values)
-		o.RespJsonEx(data, err, c);
-	});
+	o.Data["include"] = include
+	group.POST("/query", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var script = util.GetStr(m, "", "script")
+		var values = util.GetSlice(m, "values")
+		var include = o.Data["include"].(string)
+		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var data, err = dao.Script(dict.DB_DEFAULT, "", "", include+script, values, nil)
+		o.RespJsonEx(data, err, c)
+	})
 }
 
-func (o * HttpServer) routeScript() {
-	var group = o.Engine.Group("/script");
+func (o *HttpServer) routeScript() {
+	var group = o.Engine.Group("/script")
 
-	group.POST("/update", func(c * gin.Context) {
-		var m, _ = o.ReqParse(c);
-		var name = util.GetStr(m, "", "name");
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, -1);
-		o.RespJsonEx(data, err, c);
-	});
+	group.POST("/update", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var name = util.GetStr(m, "", "name")
+		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, -1, nil)
+		o.RespJsonEx(data, err, c)
+	})
 
-	group.POST("/list", func(c * gin.Context) {
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var scripts, err = dao.Keys(dict.DB_COMMON, "script", "*")
-		o.RespJsonEx(scripts, err, c);
-	});
+	group.POST("/list", func(c *gin.Context) {
+		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var scripts, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
+		o.RespJsonEx(scripts, err, c)
+	})
 
-	group.POST("/get", func(c * gin.Context) {
-		var m, _ = o.ReqParse(c);
-		var name = util.GetStr(m, "", "name");
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var data, err = dao.Get(dict.DB_COMMON, "script", name, true);
-		o.RespJsonEx(data, err, c);
-	});
+	group.POST("/get", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var name = util.GetStr(m, "", "name")
+		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var data, err = dao.Get(dict.DB_COMMON, "script", name, 1, nil)
+		o.RespJsonEx(data, err, c)
+	})
 
-	group.POST("/delete", func(c * gin.Context) {
-		var m, _ = o.ReqParse(c);
-		var name = util.GetStr(m, "", "name");
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN);
-		var data, err = dao.Delete(dict.DB_COMMON, "script", name );
-		o.RespJsonEx(data, err, c);
-	});
+	group.POST("/delete", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var name = util.GetStr(m, "", "name")
+		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var data, err = dao.Delete(dict.DB_COMMON, "script", name, nil)
+		o.RespJsonEx(data, err, c)
+	})
 }
 
-
-
-func (o * HttpServer) routeStatic() {
+func (o *HttpServer) routeStatic() {
 
 	//_router.LoadHTMLGlob(_rootabs + "/page/*")
 
-	var router = o.Engine;
-	var rootabs = o.Rootabs;
+	var router = o.Engine
+	var rootabs = o.Rootabs
 
-	router.Static("/js", rootabs + "/js")
-	router.Static("/css", rootabs+ "/css")
-	router.Static("/img", rootabs+ "/img")
-	router.Static("/res", rootabs+ "/res")
-	router.Static("/svg", rootabs+ "/svg")
-	router.Static("/tmp", rootabs+ "/tmp")
-	router.Static("/h", rootabs+ "/page")
+	router.Static("/js", rootabs+"/js")
+	router.Static("/css", rootabs+"/css")
+	router.Static("/img", rootabs+"/img")
+	router.Static("/res", rootabs+"/res")
+	router.Static("/svg", rootabs+"/svg")
+	router.Static("/tmp", rootabs+"/tmp")
+	router.Static("/h", rootabs+"/page")
 
-	router.HTMLRender = CustomHTMLRenderer{};
+	router.HTMLRender = CustomHTMLRenderer{}
 
-	router.GET("/v", func(c * gin.Context) {
-		var page = c.Query("p");
-		c.HTML(200, page, &o );
-	});
+	router.GET("/v", func(c *gin.Context) {
+		var page = c.Query("p")
+		c.HTML(200, page, &o)
+	})
 }
 
-func (o * HttpServer) Run() {
+func (o *HttpServer) Run() {
 
-	o.Data = make(map[string]interface{});
+	o.Data = make(map[string]interface{})
 
-	var g = global.GetInstance();
-	var config_http = util.GetMap(g.Config, true, "http");
-	var active = util.GetBool(config_http, true,  "active");
-	if (!active) {
-		qlog.Log(qlog.INFO, "http", "not active");
-		return;
+	var g = global.GetInstance()
+	var config_http = util.GetMap(g.Config, true, "http")
+	var active = util.GetBool(config_http, true, "active")
+	if !active {
+		qlog.Log(qlog.INFO, "http", "not active")
+		return
 	}
 
-	var err error;
+	var err error
 
-	var port = util.GetStr(config_http, "8080",  "port");
-	o.Root = util.GetStr(config_http, "../web",  "root");
-	o.Rootabs, err = filepath.Abs(o.Root);
-	if (err != nil) {
-		qlog.Log(qlog.ERROR, "http", "root", err);
-		return;
+	var port = util.GetStr(config_http, "8080", "port")
+	o.Root = util.GetStr(config_http, "../web", "root")
+	o.Rootabs, err = filepath.Abs(o.Root)
+	if err != nil {
+		qlog.Log(qlog.ERROR, "http", "root", err)
+		return
 	}
-	qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root);
+	qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root)
 
-	var logfilepath =util.GetStr(config_http, "log/http.log", "log", "file");
-	if (!strings.Contains(logfilepath, "console")) {
+	var logfilepath = util.GetStr(config_http, "log/http.log", "log", "file")
+	if !strings.Contains(logfilepath, "console") {
 		var logfile, err = os.OpenFile(logfilepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-		if (err == nil) {
-			qlog.Log(qlog.INFO, "http", "log", logfilepath);
+		if err == nil {
+			qlog.Log(qlog.INFO, "http", "log", logfilepath)
 		} else {
-			qlog.Log(qlog.ERROR, "http", "log", logfilepath, err);
+			qlog.Log(qlog.ERROR, "http", "log", logfilepath, err)
 		}
-		gin.DefaultWriter =io.MultiWriter(logfile);
-		gin.DefaultErrorWriter = io.MultiWriter(logfile);
+		gin.DefaultWriter = io.MultiWriter(logfile)
+		gin.DefaultErrorWriter = io.MultiWriter(logfile)
 	}
-	var mode = util.GetStr(config_http, gin.ReleaseMode, "mode");
-	mode = strings.ToLower(mode);
-	gin.SetMode(mode);
-	qlog.Log(qlog.INFO, "http", "mode", mode);
+	var mode = util.GetStr(config_http, gin.ReleaseMode, "mode")
+	mode = strings.ToLower(mode)
+	gin.SetMode(mode)
+	qlog.Log(qlog.INFO, "http", "mode", mode)
 
-
-	var cache_timestamp = scache.GetCacheManager().Get(dict.CACHE_TIMESTAMP);
-	o.Engine = gin.Default();
+	var cache_timestamp = scache.GetCacheManager().Get(dict.CACHE_TIMESTAMP)
+	o.Engine = gin.Default()
 	o.Engine.Use(func(c *gin.Context) {
-		if (c.Request.Method == "GET") {
-			var path = c.Request.URL.Path;
-			if (path[len(path) - 1] == 'l') { // html, last char is l
-				var v, _ = cache_timestamp.Get(true, "js");
-				c.SetCookie("_u_js", v.(string), 0, "/", "/", false, false);
+		if c.Request.Method == "GET" {
+			var path = c.Request.URL.Path
+			if path[len(path)-1] == 'l' { // html, last char is l
+				var v, _ = cache_timestamp.Get(true, "js")
+				c.SetCookie("_u_js", v.(string), 0, "/", "/", false, false)
 			}
 		}
-	});
-	o.Engine.Use(Recovery(func( c *gin.Context, err interface{}) {
-		var info = qref.StackInfo(2);
-		info["err"] = err;
-		o.RespJson(500, info, c);
+	})
+	o.Engine.Use(Recovery(func(c *gin.Context, err interface{}) {
+		var info = qref.StackInfo(2)
+		info["err"] = err
+		o.RespJson(500, info, c)
 	}))
 
-
-
-	o.routeStatic();
-	o.routeCmd();
-	o.routeStock();
-	o.routeScript();
+	o.routeStatic()
+	o.routeCmd()
+	o.routeStock()
+	o.routeScript()
 
 	//var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
 	//go GinRefreshPage(refresh_interval);
 	go func() {
-		qlog.Log(qlog.INFO, "http", "ready to run");
+		qlog.Log(qlog.INFO, "http", "ready to run")
 		var err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
-		if (err != nil) {
-			qlog.Log(qlog.ERROR, "http", "run", err);
+		if err != nil {
+			qlog.Log(qlog.ERROR, "http", "run", err)
 		}
-	} ();
+	}()
 }
-
 
 // TODO logger
 /*

@@ -23,6 +23,7 @@ vue_options.data = {
         datamap : {}
     },
     setting: {
+        compress : true,
         table : {
             page_size : 5,
             fields : _columns_default

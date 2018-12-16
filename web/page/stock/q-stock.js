@@ -179,8 +179,10 @@ const stock_methods = {
 
     stock_data_request: function(wrap) {
         let zlib = false;
-        if (wrap.time_from) {
-            zlib = window.location.href.indexOf("nozlib") < 0;
+        if (this.setting.compress) {
+            if (wrap.time_from) {
+                zlib = window.location.href.indexOf("nozlib") < 0;
+            }
         }
         return axios.post("/stock/gets", {
             "fetchs": wrap.fetch_pending,

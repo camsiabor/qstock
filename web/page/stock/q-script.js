@@ -89,8 +89,8 @@ const script_methods = {
     params_list: function() {
         return axios.post("/cmd/go", {
             "type": "db",
-            "cmd": "Gets",
-            "args": ["common", "", "params"],
+            "cmd": "Keys",
+            "args": ["common", "", "params", null ],
         }).then(function (resp) {
             let data = util.handle_response(resp);
             for (let i = 0; i < data.length; i++) {

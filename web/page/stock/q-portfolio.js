@@ -3,7 +3,7 @@ const portfoilio_methods = {
         return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Keys",
-            "args": ["common", "", "portf_*"],
+            "args": ["common", "", "portf_*", null],
         }).then(function (resp) {
             let data = util.handle_response(resp);
             for (let i = 0; i < data.length; i++) {
@@ -34,7 +34,7 @@ const portfoilio_methods = {
         axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Updates",
-            "args": ["common", portfolio_name, codes_sel, codes_sel, true, false]
+            "args": ["common", portfolio_name, codes_sel, codes_sel, true, 0, null]
         }).then(function (resp) {
             util.handle_response(resp, this.console, "");
             let msg = "加入到 " + this.portfolio.name + " 成功"
@@ -76,7 +76,7 @@ const portfoilio_methods = {
         return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Deletes",
-            "args": ["common", portfolio, codes]
+            "args": ["common", portfolio, codes, null]
         }).then(function (resp) {
             util.handle_response(resp);
             return this.portfolio_view();
@@ -90,7 +90,7 @@ const portfoilio_methods = {
         return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Get",
-            "args": ["common", "", portfolio_name, true]
+            "args": ["common", "", portfolio_name, 1, null]
         }).then(function (resp) {
             let data = util.handle_response(resp);
             let codes = QUtil.keys(data, function (m, k, v) {
@@ -110,7 +110,7 @@ const portfoilio_methods = {
         return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Delete",
-            "args": ["common", "", key]
+            "args": ["common", "", key, null]
         }).then(function (resp) {
             util.handle_response(resp);
             this.portfolio.name = "";

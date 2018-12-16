@@ -223,7 +223,7 @@ vue_options.methods = {
                     "cmd" : "set",
                     "key" : "js"
                 }).then(function () {
-                    window.location.href = window.location.href + "";
+                    window.location.href = window.location.href + "#";
                 });
                 break;
             case "local" :

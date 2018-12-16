@@ -84,7 +84,7 @@ func (o *HttpServer) RespJson(code int, data interface{}, c *gin.Context) {
 			panic(err)
 		}
 		var buffer bytes.Buffer
-		zlibwriter, _ := zlib.NewWriterLevel(&buffer, 6)
+		zlibwriter, _ := zlib.NewWriterLevel(&buffer, zlib.DefaultCompression)
 		zlibwriter.Write(frbytes[:])
 		zlibwriter.Close()
 		//c.Stream(func(w io.Writer) bool {

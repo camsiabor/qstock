@@ -55,10 +55,11 @@ const script_methods = {
     script_query: function () {
         this.console.text = "";
         let script = this.editor.getValue().trim();
-
+        let hash = md5(script);
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
+            hash : hash,
             script : script
         }).then(this.stock_get_data_by_code)
         /*
@@ -72,9 +73,14 @@ const script_methods = {
 
     script_test: function () {
         let script = this.editor.getValue().trim();
+        let hash = "";
+        if (window.location.href.indexOf('nohash') <= 0) {
+            hash = md5(script);
+        }
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
+            hash : hash,
             debug : true,
             script : script
         }).then(function (resp) {

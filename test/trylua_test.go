@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/scache"
 	"testing"
@@ -76,11 +77,35 @@ return {v, v, v}, { "2" };
 }
 
 func TestTryLua(t *testing.T) {
+
+	var script = `
+		function power()
+			return 123
+		end	
+		return 1024
+	`
 	L := luar.Init()
-	//L.LoadString("xxx")
+	fmt.Println("loadstring", L.LoadString(script))
 	if L.Dump() == nil {
-		var bytes = L.ToBytes(2)
-		fmt.Println(len(bytes))
+		var chunk = L.ToBytes(-1)
+		fmt.Println(len(chunk))
+		L.Pop(1)
+
+		L2 := luar.Init()
+		//L2.PushBytes(bytes)
+		//L2.LoadString(string(bytes[:]))
+		errload := L2.LoadBuffer(chunk, "chunk", "")
+		if errload != nil {
+			panic(errload)
+		}
+		errcall := L2.CallHandle(0, lua.LUA_MULTRET, nil)
+		if errcall != nil {
+			panic(errcall)
+		}
+		var i = L2.ToInteger(-1)
+		fmt.Println(i)
+		L2.Close()
 	}
+
 	L.Close()
 }

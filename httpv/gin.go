@@ -1,6 +1,7 @@
 package httpv
 
 import (
+	"bitbucket.org/avd/go-ipc/sync"
 	"encoding/json"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
@@ -28,13 +29,28 @@ type HttpServer struct {
 	Root    string
 	Rootabs string
 	Engine  *gin.Engine
-	Data    map[string]interface{}
+	lock    sync.RWMutex
+	data    map[string]interface{}
 }
 
-var _instance *HttpServer = &HttpServer{}
+var _instance *HttpServer = &HttpServer{
+	data: map[string]interface{}{},
+}
 
 func GetInstance() *HttpServer {
 	return _instance
+}
+
+func (o *HttpServer) GetData(key string) interface{} {
+	o.lock.RLock()
+	defer o.lock.RUnlock()
+	return o.data[key]
+}
+
+func (o *HttpServer) SetData(key string, val interface{}) {
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	o.data[key] = val
 }
 
 func (o *HttpServer) RespJsonEx(data interface{}, err error, c *gin.Context) {
@@ -223,12 +239,12 @@ func (o *HttpServer) routeCmd() {
 	} else {
 		include = ""
 	}
-	o.Data["include"] = include
+	o.data["include"] = include
 	group.POST("/query", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var script = util.GetStr(m, "", "script")
 		var values = util.GetSlice(m, "values")
-		var include = o.Data["include"].(string)
+		var include = o.data["include"].(string)
 		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
 		var data, err = dao.Script(dict.DB_DEFAULT, "", "", include+script, values, nil)
 		o.RespJsonEx(data, err, c)
@@ -294,7 +310,7 @@ func (o *HttpServer) routeStatic() {
 
 func (o *HttpServer) Run() {
 
-	o.Data = make(map[string]interface{})
+	o.data = make(map[string]interface{})
 
 	var g = global.GetInstance()
 	var config_http = util.GetMap(g.Config, true, "http")

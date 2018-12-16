@@ -24,7 +24,8 @@ func getL() *lua.State {
 	return L
 }
 
-func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Context) {
+// TODO arguments
+func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
 	var script = util.GetStr(m, "", "script")
 	if len(script) == 0 {
@@ -34,7 +35,25 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 
 	var debug = util.GetBool(m, false, "debug")
 
-	// TODO arguments
+	var chunk []byte
+	var hash = util.GetStr(m, "", "hash")
+	if len(hash) > 0 {
+		var cache = o.GetData(hash)
+		if cache == nil {
+			func() {
+				var L = luar.Init()
+				defer L.Close()
+				L.LoadString(script)
+				if L.Dump() == nil {
+					chunk = L.ToBytes(-1)
+					o.SetData(hash, chunk)
+				}
+			}()
+		} else {
+			chunk = cache.([]byte)
+		}
+	}
+
 	var L = luar.Init()
 	defer L.Close()
 	L.OpenLibs()
@@ -48,16 +67,26 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 	var data interface{}
 	var goStackInfo map[string]interface{}
 
-	if debug {
-		start = time.Now().UnixNano()
-	}
-
-	var err = L.DoStringHandle(script, func(L *lua.State, pan interface{}) {
+	var errhandler = func(L *lua.State, pan interface{}) {
 		goStackInfo = qref.StackInfo(5)
 		var stackstr = util.AsStr(goStackInfo["stack"], "")
 		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
 		goStackInfo["stack"] = strings.Split(stackstr, "\n")
-	})
+	}
+
+	if debug {
+		start = time.Now().UnixNano()
+	}
+	var err error
+	if chunk == nil {
+		err = L.DoStringHandle(script, errhandler)
+	} else {
+		err = L.LoadBuffer(chunk, "chunk", "")
+		if err == nil {
+			err = L.CallHandle(0, lua.LUA_MULTRET, errhandler)
+		}
+	}
+
 	if debug {
 		end = time.Now().UnixNano()
 		consume = float64((end - start)) / float64(time.Millisecond)

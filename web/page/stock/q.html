@@ -372,11 +372,27 @@
 <script type="text/javascript" src="/js/g2/data-set.js" ></script>
 
 <script type="text/javascript" src="/js/common/md5.min.js"></script>
+<script type="text/javascript" src="/js/common/base64.js"></script>
+<script type="text/javascript" src="/js/common/pako.min.js"></script>
 
 <script type="text/javascript" src="/js/common/loader.js"> </script>
+<script type="text/javascript" src="/js/common/util.js"></script>
 
 
 <script type="text/javascript">
+
+    /*
+    const x = "eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=";
+    let bytes = Base64.decodeToBytes(x);///important
+    let rawlen = bytes.length;
+    let uarr = new Uint8Array(new ArrayBuffer(rawlen));
+    for (let i = 0, n = rawlen; i < n; ++i) {
+        uarr[i] = bytes[i];
+    }
+    let decompressed = pako.inflate(uarr);
+    let plain = QUtil.uint8array_to_str(decompressed);
+    console.log(plain);
+    */
 
     QLoader.fetch_with_suffix_cookie(
          [

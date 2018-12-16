@@ -45,9 +45,9 @@ Vue.component('vuetable-chart', {
             let data = stock.khistory;
             if (!data || !data.length) {
                 console.log(this.cid, "khistory null", stock, data);
-                this.timer_render = setTimeout(function () {
-                    this.chart_render(stocks_map);
-                }.bind(this), 2000);
+                // this.timer_render = setTimeout(function () {
+                //     this.chart_render(stocks_map);
+                // }.bind(this), 2000);
                 return;
             }
 

@@ -79,7 +79,7 @@ const script_methods = {
         */
     },
 
-    script_test: function () {
+    script_test: function () { // eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=
         let hash = "";
         let script = this.editor.getValue().trim();
         if (window.location.href.indexOf('nohash') <= 0) {

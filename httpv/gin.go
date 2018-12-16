@@ -1,6 +1,9 @@
 package httpv
 
 import (
+	"bytes"
+	"compress/zlib"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
@@ -74,7 +77,27 @@ func (o *HttpServer) RespJson(code int, data interface{}, c *gin.Context) {
 		"code": code,
 		"data": data,
 	}
-	c.JSON(200, fr)
+	if c.GetBool("zlib") {
+
+		var frbytes, err = json.Marshal(fr)
+		if err != nil {
+			panic(err)
+		}
+		var buffer bytes.Buffer
+		zlibwriter, _ := zlib.NewWriterLevel(&buffer, 6)
+		zlibwriter.Write(frbytes[:])
+		zlibwriter.Close()
+		//c.Stream(func(w io.Writer) bool {
+		//	w.Write(buffer.Bytes())
+		//	return false
+		//})
+		//zlib.NewWriterLevel(&buffer, zlib.DefaultCompression)
+		var base64str = base64.StdEncoding.EncodeToString(buffer.Bytes()[:])
+		c.String(200, base64str)
+	} else {
+		c.JSON(200, fr)
+	}
+
 }
 
 func (o *HttpServer) ReqParse(c *gin.Context) (map[string]interface{}, error) {
@@ -87,6 +110,10 @@ func (o *HttpServer) ReqParse(c *gin.Context) (map[string]interface{}, error) {
 	err = json.Unmarshal(bytes, &m)
 	if err != nil {
 		o.RespJsonEx(nil, err, c)
+	}
+	var zlib = util.GetBool(m, false, "zlib")
+	if zlib {
+		c.Set("zlib", true)
 	}
 	return m, err
 }

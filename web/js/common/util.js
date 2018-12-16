@@ -56,6 +56,16 @@ QUtil.prototype.handle_response = function(resp, printer, msg) {
     let r = resp.data;
 
     if (typeof r === "string") {
+        if (r.charAt(0) !== '{') {
+            // let zbinary = Base64.decode(r);
+            let zbinary = Base64.decodeToBytes(r);///important
+            let uarr = new Uint8Array(new ArrayBuffer(zbinary.length));
+            for (let i = 0, n = zbinary.length; i < n; ++i) {
+                uarr[i] = zbinary[i];
+            }
+            let decompressed = pako.inflate(uarr);
+            r = QUtil.uint8array_to_str(decompressed);
+        }
         r = eval( "(" + r + ")" );
     }
 
@@ -410,3 +420,23 @@ QUtil.array_to_map = function (arr, keyname) {
     }
     return m;
 };
+
+QUtil.str_to_uint8array = function(str){
+    let raw = str;
+    // let raw = window.atob(str);
+    let rawlen = raw.length;
+    let arr = new Uint8Array(new ArrayBuffer(rawlen));
+    for (let i = 0, n = rawlen; i < n; ++i) {
+        arr[i] = raw.charCodeAt(i);
+    }
+    return new Uint8Array(arr);
+}
+
+
+QUtil.uint8array_to_str = function(data){
+    let sarr = [];
+    for (let i = 0, n = data.length; i < n; i++) {
+        sarr.push(String.fromCharCode(data[i]));
+    }
+    return sarr.join("");
+}

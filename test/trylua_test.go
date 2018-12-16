@@ -16,7 +16,7 @@ func BenchmarkGolua(b *testing.B) {
 }
 
 func BenchmarkGoluaRaw(b *testing.B) {
-	var cacheManager = scache.GetCacheManager()
+	var cacheManager = scache.GetManager()
 	var cache = cacheManager.Get("test")
 	cache.Set("power overwhelming", "power")
 	for i := 0; i < 100; i++ {
@@ -37,7 +37,7 @@ end
 return {v, v, v}, { "2" };
 `
 	//var g = global.GetInstance();
-	var cacheManager = scache.GetCacheManager()
+	var cacheManager = scache.GetManager()
 	var cache = cacheManager.Get("test")
 	cache.Set("power overwhelming", "power")
 

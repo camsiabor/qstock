@@ -436,7 +436,7 @@ func (o *Syncer) PersistAndCache(
 
 	var db = util.GetStr(profile, "", "db")
 	var cachername = util.GetStr(profile, "", "cacher")
-	var cacher = scache.GetCacheManager().Get(cachername)
+	var cacher = scache.GetManager().Get(cachername)
 	_, err = work.Dao.Updates(db, group, ids, data, true, -1, nil)
 	if cacher != nil {
 		if len(group) == 0 {

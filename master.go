@@ -90,7 +90,7 @@ func initDao(g *global.G) {
 
 func initCacher(g *global.G) {
 
-	var cache_manager = scache.GetCacheManager()
+	var cache_manager = scache.GetManager()
 	g.SetData("cachem", cache_manager)
 
 	var cache_timestamp = cache_manager.Get(dict.CACHE_TIMESTAMP)
@@ -155,7 +155,7 @@ func initCacher(g *global.G) {
 	}
 	scache_code.Loader(scache_code, 1, 0)
 
-	var scache_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT)
+	var scache_snapshot = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
 	scache_snapshot.Dao = dict.DAO_MAIN
 	scache_snapshot.Db = dict.DB_DEFAULT
 	scache_snapshot.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
@@ -167,7 +167,7 @@ func initCacher(g *global.G) {
 		return conn.Get(scache.Db, "", code, 1, nil)
 	}
 
-	var scache_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY)
+	var scache_khistory = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY)
 	scache_khistory.Dao = dict.DAO_MAIN
 	scache_khistory.Db = dict.DB_HISTORY
 	scache_khistory.Timeout = -1 //time.Second * time.Duration(20);

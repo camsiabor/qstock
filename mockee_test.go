@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/camsiabor/golua/luar"
+	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/scache"
+	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qstock/dict"
 	"testing"
+	"time"
 )
 
 // https://colobu.com/
@@ -12,17 +16,104 @@ import (
 // https://github.com/camsiabor/golua/luar/
 
 func BenchmarkGolua(b *testing.B) {
-	TestMockee(nil)
+
 }
 
 func BenchmarkGoluaRaw(b *testing.B) {
-	var cacheManager = scache.GetCacheManager()
+	var cacheManager = scache.GetManager()
 	var cache = cacheManager.Get("test")
 	cache.Set("power overwhelming", "power")
 	for i := 0; i < 100; i++ {
 		var val, _ = cache.Get(false, "power")
 		fmt.Println(val)
 	}
+}
+
+func myQuery() {
+
+	var scachem = scache.GetManager()
+	var cache_code = scachem.Get("stock.code")
+	var cache_stock = scachem.Get("stock.snapshot")
+	var r, _ = cache_code.Get(false, "all")
+	var codes = util.AsStringSlice(r, 0)
+	var list = map[string]interface{}{}
+
+	var codes_len = len(codes)
+	for i := 0; i < codes_len; i++ {
+		var code = codes[i]
+		r, _ = cache_stock.Get(true, code)
+		var stock = util.AsMap(r, false)
+		var open0 = util.AsFloat64(stock["open"], 0)
+		if stock != nil && open0 != 0 {
+			var pb = util.AsFloat64(stock["pb"], 0)
+			var change_rate = util.AsFloat64(stock["change_rate"], 0)
+			if pb >= 1 && pb <= 10 && change_rate <= 7 {
+				list[code] = code
+			}
+		}
+	}
+
+	fmt.Println(list)
+}
+
+func myQuery2() {
+
+	var scachem = scache.GetManager()
+	var cache_code = scachem.Get(dict.CACHE_STOCK_CODE)
+	var cache_stock = scachem.Get(dict.CACHE_STOCK_SNAPSHOT)
+	var cache_khistory = scachem.Get(dict.CACHE_STOCK_KHISTORY)
+	var r, _ = cache_code.Get(false, "all")
+	var codes = util.AsStringSlice(r, 0)
+	var list = map[string]interface{}{}
+	var missing = map[string]interface{}{}
+
+	var codes_len = len(codes)
+	for i := 0; i < codes_len; i++ {
+		var code = codes[i]
+		r, _ = cache_stock.Get(true, code)
+		var k0 = util.AsMap(r, false)
+		var open0 = util.AsFloat64(k0["open"], 0)
+		if k0 != nil && open0 != 0 {
+			var r, _ = cache_khistory.GetSubVal(true, code, "20181214")
+			var k1 = util.AsMap(r, false)
+			if k1 != nil {
+				var cr0 = util.AsFloat64(k0["change_rate"], 0)
+				var cr1 = util.AsFloat64(k1["change_rate"], 0)
+				var low0 = util.AsFloat64(k0["low"], 0)
+				var high1 = util.AsFloat64(k1["high"], 0)
+				//var pb = util.AsFloat64(k0["pb"], 0)
+				if cr0 >= 0 && cr1 >= 0 && low0 > high1 {
+					list[code] = code
+				}
+			} else {
+				missing[code] = code
+			}
+		}
+	}
+	//fmt.Println(list)
+}
+
+func TestLuaBenchmark(t *testing.T) {
+	var g = global.GetInstance()
+	g.CycleHandler = func(cycle string, g *global.G, data interface{}) {
+		time.Sleep(time.Second)
+
+		var count = 100
+		var total float64 = 0
+		for i := 0; i < count; i++ {
+			var start = time.Now().UnixNano()
+			myQuery2()
+			var end = time.Now().UnixNano()
+			if i > 0 {
+				total = total + float64((end-start))/float64(time.Millisecond)
+			}
+		}
+		total = total / float64(count-1)
+		fmt.Println("finally avg ", total)
+	}
+	main()
+
+	time.Sleep(time.Hour)
 }
 
 func TestMockee(t *testing.T) {
@@ -37,7 +128,7 @@ end
 return {v, v, v}, { "2" };
 `
 	//var g = global.GetInstance();
-	var cacheManager = scache.GetCacheManager()
+	var cacheManager = scache.GetManager()
 	var cache = cacheManager.Get("test")
 	cache.Set("power overwhelming", "power")
 

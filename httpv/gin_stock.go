@@ -82,8 +82,8 @@ func (o *HttpServer) routeStock() {
 
 		var index = 0
 		var fetchs = util.AsSlice(ofetchs, 0)
-		var cacher_stock_snapshot = scache.GetCacheManager().Get(dict.CACHE_STOCK_SNAPSHOT)
-		var cacher_stock_khistory = scache.GetCacheManager().Get(dict.CACHE_STOCK_KHISTORY)
+		var cacher_stock_snapshot = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
+		var cacher_stock_khistory = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY)
 		if fetchs == nil || len(fetchs) == 0 {
 			o.RespJsonEx(nil, errors.New("fetchs is null"), c)
 			return

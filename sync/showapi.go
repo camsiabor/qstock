@@ -157,7 +157,7 @@ func (o *Syncer) ShowAPI_khistory(phrase string, work *ProfileWork) (err error) 
 	var cachername = util.GetStr(profile, dict.CACHE_STOCK_KHISTORY, "cacher")
 	var cacher *scache.SCache
 	if len(cachername) > 0 {
-		cacher = scache.GetCacheManager().Get(cachername)
+		cacher = scache.GetManager().Get(cachername)
 	}
 	var rargs = make(map[string]interface{})
 	for _, code := range codes {

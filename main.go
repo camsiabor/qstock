@@ -50,7 +50,7 @@ func main() {
 	}
 	g.SetData("global", g)
 	g.SetData("u", wrap.U)
-	g.SetData("cachem", scache.GetCacheManager())
+	g.SetData("cachem", scache.GetManager())
 	g.Run()
 
 	var doHelp = flag.Bool("help", false, "help")

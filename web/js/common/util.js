@@ -59,8 +59,6 @@ QUtil.prototype.handle_response = function(resp, printer, msg) {
         r = eval( "(" + r + ")" );
     }
 
-
-
     if (r.code) {
         let rdataclone = {};
         for(let k in r.data) {

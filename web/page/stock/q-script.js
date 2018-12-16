@@ -75,6 +75,7 @@ const script_methods = {
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
+            debug : true,
             script : script
         }).then(function (resp) {
             let data = util.handle_response(resp);

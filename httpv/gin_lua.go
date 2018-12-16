@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"strings"
+	"time"
 )
 
 func getL() *lua.State {
@@ -31,6 +32,8 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 		return
 	}
 
+	var debug = util.GetBool(m, false, "debug")
+
 	// TODO arguments
 	var L = luar.Init()
 	defer L.Close()
@@ -38,15 +41,27 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 	var Q = global.GetInstance().Data()
 	luar.Register(L, "Q", Q)
 
+	var start, end int64
+	var consume float64
+
 	var code = 0
 	var data interface{}
 	var goStackInfo map[string]interface{}
+
+	if debug {
+		start = time.Now().UnixNano()
+	}
 	var err = L.DoStringHandle(script, func(L *lua.State, pan interface{}) {
 		goStackInfo = qref.StackInfo(5)
 		var stackstr = util.AsStr(goStackInfo["stack"], "")
 		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
 		goStackInfo["stack"] = strings.Split(stackstr, "\n")
 	})
+	if debug {
+		end = time.Now().UnixNano()
+		consume = float64((end - start)) / float64(time.Millisecond)
+	}
+
 	if err == nil {
 		data, err = run.LuaGetVal(L, 1)
 		if err == nil {
@@ -57,7 +72,15 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 		}
 	}
 
-	if err != nil {
+	if err == nil {
+		if debug {
+			var wrap = map[string]interface{}{}
+			wrap["debug"] = true
+			wrap["data"] = data
+			wrap["consume"] = consume
+			data = wrap
+		}
+	} else {
 		code = 500
 		var luastacks = L.StackTrace()
 		var luastacksinfo = run.LuaFormatStackToMap(luastacks)
@@ -76,6 +99,11 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 		r["stack"] = luastacksinfo
 		r["err"] = err.Error()
 		r["type"] = "lua"
+
+		if debug {
+			r["cosume"] = consume
+		}
+
 		data = r
 	}
 	o.RespJson(code, data, c)

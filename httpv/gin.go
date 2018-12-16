@@ -166,7 +166,7 @@ func (o *HttpServer) handlePanicCmd(c *gin.Context, cmdtype string, cmd string, 
 func (o *HttpServer) handleTimeCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
 	var key = util.GetStr(m, "js", "key")
-	var cache = scache.GetCacheManager().Get("timestamp")
+	var cache = scache.GetManager().Get("timestamp")
 	cmd = strings.ToLower(cmd)
 	switch cmd {
 	case "now":
@@ -331,7 +331,7 @@ func (o *HttpServer) Run() {
 	gin.SetMode(mode)
 	qlog.Log(qlog.INFO, "http", "mode", mode)
 
-	var cache_timestamp = scache.GetCacheManager().Get(dict.CACHE_TIMESTAMP)
+	var cache_timestamp = scache.GetManager().Get(dict.CACHE_TIMESTAMP)
 	o.Engine = gin.Default()
 	o.Engine.Use(func(c *gin.Context) {
 		if c.Request.Method == "GET" {

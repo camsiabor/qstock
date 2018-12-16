@@ -27,16 +27,17 @@ func getL() *lua.State {
 // TODO arguments
 func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
+	var hash = util.GetStr(m, "", "hash")
 	var script = util.GetStr(m, "", "script")
-	if len(script) == 0 {
-		o.RespJsonEx(0, errors.New("no script content"), c)
+	if len(script) == 0 && len(hash) == 0 {
+		o.RespJsonEx(0, errors.New("script is null && hash is null"), c)
 		return
 	}
 
 	var debug = util.GetBool(m, false, "debug")
 
 	var chunk []byte
-	var hash = util.GetStr(m, "", "hash")
+
 	if len(hash) > 0 {
 		var cache = o.GetData(hash)
 		if cache == nil {

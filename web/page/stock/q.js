@@ -52,6 +52,9 @@ vue_options.data = {
             portfolio: true
         }
     },
+    hash : {
+
+    },
     script_names: [],
     script: {
         name: "",

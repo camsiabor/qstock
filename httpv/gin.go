@@ -1,7 +1,6 @@
 package httpv
 
 import (
-	"bitbucket.org/avd/go-ipc/sync"
 	"encoding/json"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
@@ -15,10 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
-	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 

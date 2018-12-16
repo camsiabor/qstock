@@ -53,9 +53,17 @@ const script_methods = {
 
 
     script_query: function () {
-        this.console.text = "";
+        let hash = "";
         let script = this.editor.getValue().trim();
-        let hash = md5(script);
+        if (window.location.href.indexOf('nohash') <= 0) {
+            hash = md5(script);
+            if (this.hash[hash]) {
+                script = "";
+            }  else {
+                this.hash[hash] = hash
+            }
+        }
+        this.console.text = "";
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
@@ -72,11 +80,17 @@ const script_methods = {
     },
 
     script_test: function () {
-        let script = this.editor.getValue().trim();
         let hash = "";
+        let script = this.editor.getValue().trim();
         if (window.location.href.indexOf('nohash') <= 0) {
             hash = md5(script);
+            if (this.hash[hash]) {
+                script = "";
+            }  else {
+                this.hash[hash] = hash
+            }
         }
+        this.console.text = "";
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',

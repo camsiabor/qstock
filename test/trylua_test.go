@@ -25,7 +25,7 @@ func BenchmarkGoluaRaw(b *testing.B) {
 	}
 }
 
-func TestTryLua(t *testing.T) {
+func testRegister() {
 	const script = `
 local v;
 local cache = Q.cachem.Get("test");
@@ -73,4 +73,14 @@ return {v, v, v}, { "2" };
 	if err2 != nil {
 		fmt.Println("[err2]", err2.Error())
 	}
+}
+
+func TestTryLua(t *testing.T) {
+	L := luar.Init()
+	//L.LoadString("xxx")
+	if L.Dump() == nil {
+		var bytes = L.ToBytes(2)
+		fmt.Println(len(bytes))
+	}
+	L.Close()
 }

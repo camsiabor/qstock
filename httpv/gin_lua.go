@@ -51,6 +51,7 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 	if debug {
 		start = time.Now().UnixNano()
 	}
+
 	var err = L.DoStringHandle(script, func(L *lua.State, pan interface{}) {
 		goStackInfo = qref.StackInfo(5)
 		var stackstr = util.AsStr(goStackInfo["stack"], "")
@@ -82,21 +83,21 @@ func (o HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Co
 		}
 	} else {
 		code = 500
-		var luastacks = L.StackTrace()
-		var luastacksinfo = run.LuaFormatStackToMap(luastacks)
+		var luaStacks = L.StackTrace()
+		var luaStackInfo = run.LuaFormatStackToMap(luaStacks)
 		var r = make(map[string]interface{})
 
-		var luastackslen = len(luastacksinfo)
-		if len(luastacksinfo) > 0 {
-			r["func"] = luastacksinfo[luastackslen-1]["func"]
-			r["line"] = luastacksinfo[luastackslen-1]["line"]
-			r["linesrc"] = luastacksinfo[luastackslen-1]["linesrc"]
+		var luaStockLen = len(luaStackInfo)
+		if len(luaStackInfo) > 0 {
+			r["func"] = luaStackInfo[luaStockLen-1]["func"]
+			r["line"] = luaStackInfo[luaStockLen-1]["line"]
+			r["linesrc"] = luaStackInfo[luaStockLen-1]["linesrc"]
 		}
 		if goStackInfo != nil {
-			luastacksinfo = append([]map[string]interface{}{goStackInfo}, luastacksinfo...)
+			luaStackInfo = append([]map[string]interface{}{goStackInfo}, luaStackInfo...)
 		}
 
-		r["stack"] = luastacksinfo
+		r["stack"] = luaStackInfo
 		r["err"] = err.Error()
 		r["type"] = "lua"
 

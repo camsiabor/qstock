@@ -188,7 +188,7 @@ const stock_methods = {
             "fetchs": wrap.fetch_pending,
             "time_from" : wrap.time_from,
             "time_to" : wrap.time_to,
-            "zlib" : zlib
+            "zlib" : false
         }).then(function (resp) {
             wrap.stocks = util.handle_response(resp);
             if (wrap.stocks_local && wrap.stocks_local.length) {

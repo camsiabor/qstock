@@ -1,43 +1,71 @@
 <div class="modal fade" id="div_params_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
-    <div class="modal-dialog" style="min-width: 500px">
+    <div class="modal-dialog" style="min-width: 600px">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">参数设置</h4>
+                <h4 class="modal-title">参数设置．{{params.name}}</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
 
             <div class="modal-body">
-                <button type="button" class="btn btn-primary" v-on:click="params_update();">ok</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
-                <button type="button" class="btn btn-info" v-on:click="params_list_add();">
+                <button type="button" class="btn btn-sm btn-info" v-on:click="params_update();">
+                    <i class="fa fa-save"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" v-on:click="params_list_add();">
                     <i class="fa fa-plus-circle"></i>
                 </button>
+                <!--
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-dismiss="modal">
+                    <i class="">x</i>
+                </button>
+                -->
 
-                <div style="margin: 5px" v-for="param in params.list">
-                    <div class="row">
-                        <div class="col-sm-3">
-                            <input style=""
-                                   class="form-control form-control-sm"
-                                   type="search" placeholder="params key"
+                <div style="margin: 5px" >
+                    <div class="row" style="color: gray; font-weight: bold;">
+                        <div class="col-sm-2 text-center">
+                            键
+                        </div>
+                        <div class="col-sm-2 text-center">
+                            别名
+                        </div>
+                        <div class="col-sm-3 text-center">
+                            值
+                        </div>
+                        <div class="col-sm-3 text-center">
+                            表达式
+                        </div>
+                        <div class="col-sm-2 text-center">
+
+                        </div>
+                    </div>
+                    <div class="row" v-for="(param, index) in params.list" style="margin-top: 5px">
+                        <div class="col-sm-2">
+                            <input style="width: 95%"
+                                   class="form-control form-control-sm text-center"
+                                   type="search" placeholder=""
                                    v-model="param.key">
                         </div>
-                        <div class="col-sm-3">
-                            <input style=""
-                                   class="form-control form-control-sm"
-                                   type="search" placeholder="params key"
+                        <div class="col-sm-2">
+                            <input style="width: 95%"
+                                   class="form-control form-control-sm text-center"
+                                   type="search" placeholder=""
                                    v-model="param.alias">
                         </div>
                         <div class="col-sm-3">
-                            <input style=""
+                            <input style="width: 95%"
                                    class="form-control form-control-sm"
-                                   type="search" placeholder="params value"
+                                   type="search" placeholder=""
                                    v-model="param.value">
                         </div>
                         <div class="col-sm-3">
-                            <input style=""
+                            <input style="width: 95%"
                                    class="form-control form-control-sm"
-                                   type="search" placeholder="params default value"
-                                   v-model="param.desc">
+                                   type="search" placeholder=""
+                                   v-model="param.expression">
+                        </div>
+                        <div class="col-sm-2">
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fa fa-minus-circle" v-on:click="params_list_delete(index)"></i>
+                            </button>
                         </div>
                     </div>
 

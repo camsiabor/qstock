@@ -48,7 +48,14 @@ QLoader.fetch = function (inputs, promise) {
     })
 };
 
+QLoader.fetch_html_fragment_and_js = function(selector, suffix, urls) {
+    return QLoader.fetch_html_fragment(selector, suffix).then(function () {
+        return QLoader.fetch_with_suffix( urls, suffix);
+    });
+};
+
 QLoader.fetch_html_fragment = function(selector, suffix) {
+
     let doms = document.querySelectorAll(selector);
     if (!doms || !doms.length) {
         return Promise.resolve(false);
@@ -61,7 +68,8 @@ QLoader.fetch_html_fragment = function(selector, suffix) {
         if (!url) {
             continue;
         }
-        if (suffix) {
+        let dosuffix = dom.className.indexOf("nosuffix") < 0;
+        if (dosuffix && suffix) {
             if (url.indexOf("?") >= 0) {
                 url = url + suffix;
             } else {
@@ -135,6 +143,7 @@ QLoader.fetch_and_do = function(opts) {
 };
 
 QLoader.fetch_with_suffix = function (urls, suffix) {
+
     if (typeof urls === 'string') { urls = [urls]; }
     if (!(urls instanceof Array)) {
        return Promise.resolve(false);
@@ -142,7 +151,11 @@ QLoader.fetch_with_suffix = function (urls, suffix) {
     if (suffix) {
         for (let i = 0; i < urls.length; i++) {
             let url = urls[i];
-            if (url.indexOf('?') < 0) { url = url + "?" + suffix; } else { url = url + "&" + suffix; }
+            if (url.indexOf('?') < 0) {
+                url = url + "?" + suffix;
+            } else {
+                url = url + "&" + suffix;
+            }
             urls[i] = url;
         }
     }

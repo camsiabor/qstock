@@ -32,9 +32,12 @@
 
 <div id="dcontainer" class="container"  style="max-width: 9999px"  >
 
+    <!--
+    <div class="qam-html-fragment nosuffix" include="../common/mask.html" v-if="!ready"></div>
+    -->
+
     <!-- nav bar -->
     <div class="qam-html-fragment" include="q-nav.html"></div>
-
 
     <div id="div_tool" class="row" style="margin-top: 10px">
 
@@ -61,7 +64,7 @@
                 <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
                     <i class="fa fa-save"></i>
                 </button>
-                <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="script_delete()">
+                <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete()">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
@@ -88,7 +91,7 @@
                 <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_update()" >
                     <i class="fa fa-save"></i>
                 </button>
-                <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="params_delete()">
+                <button type="button" value="删除" class="btn btn-sm btn-outline-warning" v-on:click="params_delete()">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
@@ -119,11 +122,11 @@
                 <button type="button" value="新加" class="btn btn-sm btn-outline-danger"  v-on:click="portfolio_update()" style="margin-left: 3px;">
                     <i class="fa fa-plus-circle"></i>
                 </button>
-                <button type="button" value="移出" class="btn btn-sm btn-outline-secondary"  v-on:click="portfolio_unadd()" >
+                <button type="button" value="移出" class="btn btn-sm btn-outline-danger"  v-on:click="portfolio_unadd()" >
                     <i class="fa fa-minus-circle"></i>
                 </button>
 
-                <button type="button" value="刪除" class="btn btn-sm btn-outline-secondary" v-on:click="portfolio_delete()" >
+                <button type="button" value="刪除" class="btn btn-sm btn-outline-danger" v-on:click="portfolio_delete()" >
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
@@ -230,23 +233,20 @@
 
 <script type="text/javascript">
 
-    const suffix = QLoader.get_cookie_val("_u_js");
-    QLoader.fetch_html_fragment(".qam-html-fragment", suffix).then(function () {
-        return QLoader.fetch_with_suffix(
-                [
-                    "/js/common/util.js",
-                    "/js/db/db.js",
-                    "coldef.js",
-                    "q-chart-k.js",
-                    "q-stock.js",
-                    "q-script.js",
-                    "q-portfolio.js",
-                    "q.js"
-                ],
-                suffix
-        );
-    });
-
+    let suffix = QLoader.get_cookie_val("_u_js");
+    if (window.location.href.indexOf("debug") > 0) {
+        suffix = new Date().getTime();
+    }
+    QLoader.fetch_html_fragment_and_js(".qam-html-fragment", suffix, [
+        "/js/common/util.js",
+        "/js/db/db.js",
+        "coldef.js",
+        "q-chart-k.js",
+        "q-stock.js",
+        "q-script.js",
+        "q-portfolio.js",
+        "q.js"
+    ]);
 
     QLoader.fetch_if('/js/eruda/eruda.js', "", {
         "url" : "eruda"

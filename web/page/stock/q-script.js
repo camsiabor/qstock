@@ -68,6 +68,7 @@ const script_methods = {
             type : 'lua',
             cmd : 'run',
             hash : hash,
+            params : this.params,
             script : script
         }).then(this.stock_get_data_by_code)
     },
@@ -89,6 +90,7 @@ const script_methods = {
             cmd : 'run',
             hash : hash,
             debug : true,
+            params : this.params,
             script : script
         }).then(function (resp) {
             let data = util.handle_response(resp);
@@ -139,14 +141,16 @@ const script_methods = {
     },
 
     params_select: function(name) {
-        name = name || this.portfolio.name;
-        this.setting.params.last = name;
-        this.params_get(name);
+        name = name || this.params.name.trim();
+        if (name) {
+            this.setting.params.last = name;
+            this.params_get(name);
+        }
     },
 
     params_update : function (name) {
         if (!name) {
-            name = this.params.name;
+            name = this.params.name.trim();
         }
         if (!name) {
             alert("需要参数名字");
@@ -164,9 +168,7 @@ const script_methods = {
     },
 
     params_delete : function (name) {
-        if (!name) {
-            name = this.params.name;
-        }
+        name = name || this.params.name.trim();
         if (!confirm("sure to delete params? " + name)) {
             return;
         }
@@ -188,16 +190,19 @@ const script_methods = {
         if (!this.params.list) {
             this.params.list = [];
         }
+        let len = this.params.list.length;
         this.params.list.push({
-            "key" : "key",
-            "alias" : "alias",
-            "value" : "value",
-            "desc" : "desc"
+            "key" : "key" + len,
+            "alias" : "key" + len,
+            "value" : "val" + len,
+            "expression" : ""
         });
     },
     
-    params_list_delete : function () {
-
+    params_list_delete : function (index) {
+        let head = this.params.list.slice(0, index);
+        let tail = this.params.list.slice(index + 1);
+        this.params.list = head.concat(tail);
     }
 
 };

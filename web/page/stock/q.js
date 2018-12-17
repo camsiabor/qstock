@@ -70,7 +70,7 @@ vue_options.data = {
                 "key" : "key",
                 "alias" : "别名",
                 "value" : "val",
-                "desc" : ""
+                "expression" : ""
             }
         ]
     },
@@ -417,8 +417,12 @@ DB.new_db_promise({
             if (this.setting.portfolio.last || this.setting.portfolio_last) {
                 this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
             }
+
+            this.ready = true;
+
         }.bind(this));
     };
+
     window.vue = new Vue(vue_options);
 
 }).catch(function (err) {

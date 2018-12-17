@@ -94,16 +94,18 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 	var metatoken string
 	var date_to_str string
 	var date_from_str string
-	if work.GCmd != nil && work.GCmd.Data != nil {
-		codes = util.GetStringSlice(work.GCmd.Data, "codes")
-		date_to_str = util.GetStr(work.GCmd.Data, "", "to")
-		date_from_str = util.GetStr(work.GCmd.Data, "", "from")
-		if codes == nil || len(codes) == 0 {
-			return nil, fmt.Errorf("codes is null %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data)
+	if work.GCmd != nil {
+		var cmdata = work.GCmd.Data()
+
+		date_to_str = util.GetStr(cmdata, "", "to")
+		date_from_str = util.GetStr(cmdata, "", "from")
+		if len(date_from_str) > 0 {
+			codes = util.GetStringSlice(cmdata, "codes")
+			if codes == nil || len(codes) == 0 {
+				return nil, fmt.Errorf("codes is null %s : %v", work.GCmd.GetServFunc(), cmdata)
+			}
 		}
-		if len(date_from_str) == 0 {
-			return nil, fmt.Errorf("need to specify date from %s : %v", work.GCmd.GetServFunc(), work.GCmd.Data)
-		}
+
 	}
 
 	var dao = work.Dao

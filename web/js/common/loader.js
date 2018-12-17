@@ -150,6 +150,11 @@ QLoader.fetch_with_suffix = function (urls, suffix) {
     if (!url) {
         return Promise.resolve(false);
     }
+
+    for(let i = 0, n = urls.length; i < n; i++) {
+        let url = urls[i];
+    }
+
     let promise = new Promise(function (resolve, reject) {
         let dom = document.createElement('script');
         dom.setAttribute("type", "text/javascript");

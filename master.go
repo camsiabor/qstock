@@ -189,12 +189,10 @@ func initCacher(g *global.G) {
 		var cmd = &global.Cmd{
 			Service:  dict.SERVICE_SYNC,
 			Function: "k.history.sz",
-			Data: map[string]interface{}{
-				"codes": []string{code},
-				"from":  datestr,
-			},
-			SFlag: "go",
+			SFlag:    "go",
 		}
+		cmd.SetData("from", datestr)
+		cmd.SetData("codes", []string{code})
 		var reply, _ = g.SendCmd(cmd, timeout)
 		if reply != nil {
 			err = reply.RetErr

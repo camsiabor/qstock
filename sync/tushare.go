@@ -129,7 +129,7 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		}
 
 		var to_date = time.Now()
-		var date_to_str = to_date.Format("20060102")
+		date_to_str = to_date.Format("20060102")
 		if date_from_str == date_to_str {
 			if to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday {
 				qlog.Log(qlog.DEBUG, o.Name, "sunday & saturday need a rest")

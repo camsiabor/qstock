@@ -343,8 +343,6 @@ func (o *Syncer) DoProfileWithRecord(work *ProfileWork) (ferr error) {
 	dao.Update(database, metatoken, "start_id", work.Id, true, -1, nil)
 	dao.Update(database, metatoken, "start_str", qtime.YYYY_MM_dd_HH_mm_ss(&start), true, -1, nil)
 
-	var end = time.Now()
-	var elapse = end.Unix() - start.Unix()
 	var data, err = o.DoProfile(work)
 	var count int
 	if data == nil {
@@ -353,6 +351,8 @@ func (o *Syncer) DoProfileWithRecord(work *ProfileWork) (ferr error) {
 		count = len(data)
 	}
 
+	var end = time.Now()
+	var elapse = end.Unix() - start.Unix()
 	if err == nil {
 		profile["last"] = end.Unix()
 		dao.Update(database, metatoken, "last", end.Unix(), true, -1, nil)

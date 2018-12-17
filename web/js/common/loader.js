@@ -1,5 +1,4 @@
 
-
 const QLoader = {};
 
 QLoader.debug = false;
@@ -49,37 +48,112 @@ QLoader.fetch = function (inputs, promise) {
     })
 };
 
+QLoader.fetch_html_fragment = function(selector, suffix) {
+    let doms = document.querySelectorAll(selector);
+    if (!doms || !doms.length) {
+        return Promise.resolve(false);
+    }
 
+    let promises = [];
+    for (let i = 0, n = doms.length; i < n; i++) {
+        let dom = doms[i];
+        let url = dom.getAttribute("include");
+        if (!url) {
+            continue;
+        }
+        if (suffix) {
+            if (url.indexOf("?") >= 0) {
+                url = url + suffix;
+            } else {
+                url = url + "?" + suffix;
+            }
+        }
 
+        let obj = {
+            url : url,
+            dom : dom
+        };
+        promises[i] = window.fetch(url).then(function (resp) {
+            return resp.text().then(function (content) {
+                this.dom.removeAttribute("include");
+                this.dom.setAttribute("included", this.url);
+                if (content) {
+                    this.dom.innerHTML = content;
+                }
+            }.bind(this));
+        }.bind(obj));
+    }
+    if (promises.length === 0) {
+       return Promise.resolve(false);
+    }
+
+    return Promise.all(promises).then(function () {
+        // return QLoader.fetch_html_fragment(selector, suffix);
+    });
+
+};
+
+/**
+ * opts.objs {
+ *     url
+ *     callback
+ * }
+ * opts.suffix
+ * @param opts
+ */
+QLoader.fetch_and_do = function(opts) {
+    let objs = opts.objs;
+    for (let i = 0; i < objs.length; i++) {
+        let obj = objs[i];
+        if (typeof obj === 'string') {
+            objs[i] = { url : obj };
+        }
+    }
+    if (typeof opts.index === 'undefined') {
+        opts.index = 0;
+    }
+
+    if (opts.index >= opts.objs.length) {
+        return true;
+    }
+
+    let target = opts.objs[opts.index];
+    if (opts.suffix) {
+        if (target.url.indexOf('?') >= 0) {
+            target.url = target.url + opts.suffix;
+        } else {
+            target.url = target.url + "?" + opts.suffix;
+        }
+    }
+    return window.fetch(target.url).then(function (resp) {
+        if (target.callback) {
+            target.callback.call(this, resp);
+        }
+        opts.index = opts.index + 1;
+        return QLoader.fetch_and_do(opts);
+    });
+};
 
 QLoader.fetch_with_suffix = function (urls, suffix) {
-    if (typeof urls === 'string') {
-        urls = [urls];
-    }
+    if (typeof urls === 'string') { urls = [urls]; }
     if (!(urls instanceof Array)) {
        return Promise.resolve(false);
     }
     if (suffix) {
         for (let i = 0; i < urls.length; i++) {
             let url = urls[i];
-            if (url.indexOf('?') < 0) {
-                url = url + "?" + suffix;
-            } else {
-                url = url + "&" + suffix;
-            }
+            if (url.indexOf('?') < 0) { url = url + "?" + suffix; } else { url = url + "&" + suffix; }
             urls[i] = url;
         }
     }
-
     let url = urls[0];
     if (!url) {
         return Promise.resolve(false);
     }
-    let dom = document.createElement('script');
-    dom.setAttribute("type", "text/javascript");
-    dom.setAttribute("src", url);
-
     let promise = new Promise(function (resolve, reject) {
+        let dom = document.createElement('script');
+        dom.setAttribute("type", "text/javascript");
+        dom.setAttribute("src", url);
         dom.onload = dom.onreadystatechange = function () {
             if (QLoader.debug) {
                 console.log("[fetch]", dom);
@@ -95,7 +169,6 @@ QLoader.fetch_with_suffix = function (urls, suffix) {
         return QLoader.fetch_with_suffix(urls);
     });
     return promise;
-    // QLoader.fetch(urls);
 };
 
 QLoader.fetch_if = function (urls, suffix, opt) {
@@ -108,18 +181,18 @@ QLoader.fetch_if = function (urls, suffix, opt) {
     return Promise.resolve(false);
 };
 
-QLoader.fetch_with_suffix_cookie = function(urls, name) {
+QLoader.get_cookie_val = function(cookiename) {
     let cookies = document.cookie.split(";");
     for(let i = 0; i < cookies.length; i++) {
         let c = cookies[i];
-        let index = c.indexOf(name);
+        let index = c.indexOf(cookiename);
         if (index >= 0) {
-            let suffix = c.substring(index + name.length + 5);
-            return QLoader.fetch_with_suffix(urls, suffix);
+            return c.substring(index + cookiename.length + 5);
         }
     }
-    return Promise.resolve(false);
+    return "";
 };
+
 
 QLoader.fetch_with_suffix_ajax = function (url, params, script_urls) {
     axios.post(url, params).then(function (resp) {

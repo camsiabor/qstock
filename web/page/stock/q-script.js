@@ -70,13 +70,6 @@ const script_methods = {
             hash : hash,
             script : script
         }).then(this.stock_get_data_by_code)
-        /*
-         return axios.post("/cmd/query", {
-            type : 'db',
-            cmd : 'run',
-            script : script
-        }).then(this.stock_get_data_by_code);
-        */
     },
 
     script_test: function () { // eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=
@@ -87,7 +80,7 @@ const script_methods = {
             if (this.hash[hash]) {
                 script = "";
             }  else {
-                this.hash[hash] = hash
+                this.hash[hash] = hash;
             }
         }
         this.console.text = "";
@@ -111,31 +104,99 @@ const script_methods = {
         return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Keys",
-            "args": ["common", "", "params", null ],
+            "args": [ "common", "params", "*", null ],
         }).then(function (resp) {
             let data = util.handle_response(resp);
-            for (let i = 0; i < data.length; i++) {
-                let name = data[i];
-                name = name.replace("portf_", "");
-                data[i] = name;
-            }
-            this.portfolio_names = data.sort();
+            this.params_names = data.sort();
         }.bind(this));
     },
 
-    params_select: function() {
-
-    },
-
     params_setting : function () {
-
+        if (!this.params.name) {
+            alert("请输入参数名字");
+            return;
+        }
+        $('#div_params_setting').modal('toggle');
     },
 
-    params_save : function () {
-
+    params_get: function(name) {
+        if (!name) {
+            name = this.params.name;
+        }
+        if (!name) {
+            return;
+        }
+        return axios.post("/cmd/go", {
+            "type": "db",
+            "cmd": "Get",
+            "args": ["common", "params", name, 1, null]
+        }).then(function (resp) {
+            let data = util.handle_response(resp);
+            if (data) {
+                this.params = data;
+            }
+        }.bind(this));
     },
 
-    params_delete : function () {
+    params_select: function(name) {
+        name = name || this.portfolio.name;
+        this.setting.params.last = name;
+        this.params_get(name);
+    },
+
+    params_update : function (name) {
+        if (!name) {
+            name = this.params.name;
+        }
+        if (!name) {
+            alert("需要参数名字");
+            return;
+        }
+        axios.post("/cmd/go", {
+            "type": "db",
+            "cmd": "Update",
+            "args": ["common", "params", name, this.params, true, 1, null]
+        }).then(function (resp) {
+            let msg = "保存参数 " + this.params.name + " 成功"
+            util.handle_response(resp, this.console, msg);
+            this.params_list();
+        }.bind(this));
+    },
+
+    params_delete : function (name) {
+        if (!name) {
+            name = this.params.name;
+        }
+        if (!confirm("sure to delete params? " + name)) {
+            return;
+        }
+        return axios.post("/cmd/go", {
+            "type": "db",
+            "cmd": "Delete",
+            "args": ["common", "params", name, null]
+        }).then(function (resp) {
+            util.handle_response(resp);
+            this.params.name = "";
+            return this.params_list();
+        }.bind(this));
+    },
+
+    params_list_add : function () {
+        if (!this.params) {
+            this.params = {};
+        }
+        if (!this.params.list) {
+            this.params.list = [];
+        }
+        this.params.list.push({
+            "key" : "key",
+            "alias" : "alias",
+            "value" : "value",
+            "desc" : "desc"
+        });
+    },
+    
+    params_list_delete : function () {
 
     }
 

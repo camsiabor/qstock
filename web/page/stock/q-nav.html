@@ -1,0 +1,59 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">
+        <span v-if="setting.mode=='query'">查询．{{script.name}} ． {{portfolio.name}}</span>
+        <span v-if="setting.mode=='portfolio'">组合．{{script.name}} ． {{portfolio.name}}</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    设置
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="setting_show()">列表</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    显示
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="toggle('script', 'view')">查询运行</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'view')">自选组合</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('editor', 'view')">脚本编辑</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    模式
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="toggle('query', 'mode')">查询</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'mode')">组合</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('silent', 'mode')">静默</a>
+                </div>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    动作
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sz')">同步映照</a>
+                    <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sz', 'k.history.sh', 'k.history.ms')">同步历史</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('js', 'mode')">更新JS</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('local', 'mode')">清除记忆</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'meta')">清除缓存META</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'snapshot')">清除缓存映照</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'khistory')">清除缓存历史</a>
+                    <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'def', '')">刪除映照</a>
+                    <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'history', '')">刪除历史</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>

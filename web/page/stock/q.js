@@ -8,7 +8,37 @@ Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
 // Vue.component('vuetable-pagination', Vuetable.VuetablePaginationInfoMixin);
 // Vue.component('vuetable-pagination-dropdown', Vuetable.VuetablePaginationDropDown);
 
-
+const def_setting = {
+    compress : true,
+    table : {
+        page_size : 5,
+        fields : _columns_default
+    },
+    kagi : {
+        count : 50,
+        width : -2,
+        height : 100,
+        scale_y : 5
+    },
+    mode: "query",
+    exclude: "buy,sell",
+    script: {
+        last: ""
+    },
+    params : {
+        last: ""
+    },
+    portfolio_last: "",
+    portfolio: {
+        last: ""
+    },
+    display: {
+        editor: true,
+        script: true,
+        params: true,
+        portfolio: true
+    }
+};
 
 const vue_options = {
     el: '#dcontainer'
@@ -22,49 +52,27 @@ vue_options.data = {
         data: datamock,
         datamap : {}
     },
-    setting: {
-        compress : true,
-        table : {
-            page_size : 5,
-            fields : _columns_default
-        },
-        kagi : {
-            count : 20,
-            width : -1,
-            height : 100,
-            scale_y : 1
-        },
-        mode: "query",
-        exclude: "buy,sell",
-        script: {
-            last: ""
-        },
-        params : {
-            last: ""
-        },
-        portfolio_last: "",
-        portfolio: {
-            last: ""
-        },
-        display: {
-            editor: true,
-            script: true,
-            params: true,
-            portfolio: true
-        }
-    },
+    setting: def_setting,
     hash : {
 
     },
     script_names: [],
     script: {
         name: "",
-        script: "--lua.redis"
+        script: "--[[lua]]--"
     },
     params_names: [],
     params_map : {},
     params: {
-        name: ""
+        name: "",
+        list : [
+            {
+                "key" : "key",
+                "alias" : "别名",
+                "value" : "val",
+                "desc" : ""
+            }
+        ]
     },
     portfolio_names: [],
     portfolios: {},
@@ -141,6 +149,11 @@ vue_options.methods = {
             }
         } else {
             this.columns = _columns_default;
+        }
+        for (let k in def_setting) {
+            if (!this.setting[k]) {
+                this.setting[k] = def_setting[k];
+            }
         }
     },
 
@@ -389,13 +402,17 @@ DB.new_db_promise({
         this.editor_init();
         this.table_init();
 
+        this.params_list();
         this.script_list();
         this.portfolio_list();
 
         // data init
         this.sync_meta_query(["def", "history"]).then(function () {
+            if (this.setting.params.last) {
+                this.params_select(this.setting.params.last);
+            }
             if (this.setting.script.last) {
-                this.script_select(this.setting.script.last)
+                this.script_select(this.setting.script.last);
             }
             if (this.setting.portfolio.last || this.setting.portfolio_last) {
                 this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);

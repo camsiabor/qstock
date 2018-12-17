@@ -1,4 +1,5 @@
 const portfoilio_methods = {
+
     portfolio_list: function () {
         return axios.post("/cmd/go", {
             "type": "db",
@@ -37,8 +38,8 @@ const portfoilio_methods = {
             "args": ["common", portfolio_name, codes_sel, codes_sel, true, 0, null]
         }).then(function (resp) {
             util.handle_response(resp, this.console, "");
-            let msg = "加入到 " + this.portfolio.name + " 成功"
-            util.popover("#input_portfolio_name", msg, "bottom")
+            let msg = "加入到 " + this.portfolio.name + " 成功";
+            util.popover("#input_portfolio_name", msg, "bottom");
             this.portfolio_list();
         }.bind(this));
     },

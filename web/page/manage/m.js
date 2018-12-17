@@ -29,9 +29,6 @@ let vue = new Vue({
         config_persist : function() {
         },
 
-        config_load : function() {
-        },
-
         cmd_select : function(cmdtype) {
             let mode;
             this.cmd.type = cmdtype;

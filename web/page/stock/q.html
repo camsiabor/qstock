@@ -32,73 +32,9 @@
 
 <div id="dcontainer" class="container"  style="max-width: 9999px"  >
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">
-            <span v-if="setting.mode=='query'">查询．{{script.name}} ． {{portfolio.name}}</span>
-            <span v-if="setting.mode=='portfolio'">组合．{{script.name}} ． {{portfolio.name}}</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <!-- nav bar -->
+    <div class="qam-html-fragment" include="q-nav.html"></div>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        设置
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="" >
-                        <a class="dropdown-item" href="#" v-on:click="setting_show()">列表</a>
-                    </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        显示
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="" >
-                        <a class="dropdown-item" href="#" v-on:click="toggle('script', 'view')">查询运行</a>
-                        <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'view')">自选组合</a>
-                        <a class="dropdown-item" href="#" v-on:click="toggle('editor', 'view')">脚本编辑</a>
-                    </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        模式
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="" >
-                        <a class="dropdown-item" href="#" v-on:click="toggle('query', 'mode')">查询</a>
-                        <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'mode')">组合</a>
-                        <a class="dropdown-item" href="#" v-on:click="toggle('silent', 'mode')">静默</a>
-                    </div>
-                </li>
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        动作
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="" >
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot.sz')">同步映照</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history.sz', 'k.history.sh', 'k.history.ms')">同步历史</a>
-                        <a class="dropdown-item" href="#" v-on:click="clear_cache('js', 'mode')">更新JS</a>
-                        <a class="dropdown-item" href="#" v-on:click="clear_cache('local', 'mode')">清除记忆</a>
-                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'meta')">清除缓存META</a>
-                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'snapshot')">清除缓存映照</a>
-                        <a class="dropdown-item" href="#" v-on:click="clear_cache('webdb', 'khistory')">清除缓存历史</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'def', '')">刪除映照</a>
-                        <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'history', '')">刪除历史</a>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="row">
-        <div class="col-sm-12">
-            <div id="test">
-
-            </div>
-        </div>
-    </div>
 
     <div id="div_tool" class="row" style="margin-top: 10px">
 
@@ -134,7 +70,7 @@
         <div aria-details="脚本参数" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
             <div class="input-group-prepend">
 
-                <button ar type="button" value="设置" id="button_script_test" class="btn btn-sm btn-outline-warning"  v-on:click="script_setting()" style="margin-left: 3px;">
+                <button ar type="button" value="设置" id="button_script_test" class="btn btn-sm btn-outline-warning"  v-on:click="params_setting()" style="margin-left: 3px;">
                     <i class="fa fa-edit"></i>
                 </button>
                 <button type="button" class="btn btn-outline-warning dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -149,7 +85,7 @@
                 <input type="search" id="input_script_name" class="form-control"
                        placeholder="查询参数" aria-label="script" aria-describedby="script" v-model="params.name" >
 
-                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_save()" >
+                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_update()" >
                     <i class="fa fa-save"></i>
                 </button>
                 <button type="button" value="删除" class="btn btn-sm btn-outline-secondary" v-on:click="params_delete()">
@@ -257,98 +193,11 @@
 
 
 
-    <!-- -->
+    <!-- table setting -->
+    <div class="qam-html-fragment" include="q-table-setting.html"></div>
 
-    <div class="modal fade" id="div_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
-        <div class="modal-dialog" style="min-width: 600px">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">setting</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                </div>
-
-                <div class="modal-body">
-                    <button type="button" class="btn btn-primary" v-on:click="setting_save()">ok</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
-                    <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 90%">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1">k-count</span>
-                        </div>
-                        <input
-                                class="form-control mr-sm-2"
-                                type="search" placeholder="kagi count"
-                                aria-label="kagi count" v-model="setting.kagi.count">
-                    </div>
-                    </div>
-                    <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 90%">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text" id="basic-addon1">k-width</span>
-                            </div>
-                            <input style="width: 75%"
-                                   class="form-control mr-sm-2"
-                                   type="search" placeholder="kagi width"
-                                   aria-label="kagi height" v-model="setting.kagi.width">
-                        </div>
-                    </div>
-                    <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 90%">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text" id="basic-addon1">k-height</span>
-                            </div>
-                            <input style="width: 75%"
-                                   class="form-control mr-sm-2"
-                                   type="search" placeholder="kagi height"
-                                   aria-label="kagi height" v-model="setting.kagi.height">
-                        </div>
-                    </div>
-                    <div style="margin: 5px">
-                        <div class="input-group sm-3" style="width: 90%">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text" id="basic-addon1">k-scale-y</span>
-                            </div>
-                            <input style="width: 75%"
-                                   class="form-control mr-sm-2"
-                                   type="search" placeholder="kagi scale y"
-                                   aria-label="kagi scale y" v-model="setting.kagi.scale_y">
-                        </div>
-                    </div>
-                    <div>
-                        <table width="90%">
-                            <thead>
-                            <tr>
-                                <th>字段</th>
-                                <th>列名</th>
-                                <th>排序</th>
-                                <th>显示</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <!-- :style="i % 2 ? 'background-color: rgb(244,244,244);' : ''"-->
-                            <!-- :style="isexclude(col.field) ? 'display:none' : 'display:inherit'" -->
-                            <!--
-                            <tr v-for="(col, i) in columns" :style="isexclude(col.field) ? 'display:none' : (i % 2 ? 'background-color: rgb(244,244,244);' : '')">
-                                <td>{{col.field}}</td>
-                                <td>{{col.title}}</td>
-                                <td>
-                                    <input type="checkbox" v-model="col.sortable"/>
-                                </td>
-                                <td>
-                                    <input type="checkbox" v-model="col.visible"/>
-                                </td>
-                            </tr>
-                            -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal -->
-    </div>
+    <!-- params setting -->
+    <div class="qam-html-fragment" include="q-param-setting.html"></div>
 
 </div>
 
@@ -381,20 +230,23 @@
 
 <script type="text/javascript">
 
+    const suffix = QLoader.get_cookie_val("_u_js");
+    QLoader.fetch_html_fragment(".qam-html-fragment", suffix).then(function () {
+        return QLoader.fetch_with_suffix(
+                [
+                    "/js/common/util.js",
+                    "/js/db/db.js",
+                    "coldef.js",
+                    "q-chart-k.js",
+                    "q-stock.js",
+                    "q-script.js",
+                    "q-portfolio.js",
+                    "q.js"
+                ],
+                suffix
+        );
+    });
 
-    QLoader.fetch_with_suffix_cookie(
-         [
-             "/js/common/util.js",
-             "/js/db/db.js",
-             "coldef.js",
-             "q-chart-k.js",
-             "q-stock.js",
-             "q-script.js",
-             "q-portfolio.js",
-             "q.js"
-        ],
-        "_u_js"
-    );
 
     QLoader.fetch_if('/js/eruda/eruda.js', "", {
         "url" : "eruda"

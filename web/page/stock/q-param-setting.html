@@ -1,0 +1,51 @@
+<div class="modal fade" id="div_params_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+    <div class="modal-dialog" style="min-width: 500px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">参数设置</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <button type="button" class="btn btn-primary" v-on:click="params_update();">ok</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                <button type="button" class="btn btn-info" v-on:click="params_list_add();">
+                    <i class="fa fa-plus-circle"></i>
+                </button>
+
+                <div style="margin: 5px" v-for="param in params.list">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <input style=""
+                                   class="form-control form-control-sm"
+                                   type="search" placeholder="params key"
+                                   v-model="param.key">
+                        </div>
+                        <div class="col-sm-3">
+                            <input style=""
+                                   class="form-control form-control-sm"
+                                   type="search" placeholder="params key"
+                                   v-model="param.alias">
+                        </div>
+                        <div class="col-sm-3">
+                            <input style=""
+                                   class="form-control form-control-sm"
+                                   type="search" placeholder="params value"
+                                   v-model="param.value">
+                        </div>
+                        <div class="col-sm-3">
+                            <input style=""
+                                   class="form-control form-control-sm"
+                                   type="search" placeholder="params default value"
+                                   v-model="param.desc">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>

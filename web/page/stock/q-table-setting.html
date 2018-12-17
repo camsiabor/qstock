@@ -1,0 +1,90 @@
+<div class="modal fade" id="div_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+    <div class="modal-dialog" style="min-width: 600px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">列表设置</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <button type="button" class="btn btn-primary" v-on:click="setting_save()">ok</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">cancel</button>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-count</span>
+                        </div>
+                        <input
+                                class="form-control mr-sm-2"
+                                type="search" placeholder="kagi count"
+                                aria-label="kagi count" v-model="setting.kagi.count">
+                    </div>
+                </div>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-width</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi width"
+                               aria-label="kagi height" v-model="setting.kagi.width">
+                    </div>
+                </div>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-height</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi height"
+                               aria-label="kagi height" v-model="setting.kagi.height">
+                    </div>
+                </div>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-scale-y</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi scale y"
+                               aria-label="kagi scale y" v-model="setting.kagi.scale_y">
+                    </div>
+                </div>
+                <div>
+                    <table width="90%">
+                        <thead>
+                        <tr>
+                            <th>字段</th>
+                            <th>列名</th>
+                            <th>排序</th>
+                            <th>显示</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- :style="i % 2 ? 'background-color: rgb(244,244,244);' : ''"-->
+                        <!-- :style="isexclude(col.field) ? 'display:none' : 'display:inherit'" -->
+                        <!--
+                            <tr v-for="(col, i) in columns" :style="isexclude(col.field) ? 'display:none' : (i % 2 ? 'background-color: rgb(244,244,244);' : '')">
+                                <td>{{col.field}}</td>
+                                <td>{{col.title}}</td>
+                                <td>
+                                    <input type="checkbox" v-model="col.sortable"/>
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="col.visible"/>
+                                </td>
+                            </tr>
+                            -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>

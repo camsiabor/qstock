@@ -172,10 +172,14 @@ func initCacher(g *global.G) {
 	scache_khistory.Db = dict.DB_HISTORY
 	scache_khistory.Timeout = -1 //time.Second * time.Duration(20);
 	scache_khistory.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
+		if len(keys) < 1 {
+			return nil, fmt.Errorf("keys len invalid for this cache loader %s", scache.Name)
+		}
 		conn, err := qdao.GetDaoManager().Get(scache.Dao)
 		if err != nil {
 			return nil, err
 		}
+
 		var code = keys[0]
 		var datestr = keys[1]
 		data, err := conn.Get(scache.Db, code, datestr, 1, nil)

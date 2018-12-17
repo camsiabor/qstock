@@ -24,6 +24,26 @@ func getL() *lua.State {
 	return L
 }
 
+func (o *HttpServer) getScriptParams(params interface{}) map[string]interface{} {
+	if params == nil {
+		return nil
+	}
+	var list = util.GetSlice(params, "list")
+	if list == nil {
+		return nil
+	}
+	var r = make(map[string]interface{})
+	for _, one := range list {
+		var key = util.GetStr(one, "", "key")
+		if len(key) == 0 {
+			continue
+		}
+		var value = util.Get(one, "", "value")
+		r[key] = value
+	}
+	return r
+}
+
 // TODO arguments
 func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
@@ -60,6 +80,11 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	L.OpenLibs()
 	var Q = global.GetInstance().Data()
 	luar.Register(L, "Q", Q)
+
+	var params = o.getScriptParams(m["params"])
+	if params != nil {
+		luar.Register(L, "A", params)
+	}
 
 	var start, end int64
 	var consume float64

@@ -224,7 +224,7 @@ const _columns_default = [
     {
         "name" : '__component:vuetable-actions',
         "title" : '',
-        "visible" : true,
+        "visible" : false,
         "width" : "8%"
     },
     {

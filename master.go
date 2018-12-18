@@ -67,7 +67,7 @@ func master(g *global.G) {
 func initDao(g *global.G) {
 	var schemaOpts = util.GetMap(g.Config, true, "dbschema")
 	var databaseOpts = util.GetMap(g.Config, true, "database")
-	qdao.GetDaoManager().Init(func(manager *qdao.DaoManager, name string, opts map[string]interface{}) (qdao.D, error) {
+	qdao.GetManager().Init(func(manager *qdao.DaoManager, name string, opts map[string]interface{}) (qdao.D, error) {
 		var daotype = util.GetStr(opts, "", "type")
 		if len(daotype) == 0 {
 			panic(fmt.Errorf("no dao type specific in dao init : %v", opts))
@@ -85,13 +85,24 @@ func initDao(g *global.G) {
 		}
 		return nil, nil
 	}, schemaOpts, databaseOpts)
-	g.SetData("daom", qdao.GetDaoManager())
+	g.SetData("daom", qdao.GetManager())
 }
 
 func initCacher(g *global.G) {
 
 	var cache_manager = scache.GetManager()
 	g.SetData("cachem", cache_manager)
+
+	var cache_trade_calendar = cache_manager.Get(dict.CACHE_CALENDAR)
+	cache_trade_calendar.Dao = dict.DAO_MAIN
+	cache_trade_calendar.Db = dict.DB_CALENDAR
+	cache_trade_calendar.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
+		var dao, _ = qdao.GetManager().Get(scache.Dao)
+		var date = keys[0]
+		var r, err = dao.Get(scache.Db, scache.Group, date, 1, nil)
+		var is_open = util.Get(r, 0, "is_open")
+		return is_open, err
+	}
 
 	var cache_timestamp = cache_manager.Get(dict.CACHE_TIMESTAMP)
 	cache_timestamp.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (v interface{}, err error) {
@@ -106,7 +117,7 @@ func initCacher(g *global.G) {
 	scache_code.Dao = dict.DAO_MAIN
 	scache_code.Db = dict.DB_DEFAULT
 	scache_code.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
-		var dao, err = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var dao, err = qdao.GetManager().Get(scache.Dao)
 		if err != nil {
 			qlog.Error(0, err)
 			go func() {
@@ -115,7 +126,7 @@ func initCacher(g *global.G) {
 			}()
 			return nil, err
 		}
-		var codes, _ = dao.Keys(dict.DB_DEFAULT, "", "*", nil)
+		var codes, _ = dao.Keys(scache.Db, "", "*", nil)
 		var sz, szn = make([]string, 5000), 0
 		var sh, shn = make([]string, 5000), 0
 		var su, sun = make([]string, 5000), 0
@@ -159,7 +170,7 @@ func initCacher(g *global.G) {
 	scache_snapshot.Dao = dict.DAO_MAIN
 	scache_snapshot.Db = dict.DB_DEFAULT
 	scache_snapshot.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
-		conn, err := qdao.GetDaoManager().Get(scache.Dao)
+		conn, err := qdao.GetManager().Get(scache.Dao)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +186,7 @@ func initCacher(g *global.G) {
 		if len(keys) < 1 {
 			return nil, fmt.Errorf("keys len invalid for this cache loader %s", scache.Name)
 		}
-		conn, err := qdao.GetDaoManager().Get(scache.Dao)
+		conn, err := qdao.GetManager().Get(scache.Dao)
 		if err != nil {
 			return nil, err
 		}

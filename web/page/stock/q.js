@@ -174,19 +174,21 @@ vue_options.methods = {
         .catch(util.handle_error.bind(this));
     },
 
-
-
     toggle: function (target, type) {
         if (type === "view") {
             this.setting.display[target] = !this.setting.display[target];
         } else if (type === "mode") {
             this.setting.mode = target;
-            if (target === "query") {
-                this.script_select();
-            } else if (target === "portfolio") {
-                this.portfolio_select();
-            } else {
-
+            switch (target) {
+                case "query":
+                    this.script_select();
+                    break;
+                case "statistic":
+                    this.script_test();
+                    break;
+                case "portfolio":
+                    this.portfolio_select();
+                    break;
             }
         }
     },

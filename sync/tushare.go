@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
@@ -81,11 +82,36 @@ func (o Syncer) TuShare_request(
 	return maps, err
 }
 
-func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) (err error) {
+func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error {
 	if phrase != "work" {
 		return nil
 	}
-	return nil
+
+	var err error
+	var calendar []interface{}
+	var start_date = time.Now().AddDate(0, 0, -180).Format("20060102")
+	var end_date = time.Now().AddDate(0, 0, +180).Format("20060102")
+	var rargs = make(map[string]interface{})
+	rargs["exchange"] = "SSE"
+	rargs["start_date"] = start_date
+	rargs["end_date"] = end_date
+	retry := util.GetInt(work.Profile, 3, "retry")
+	var cacher = scache.GetManager().Get(dict.CACHE_CALENDAR)
+	for i := 1; i <= retry; i++ {
+		calendar, err = o.TuShare_request(work, nil, rargs)
+		if err == nil {
+			var list = util.AsSlice(calendar, 0)
+			var dates = make([]string, len(list))
+			var is_opens = make([]interface{}, len(list))
+			for i, one := range list {
+				dates[i] = util.GetStr(one, "", "date") // after mapping cal_date -> date
+				is_opens[i] = util.GetInt(one, 0, "is_open")
+			}
+			cacher.Sets(is_opens, dates)
+			break
+		}
+	}
+	return err
 }
 
 func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}, error) {
@@ -168,7 +194,8 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 
 	var data []interface{}
 	var rargs = make(map[string]interface{})
-	for retry := 1; retry <= 3; retry++ {
+	var retry = util.GetInt(work.Profile, 3, "retry")
+	for i := 1; i <= retry; i++ {
 		var fails = make([]string, len(codes))
 		var failcount = 0
 		for _, code := range codes {

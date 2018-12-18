@@ -50,7 +50,7 @@ func (o *ProfileWork) GetDao() (dao qdao.D, err error) {
 	if o.Dao == nil {
 		if o.Profile != nil {
 			daoname := util.GetStr(o.Profile, dict.DAO_MAIN, "dao")
-			o.Dao, err = qdao.GetDaoManager().Get(daoname)
+			o.Dao, err = qdao.GetManager().Get(daoname)
 		}
 	}
 	return o.Dao, err
@@ -156,10 +156,10 @@ func (o *Syncer) heartbeat() {
 			if util.AsMap(profile, false) == nil {
 				continue
 			}
-			var force = false
+			var force = util.GetBool(profile, false, "force")
 			if cmd != nil {
 				if strings.Contains(cmd.Function, profilename) {
-					force = strings.Contains(cmd.SFlag, "force")
+					force = force || strings.Contains(cmd.SFlag, "force")
 				} else {
 					continue
 				}
@@ -183,10 +183,14 @@ func (o *Syncer) heartbeat() {
 			var dcmd *global.Cmd
 			if cmd == nil {
 				dcmd = &global.Cmd{
-					Function: profilename, SFlag: "record",
+					Function: profilename,
+					SFlag:    "record",
 				}
 			} else {
 				dcmd = cmd
+			}
+			if force {
+				dcmd.SFlag = dcmd.SFlag + ",force"
 			}
 			dcmd.SetData("factor", factor)
 			o.channelWorkProfile <- dcmd

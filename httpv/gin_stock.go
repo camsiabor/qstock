@@ -33,7 +33,7 @@ func (o *HttpServer) routeStock() {
 		var db = util.GetStr(m, "", "db")
 		var group = util.GetStr(m, "", "group")
 		var daoname = util.GetStr(m, dict.DAO_MAIN, "dao")
-		dao, err := qdao.GetDaoManager().Get(daoname)
+		dao, err := qdao.GetManager().Get(daoname)
 		if err != nil {
 			o.RespJsonEx(nil, err, c)
 			return
@@ -54,7 +54,7 @@ func (o *HttpServer) routeStock() {
 		var group = util.GetStr(m, "", "group")
 		var keys = util.GetStr(m, "meta*", "keys")
 		var ret = make(map[string]interface{})
-		var dao, _ = qdao.GetDaoManager().Get(dict.DAO_MAIN)
+		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		for _, db := range dbs {
 			var sdb = db.(string)
 			keysret, err := dao.Keys(sdb, group, keys, nil)

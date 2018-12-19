@@ -117,7 +117,6 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}, error) {
 
 	var codes []string
-	var metatoken string
 	var date_to_str string
 	var date_from_str string
 	if work.GCmd != nil {
@@ -137,9 +136,9 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 	var dao = work.Dao
 	var profile = work.Profile
 	var profilename = work.ProfileName
+	var metatoken = o.GetMetaToken(profilename)
 	var db = util.GetStr(profile, dict.DB_HISTORY, "db")
 	if len(date_to_str) == 0 {
-		var metatoken = o.GetMetaToken(profilename)
 		var fetcheach = util.GetInt(profile, 60, "each")
 		date_from_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102")
 		var fetch_last_date_from, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", 0, nil))
@@ -166,6 +165,10 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 				return nil, nil
 			}
 		}
+	}
+
+	if len(date_to_str) == 0 {
+		date_to_str = time.Now().Format("20060102")
 	}
 
 	var keyprefix string

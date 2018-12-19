@@ -16,6 +16,7 @@ import (
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/sync"
+	"github.com/camsiabor/qstock/sync/calendar"
 	"net"
 	"strings"
 	"time"
@@ -215,6 +216,9 @@ func initCacher(g *global.G) {
 		}
 		return data, err
 	}
+
+	g.SetData("stock.calendar", calendar.GetStockCalendar())
+
 }
 
 func initSyncer(g *global.G) {

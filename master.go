@@ -217,7 +217,7 @@ func initCacher(g *global.G) {
 		return data, err
 	}
 
-	g.SetData("stock.calendar", calendar.GetStockCalendar())
+	g.SetData("calendar", calendar.GetStockCalendar())
 
 }
 

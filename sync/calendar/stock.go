@@ -50,36 +50,39 @@ func (o *StockCal) List(iprev int, pin int, inext int, todayinclude bool) []stri
 
 	iprev = iprev - pin
 	if iprev > o.prevdelta {
-		var prev = time.Now().AddDate(0, 0, -1)
+		var prev = time.Now()
 		for i := 0; i < iprev; i++ {
-			prev = prev.AddDate(0, 0, 1)
+			prev = prev.AddDate(0, 0, -1)
 			var date = prev.Format("20060102")
 			var isopen, _ = o.cache.Get(true, date)
 			if util.AsInt(isopen, 0) > 0 {
-				o.prev[i] = prev.Format("20160102")
+				o.prev[i] = prev.Format("20060102")
 			} else {
 				o.prev[i] = ""
 			}
 		}
+		o.prevdelta = iprev
 	}
 
 	inext = inext + pin
 	if inext > o.nextdelta {
-		var next = time.Now().AddDate(0, 0, 1)
+		var next = time.Now()
 		for i := 0; i < inext; i++ {
 			next = next.AddDate(0, 0, 1)
 			var date = next.Format("20060102")
 			var isopen, _ = o.cache.Get(true, date)
 			if util.AsInt(isopen, 0) > 0 {
-				o.next[i] = next.Format("20160102")
+				o.next[i] = next.Format("20060102")
 			} else {
 				o.next[i] = ""
 			}
+
 		}
+		o.nextdelta = inext
 	}
 
 	var rcount = 0
-	var result = make([]string, inext-iprev)
+	var result = make([]string, inext+iprev+1)
 
 	for i := 0; i < iprev; i++ {
 		var date = o.prev[i]

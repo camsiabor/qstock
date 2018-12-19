@@ -52,16 +52,21 @@ const script_methods = {
     },
 
 
-    script_query: function () {
-        let hash = "";
+    script_query: function (carrayscript) {
         let script = this.editor.getValue().trim();
+        if (script.length === 0) {
+            alert("need script!");
+            return;
+        }
+        let hash = "";
         if (window.location.href.indexOf('nohash') <= 0) {
             hash = md5(script);
-            if (this.hash[hash]) {
-                script = "";
-            }  else {
+            if (!this.hash[hash]) {
                 this.hash[hash] = hash
             }
+        }
+        if (!carrayscript) {
+            script = hash ? "" : script;
         }
         this.console.text = "";
         return axios.post("/cmd/go", {
@@ -70,19 +75,29 @@ const script_methods = {
             hash : hash,
             params : this.params,
             script : script
-        }).then(this.stock_get_data_by_code)
+        }).then(function (resp) {
+            if (resp.data.code === 404) {
+                return this.script_query(true);
+            }
+            this.stock_get_data_by_code(resp)
+        }.bind(this))
     },
 
-    script_test: function () { // eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=
-        let hash = "";
+    script_test: function (carryscript) { // eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=
         let script = this.editor.getValue().trim();
+        if (script.length === 0) {
+            alert("need script!");
+            return;
+        }
+        let hash = "";
         if (window.location.href.indexOf('nohash') <= 0) {
             hash = md5(script);
-            if (this.hash[hash]) {
-                script = "";
-            }  else {
+            if (!this.hash[hash]) {
                 this.hash[hash] = hash;
             }
+        }
+        if (!carryscript) {
+            script = hash ? "" : script
         }
         this.console.text = "";
         return axios.post("/cmd/go", {
@@ -93,6 +108,9 @@ const script_methods = {
             params : this.params,
             script : script
         }).then(function (resp) {
+            if (resp.data.code === 404) {
+                return this.script_test(true);
+            }
             let data = util.handle_response(resp);
             if (typeof data === 'object') {
                 data = JSON.stringify(data, null, 2);

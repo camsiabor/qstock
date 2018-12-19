@@ -61,15 +61,20 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	if len(hash) > 0 {
 		var cache = o.GetData(hash)
 		if cache == nil {
-			func() {
-				var L = luar.Init()
-				defer L.Close()
-				L.LoadString(script)
-				if L.Dump() == nil {
-					chunk = L.ToBytes(-1)
-					o.SetData(hash, chunk)
-				}
-			}()
+			if len(script) == 0 {
+				o.RespJson(404, "no script", c)
+				return
+			} else {
+				func() {
+					var L = luar.Init()
+					defer L.Close()
+					L.LoadString(script)
+					if L.Dump() == nil {
+						chunk = L.ToBytes(-1)
+						o.SetData(hash, chunk)
+					}
+				}()
+			}
 		} else {
 			chunk = cache.([]byte)
 		}

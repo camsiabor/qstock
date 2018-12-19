@@ -26,10 +26,10 @@
     "active" : true,
     "appsecret" : "f113afc39e582231631b3eabd61174397a25e2a6c56176d076f1a7ad",
     "domain" : "http://api.tushare.pro",
-    "nice" : 250,
+    "nice" : 300,
     "timeout" : 20,
     "concurrent" : 1,
-    "select_interval" : 180,
+    "select_interval" : 120,
     "profiles" : {
       "k.history.sz" : {
         "api" : "daily",
@@ -58,7 +58,7 @@
         "interval" : 86400,
         "dao" : "main",
         "db" : "calendar",
-        "cacher" : "stock.calendar",
+        "key" : "date",
         "handler" : "TuShare_trade_calendar"
       }
     }

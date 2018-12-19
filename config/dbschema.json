@@ -1,0 +1,43 @@
+{
+
+  "def" : {
+    "_" : {
+
+    }
+  },
+
+  "history" : {
+    "_" : {
+
+    }
+  },
+
+  "common" : {
+
+    "user" : {
+      "name" : {
+        "key" : true,
+        "type" : "string"
+      },
+      "pass" : "string"
+    },
+
+    "script" : {
+      "name" : {
+        "key" : true,
+        "type" : "string"
+      }
+    },
+
+    "params" : {
+      "name" : "string",
+      "list" : "string"
+    },
+
+    "portfolio" : {
+      "name" :  "string"
+    }
+
+  }
+
+}

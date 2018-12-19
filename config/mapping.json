@@ -43,6 +43,10 @@
     "pct_chg" : "change_rate",
     "vol" : null,
     "amount" : null
+  },
+
+  "tushare.calendar" : {
+    "cal_date" : "date"
   }
 
 }

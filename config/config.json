@@ -23,6 +23,17 @@
         "common" : 2,
         "calendar" : 3
       }
+    },
+    "es" : {
+      "active" : false,
+      "type" : "elasticsearch",
+      "host" : "127.0.0.1",
+      "port" : 9200,
+      "mapping" : {
+        "history" : "",
+        "common" : "",
+        "calendar" : ""
+      }
     }
   },
 
@@ -32,7 +43,7 @@
     "root": "../../src/github.com/camsiabor/qstock/web",
     "refresh_interval": 300,
     "log": {
-      "file": "log/gin.log"
+      "file": "console"
     },
     "script" : {
       "include" : "res/include.lua"
@@ -62,8 +73,6 @@
     "timezone": "Asia/Shanghai"
   },
 
-
-
   "debug" : {
     "active" : false,
     "debugger" : "dlv",
@@ -73,7 +82,8 @@
 
   "includes" : {
     "api" : "api.json",
-    "mapping" : "mapping.json"
+    "mapping" : "mapping.json",
+    "dbschema" : "dbschema.json"
   }
 
 

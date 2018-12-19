@@ -222,9 +222,10 @@ func t3() {
 }
 func TestSimple(t *testing.T) {
 
-	var inter interface{}
-	mirrorv := reflect.New(reflect.TypeOf(inter))
-	fmt.Println(mirrorv)
+	var inter []interface{} = make([]interface{}, 10)
+	var v = reflect.ValueOf(inter)
+	fmt.Println(v.Type())
+	fmt.Println(v.Index(1).Type())
 
 	//t3()
 	//t1()

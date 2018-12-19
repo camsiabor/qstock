@@ -84,7 +84,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, todayinclude bool) []stri
 	var rcount = 0
 	var result = make([]string, inext+iprev+1)
 
-	for i := 0; i < iprev; i++ {
+	for i := iprev; i >= 0; i-- {
 		var date = o.prev[i]
 		if len(date) > 0 {
 			result[rcount] = date

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
+	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
-	"github.com/camsiabor/qserv"
 	"github.com/camsiabor/qstock/dict"
-	"github.com/name5566/leaf"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -95,7 +95,7 @@ func myQuery2() {
 	//fmt.Println(list)
 }
 
-func TestLuaBenchmark(t *testing.T) {
+func testCycle() {
 	var g = global.GetInstance()
 	g.CycleHandler = func(cycle string, g *global.G, data interface{}) {
 		time.Sleep(time.Second)
@@ -113,9 +113,125 @@ func TestLuaBenchmark(t *testing.T) {
 		total = total / float64(count-1)
 		fmt.Println("finally avg ", total)
 	}
-	main()
+}
 
+func TestLuaBenchmark(t *testing.T) {
+	var g = global.GetInstance()
+
+	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
+		var data = g.Data()
+		for k, one := range data {
+			var v = reflect.ValueOf(one)
+			if !v.IsValid() {
+				continue
+			}
+			var vptr = reflect.ValueOf(&one)
+			var t = reflect.TypeOf(one)
+
+			var vptrenum = vptr.Elem()
+			if vptrenum.CanSet() {
+				vptrenum.Set(reflect.ValueOf(t.Name()))
+			}
+			data[k] = t.Name()
+
+			fmt.Printf("%v = %v\n", k, t)
+			var kind = t.Kind()
+			switch kind {
+			case reflect.Map:
+				fmt.Println("map")
+			case reflect.Ptr:
+				var pointto = t.Elem()
+				fmt.Printf("ptr --> %v\n", pointto)
+			case reflect.Struct:
+				fmt.Println("struct")
+			}
+		}
+	}
+
+	main()
 	time.Sleep(time.Hour)
+}
+
+func t1() {
+	var g = global.GetInstance()
+	var inter interface{} = g
+	var v = reflect.ValueOf(inter)
+	fmt.Printf("%v\n", v.Type())
+	var nv = reflect.New(v.Type())
+	fmt.Printf("%v\n", nv.Type())
+	var velem = v.Elem()
+	fmt.Printf("%v\n", velem.Type())
+	var nvelem = nv.Elem()
+	fmt.Printf("%v\n", nvelem.Type())
+	nvelem.Set(v)
+
+	var ng = nvelem.Interface()
+	fmt.Printf("%v", ng)
+
+}
+
+func t2() {
+	var g = global.GetInstance()
+	var slice = []interface{}{
+		g,
+	}
+	var v = reflect.ValueOf(slice)
+	var mirrorv, _ = qref.IterateMapSlice(v, true, func(value reflect.Value, pvalue reflect.Value) error {
+		fmt.Printf("%v  | %v ", value.Type(), value)
+		pvalue.Elem().Set(reflect.Zero(value.Type()))
+		return nil
+	})
+	fmt.Println(mirrorv)
+}
+
+func t3() {
+	var g = global.GetInstance()
+	var gtype = reflect.TypeOf(*g)
+	g.Mode = "power"
+	var v = reflect.ValueOf(map[string]interface{}{
+		"g": g, "gp": &g,
+	})
+	var nv, _ = qref.IterateMapSlice(v, true, func(value reflect.Value, pvalue reflect.Value) error {
+		fmt.Printf("%v = %v | %v = %v", value.Type(), value, pvalue.Type(), pvalue)
+		//pvalue.Elem().Set(reflect.Zero(value.Type()))
+		if value.CanInterface() {
+			if value.Type().ConvertibleTo(gtype) {
+				value.FieldByName("Mode").SetString(" i am G")
+			}
+		}
+		return nil
+	})
+
+	fmt.Printf("G: %v = %v\n", v.Type(), v)
+	fmt.Printf("N: %v = %v\n", nv.Type(), nv)
+
+	var m = v.Interface().(map[string]interface{})
+	var nm = nv.Interface().(map[string]interface{})
+
+	m["over"] = "here"
+	nm["xer"] = "aa"
+	fmt.Printf("G: %v\n", m)
+	fmt.Printf("N: %v\n", nm)
+
+	if nm["g"] != nil {
+		var ng = nm["g"].(*global.G)
+		fmt.Printf("N: %v\n", *ng)
+	}
+
+	fmt.Printf("Global %v\n", g)
+}
+func TestSimple(t *testing.T) {
+
+	var inter interface{}
+	mirrorv := reflect.New(reflect.TypeOf(inter))
+	fmt.Println(mirrorv)
+
+	//t3()
+	//t1()
+
+	/*
+
+	 */
 }
 
 func TestMockee(t *testing.T) {

@@ -16,6 +16,7 @@ import (
 	"github.com/camsiabor/qdaobundle/qredis"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
+	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/camsiabor/qstock/sync"
 	"github.com/camsiabor/qstock/sync/calendar"
 	"net"
@@ -58,11 +59,11 @@ func master(g *global.G) {
 	var agendaConfig = util.GetMap(g.Config, true, "agenda")
 	agenda.GetAgendaManager().Init(agendaConfig)
 
-	// [cache] --------------------------------------------------------------------------------------------
 	initCacher(g)
 
-	// [api puller] --------------------------------------------------------------------------------------------
 	initSyncer(g)
+
+	rscript.InitScript(g)
 
 }
 
@@ -187,7 +188,7 @@ func initCacher(g *global.G) {
 	scache_khistory.Timeout = -1 //time.Second * time.Duration(20);
 	scache_khistory.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
 		if len(keys) < 1 {
-			return nil, fmt.Errorf("keys len invalid for this cache loader %s", scache.Name)
+			return nil, fmt.Errorf("keys len invalid for this cache Loader %s", scache.Name)
 		}
 		conn, err := qdao.GetManager().Get(scache.Dao)
 		if err != nil {

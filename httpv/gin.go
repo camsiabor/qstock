@@ -149,20 +149,6 @@ func (o *HttpServer) handleDBCmd(cmd string, m map[string]interface{}, c *gin.Co
 	}
 }
 
-func (o *HttpServer) handleRedisCmd(cmd string, m map[string]interface{}, c *gin.Context) {
-
-	//var db = util.GetStr(m, pers.DB_DEFAULT, "db");
-	//var args = util.GetList(m,  "args");
-	//rclient, err := pers.GetDaoManager().Get(db);
-	//if (err != nil) {
-	//	o.RespJsonEx(nil, err, c);
-	//	return;
-	//}
-	//retval, err := pers.RCmd(rclient, cmd, args...);
-	//o.RespJsonEx(nil, nil, c);
-
-}
-
 func (o *HttpServer) handleOSCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 	var args = util.GetSlice(m, "args")
 	var sargs []string
@@ -246,8 +232,6 @@ func (o *HttpServer) routeCmd() {
 		switch cmdtype {
 		case "db":
 			o.handleDBCmd(cmd, m, c)
-		case "redis":
-			o.handleRedisCmd(cmd, m, c)
 		case "lua":
 			o.handleLuaCmd(cmd, m, c)
 		case "os":
@@ -274,40 +258,6 @@ func (o *HttpServer) routeCmd() {
 		var include = o.data["include"].(string)
 		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		var data, err = dao.Script(dict.DB_DEFAULT, "", "", include+script, values, nil)
-		o.RespJsonEx(data, err, c)
-	})
-}
-
-func (o *HttpServer) routeScript() {
-	var group = o.Engine.Group("/script")
-
-	group.POST("/update", func(c *gin.Context) {
-		var m, _ = o.ReqParse(c)
-		var name = util.GetStr(m, "", "name")
-		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, -1, nil)
-		o.RespJsonEx(data, err, c)
-	})
-
-	group.POST("/list", func(c *gin.Context) {
-		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var scripts, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
-		o.RespJsonEx(scripts, err, c)
-	})
-
-	group.POST("/get", func(c *gin.Context) {
-		var m, _ = o.ReqParse(c)
-		var name = util.GetStr(m, "", "name")
-		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var data, err = dao.Get(dict.DB_COMMON, "script", name, 1, nil)
-		o.RespJsonEx(data, err, c)
-	})
-
-	group.POST("/delete", func(c *gin.Context) {
-		var m, _ = o.ReqParse(c)
-		var name = util.GetStr(m, "", "name")
-		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var data, err = dao.Delete(dict.DB_COMMON, "script", name, nil)
 		o.RespJsonEx(data, err, c)
 	})
 }

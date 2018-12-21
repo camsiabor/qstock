@@ -1,4 +1,4 @@
-package run
+package rlua
 
 import (
 	"github.com/camsiabor/golua/lua"

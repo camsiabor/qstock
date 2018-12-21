@@ -7,7 +7,8 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
-	"github.com/camsiabor/qstock/run"
+	"github.com/camsiabor/qstock/run/rlua"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"reflect"
@@ -148,9 +149,9 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	if err == nil {
 		if interrupt == nil {
-			data, err = run.LuaGetVal(L, 1)
+			data, err = rlua.LuaGetVal(L, 1)
 			if err == nil {
-				r2, err := run.LuaGetVal(L, 2)
+				r2, err := rlua.LuaGetVal(L, 2)
 				if err == nil && r2 != nil {
 					code = util.AsInt(r2, 0)
 				}
@@ -181,12 +182,13 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 			wrap["mode"] = mode
 			wrap["data"] = data
 			wrap["consume"] = consume
+			wrap["params"] = params
 			data = wrap
 		}
 	} else {
 		code = 500
 		var luaStacks = L.StackTrace()
-		var luaStackInfo = run.LuaFormatStackToMap(luaStacks)
+		var luaStackInfo = rlua.LuaFormatStackToMap(luaStacks)
 		var r = make(map[string]interface{})
 
 		var luaStockLen = len(luaStackInfo)

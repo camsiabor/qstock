@@ -32,6 +32,12 @@ const def_setting = {
     portfolio: {
         last: ""
     },
+    editor : {
+        font_size : 1,
+        height_mode : "min",
+        height_min : 120,
+        height_max : 360
+    },
     display: {
         editor: true,
         script: true,
@@ -206,8 +212,8 @@ vue_options.methods = {
     },
     setting_save: function () {
         $('#div_setting').modal('hide');
-        // this.table_init(this.table.data);
         this.table_paging();
+        this.editor_init();
     },
     /* [portfolio] ------------------------------------------------------------------- */
     table_get_selection: function (retrow) {
@@ -256,16 +262,28 @@ vue_options.methods = {
 
 
     editor_init: function () {
-        this.editor = ace.edit("editor", {
-            mode: "ace/mode/lua",
-            selectionStyle: "text",
-            highlightActiveLine: true,
-            highlightSelectedWord: true,                cursorStyle: "ace",
-            newLineMode: "unix",
-            fontSize: "0.8em"
-        });
-        this.editor.setOption("wrap", "free");
-        this.editor.setTheme("ace/theme/github");
+        if (!this.editor) {
+            this.editor = ace.edit( "editor", {
+                mode: "ace/mode/lua",
+                selectionStyle: "text",
+                highlightActiveLine: true,
+                highlightSelectedWord: true,
+                cursorStyle: "ace",
+                newLineMode: "unix",
+                fontSize: "0.8em"
+            });
+            this.editor.setOption("wrap", "free");
+            this.editor.setTheme("ace/theme/github");
+        }
+        let height;
+        if (this.setting.editor.height_mode === "min") {
+            height = this.setting.editor.height_min;
+        } else {
+            height = this.setting.editor.height_max;
+        }
+        jQuery("#editor").css("height", height + "px");
+        this.editor.setFontSize(this.setting.editor.font_size + "em");
+        this.editor.resize()
     },
 
 

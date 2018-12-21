@@ -42,6 +42,7 @@
                                aria-label="kagi height" v-model="setting.kagi.height">
                     </div>
                 </div>
+
                 <div style="margin: 5px">
                     <div class="input-group sm-3" style="width: 90%">
                         <div class="input-group-prepend">
@@ -53,6 +54,44 @@
                                aria-label="kagi scale y" v-model="setting.kagi.scale_y">
                     </div>
                 </div>
+
+                <br/>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">editor.height.min</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi height"
+                               aria-label="kagi height" v-model="setting.editor.height_min">
+                    </div>
+                </div>
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">editor.height.max</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi height"
+                               aria-label="kagi height" v-model="setting.editor.height_max">
+                    </div>
+                </div>
+
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">editor.font</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi height"
+                               aria-label="kagi height" v-model="setting.editor.font_size">
+                    </div>
+                </div>
+
+
                 <div>
                     <table width="90%">
                         <thead>

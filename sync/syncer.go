@@ -131,6 +131,9 @@ func (o *Syncer) HandleCmd(cmd *global.Cmd) (*global.Cmd, bool, error) {
 }
 
 func (o *Syncer) heartbeat() {
+
+	defer qerr.SimpleRecover(0)
+
 	var g = global.GetInstance()
 	var select_interval = 1
 	for {
@@ -200,6 +203,9 @@ func (o *Syncer) heartbeat() {
 }
 
 func (o *Syncer) worker() {
+
+	defer qerr.SimpleRecover(0)
+
 	qlog.Log(qlog.INFO, "api", o.Name, "worker start")
 	for cmd := range o.channelWorkProfile {
 		if !o.doContinue {

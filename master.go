@@ -6,6 +6,7 @@ import (
 	"github.com/camsiabor/qcom/agenda"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
+	"github.com/camsiabor/qcom/qerr"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/qtime"
@@ -122,6 +123,7 @@ func initCacher(g *global.G) {
 		if err != nil {
 			qlog.Error(0, err)
 			go func() {
+				defer qerr.SimpleRecover(1)
 				time.Sleep(time.Duration(10) * time.Second)
 				scache.Loader(scache, factor, timeout, keys...)
 			}()

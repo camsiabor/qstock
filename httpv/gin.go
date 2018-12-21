@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
+	"github.com/camsiabor/qcom/qerr"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/qref"
@@ -398,6 +399,7 @@ func (o *HttpServer) Run() {
 	//var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
 	//go GinRefreshPage(refresh_interval);
 	go func() {
+		defer qerr.SimpleRecover(0)
 		qlog.Log(qlog.INFO, "http", "ready to run")
 		var err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
 		if err != nil {

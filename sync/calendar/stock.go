@@ -28,7 +28,7 @@ func GetStockCalendar() *StockCal {
 	return _stock
 }
 
-func (o *StockCal) List(iprev int, pin int, inext int, todayinclude bool) []string {
+func (o *StockCal) List(iprev int, pin int, inext int, todayinclude bool, reverse bool) []string {
 
 	var now = time.Now()
 
@@ -81,29 +81,48 @@ func (o *StockCal) List(iprev int, pin int, inext int, todayinclude bool) []stri
 		o.nextdelta = inext
 	}
 
-	var rcount = 0
+	var rindex = 0
 	var result = make([]string, inext+iprev+1)
 
-	for i := iprev; i >= 0; i-- {
-		var date = o.prev[i]
-		if len(date) > 0 {
-			result[rcount] = date
-			rcount = rcount + 1
+	if reverse {
+		for i := inext; i >= 0; i-- {
+			var date = o.next[i]
+			if len(date) > 0 {
+				result[rindex] = date
+				rindex = rindex + 1
+			}
+		}
+	} else {
+		for i := iprev; i >= 0; i-- {
+			var date = o.prev[i]
+			if len(date) > 0 {
+				result[rindex] = date
+				rindex = rindex + 1
+			}
 		}
 	}
-
 	if todayinclude {
-		result[rcount] = o.todaystr
-		rcount = rcount + 1
+		result[rindex] = o.todaystr
+		rindex = rindex + 1
 	}
 
-	for i := 0; i < inext; i++ {
-		var date = o.next[i]
-		if len(date) > 0 {
-			result[rcount] = date
-			rcount = rcount + 1
+	if reverse {
+		for i := 0; i < iprev; i++ {
+			var date = o.prev[i]
+			if len(date) > 0 {
+				result[rindex] = date
+				rindex = rindex + 1
+			}
+		}
+	} else {
+		for i := 0; i < inext; i++ {
+			var date = o.next[i]
+			if len(date) > 0 {
+				result[rindex] = date
+				rindex = rindex + 1
+			}
 		}
 	}
-	return result[:rcount]
+	return result[:rindex]
 
 }

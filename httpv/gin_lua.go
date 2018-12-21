@@ -55,9 +55,8 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		o.RespJsonEx(0, errors.New("script is null && hash is null"), c)
 		return
 	}
-
-	var debug = util.GetBool(m, false, "debug")
-
+	var mode = util.GetStr(m, "debug", "mode")
+	var debug = mode == "debug"
 	var chunk []byte
 
 	if len(hash) > 0 {
@@ -86,25 +85,47 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	defer L.Close()
 	L.OpenLibs()
 	var Q = global.GetInstance().Data()
+	Q["mode"] = mode
 	luar.Register(L, "Q", Q)
 
 	var params = o.getScriptParams(m["params"])
-	if params != nil {
+	if params != nil && len(params) > 0 {
 		luar.Register(L, "A", params)
 	}
+
+	var trace interface{}
+	luar.Register(L, "", map[string]interface{}{
+		"R": func(data interface{}) {
+			var interrupt = &lua.Interrupt{
+				Data: data,
+			}
+			panic(interrupt)
+		},
+		"Trace": func(data interface{}) {
+			trace = data
+		},
+	})
 
 	var start, end int64
 	var consume float64
 
 	var code = 0
 	var data interface{}
+	var interrupt *lua.Interrupt
 	var goStackInfo map[string]interface{}
 
 	var errhandler = func(L *lua.State, pan interface{}) {
-		goStackInfo = qref.StackInfo(5)
-		var stackstr = util.AsStr(goStackInfo["stack"], "")
-		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
-		goStackInfo["stack"] = strings.Split(stackstr, "\n")
+		if pan == nil {
+			return
+		}
+		var ok bool
+		interrupt, ok = pan.(*lua.Interrupt)
+		if !ok {
+			goStackInfo = qref.StackInfo(5)
+			var stackstr = util.AsStr(goStackInfo["stack"], "")
+			stackstr = strings.Replace(stackstr, "\t", "  ", -1)
+			goStackInfo["stack"] = strings.Split(stackstr, "\n")
+		}
 	}
 
 	if debug {
@@ -126,12 +147,17 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	}
 
 	if err == nil {
-		data, err = run.LuaGetVal(L, 1)
-		if err == nil {
-			r2, err := run.LuaGetVal(L, 2)
-			if err == nil && r2 != nil {
-				code = util.AsInt(r2, 0)
+		if interrupt == nil {
+			data, err = run.LuaGetVal(L, 1)
+			if err == nil {
+				r2, err := run.LuaGetVal(L, 2)
+				if err == nil && r2 != nil {
+					code = util.AsInt(r2, 0)
+				}
 			}
+		} else {
+			code = interrupt.Code
+			data = interrupt.Data
 		}
 	}
 
@@ -152,7 +178,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 		if debug {
 			var wrap = map[string]interface{}{}
-			wrap["debug"] = true
+			wrap["mode"] = mode
 			wrap["data"] = data
 			wrap["consume"] = consume
 			data = wrap
@@ -179,6 +205,10 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 		if debug {
 			r["cosume"] = consume
+		}
+
+		if trace != nil {
+			r["a.trace"] = trace
 		}
 
 		data = r

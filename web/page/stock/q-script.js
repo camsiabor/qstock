@@ -52,18 +52,18 @@ const script_methods = {
     },
 
 
-    script_query: function (carrayscript) {
+    script_query: function (mode, carrayscript) {
         let script = this.editor.getValue().trim();
         if (script.length === 0) {
             alert("need script!");
             return;
         }
-        let hash = "";
-        if (window.location.href.indexOf('nohash') <= 0) {
-            hash = md5(script);
-            if (!this.hash[hash]) {
-                this.hash[hash] = hash
-            }
+
+        let nohash = window.location.href.indexOf('nohash') > 0
+        let hash = md5(script);
+        if (!this.hash[hash]) {
+            this.hash[hash] = hash
+            this.script_save()
         }
         if (!carrayscript) {
             script = hash ? "" : script;
@@ -72,53 +72,27 @@ const script_methods = {
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
-            hash : hash,
+            hash : nohash ? "" : hash,
+            mode : mode,
             params : this.params,
             script : script
         }).then(function (resp) {
             if (resp.data.code === 404) {
-                return this.script_query(true);
+                return this.script_query(mode, true);
             }
-            this.stock_get_data_by_code(resp)
+            if (mode === "debug") {
+                let data = util.handle_response(resp);
+                if (typeof data === 'object') {
+                    data = JSON.stringify(data, null, 2);
+                }
+                this.console.text = data;
+                return data;
+            } else {
+                return this.stock_get_data_by_code(resp)
+            }
         }.bind(this))
     },
 
-    script_test: function (carryscript) { // eJyqVkrOT0lVsjLQUUpJLElUsgIJ5BWX5iKL5ZXm5OgopaQmlaYrWZUUlabW1gICAAD///qyEpY=
-        let script = this.editor.getValue().trim();
-        if (script.length === 0) {
-            alert("need script!");
-            return;
-        }
-        let hash = "";
-        if (window.location.href.indexOf('nohash') <= 0) {
-            hash = md5(script);
-            if (!this.hash[hash]) {
-                this.hash[hash] = hash;
-            }
-        }
-        if (!carryscript) {
-            script = hash ? "" : script
-        }
-        this.console.text = "";
-        return axios.post("/cmd/go", {
-            type : 'lua',
-            cmd : 'run',
-            hash : hash,
-            debug : true,
-            params : this.params,
-            script : script
-        }).then(function (resp) {
-            if (resp.data.code === 404) {
-                return this.script_test(true);
-            }
-            let data = util.handle_response(resp);
-            if (typeof data === 'object') {
-                data = JSON.stringify(data, null, 2);
-            }
-            this.console.text = data;
-            return data;
-        }.bind(this))
-    },
 
     params_list: function() {
         return axios.post("/cmd/go", {

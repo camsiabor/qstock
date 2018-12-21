@@ -44,7 +44,10 @@
         <div aria-details="脚本" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
             <div class="input-group-prepend">
 
-                <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_query(); script_save()">
+                <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_query('hit'); ">
+                    <i class="fa fa-search-dollar"></i>
+                </button>
+                <button type="button" value="反查询" class="btn btn-sm btn-outline-info " v-on:click="script_query('anti'); ">
                     <i class="fa fa-search-dollar"></i>
                 </button>
                 <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -58,7 +61,7 @@
 
                 <input type="search" id="input_script_name" class="form-control"
                        placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
-                <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_test()" style="margin-left: 3px;">
+                <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_query('debug')" style="margin-left: 3px;">
                     <i class="fa fa-running"></i>
                 </button>
                 <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
@@ -88,7 +91,7 @@
                 <input type="search" id="input_script_name" class="form-control"
                        placeholder="查询参数" aria-label="script" aria-describedby="script" v-model="params.name" >
 
-                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_update()" >
+                <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-warning"  v-on:click="params_update(); " >
                     <i class="fa fa-save"></i>
                 </button>
                 <button type="button" value="删除" class="btn btn-sm btn-outline-warning" v-on:click="params_delete()">

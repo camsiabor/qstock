@@ -35,27 +35,19 @@
     "concurrent" : 1,
     "select_interval" : 120,
     "profiles" : {
-      "k.history.sz" : {
+      "k.history" : {
         "api" : "daily",
+        "nice" : 100,
         "each": 90,
         "interval": 10800,
         "dao" : "main",
         "db" : "history",
-        "marker" : "sz",
         "groupkey" : "code",
         "key" : "date",
         "agenda" : "stock.khistory",
         "cacher" : "stock.khistory",
         "mapper" : "tushare.khistory",
         "handler" : "TuShare_khistory"
-      },
-      "k.history.sh" : {
-        "embed" : "k.history.sz",
-        "marker" : "sh"
-      },
-      "k.history.ms" : {
-        "embed" : "k.history.sz",
-        "marker" : "ms"
       },
       "trade.calendar" : {
         "api" : "trade_cal",

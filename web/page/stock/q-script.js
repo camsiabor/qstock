@@ -17,9 +17,7 @@ const script_methods = {
             this.script.script = info.script;
             this.editor.setValue(this.script.script);
             this.editor.clearSelection();
-            if (this.setting.mode === "query") {
-                this.script_query();
-            }
+            this.script_query();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
@@ -53,12 +51,13 @@ const script_methods = {
 
 
     script_query: function (mode, carrayscript) {
+
         let script = this.editor.getValue().trim();
         if (script.length === 0) {
             alert("need script!");
             return;
         }
-
+        mode = mode  || this.setting.mode;
         let nohash = window.location.href.indexOf('nohash') > 0
         let hash = md5(script);
         if (!this.hash[hash]) {

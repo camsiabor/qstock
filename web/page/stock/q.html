@@ -39,7 +39,7 @@
     <!-- nav bar -->
     <div class="qam-html-fragment" include="q-nav.html"></div>
 
-    <div id="div_tool" class="row" style="margin-top: 10px">
+    <div id="div_tool" class="row" style="margin-top: 3px">
 
         <div aria-details="脚本" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
             <div class="input-group-prepend">
@@ -137,17 +137,22 @@
 
     </div>
 
-    <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 10px;" >
-        <div class="col-md-12" style="border: 1px solid #f0f0f0; border-radius: 5px">
+    <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 8px;" >
+        <div class="col-sm-6" style="border: 1px solid #f0f0f0; border-radius: 5px">
             <pre id="editor" style="width: 100%; height: 120px;"><textarea></textarea></pre>
+        </div>
+        <div  class="col-sm-6" >
+            <div>
+                <pre id="console" style="width: 100%; height: 100%; background-color: #fafafa; border-radius: 5px; padding: 5px;">{{console.text}}</pre>
+            </div>
         </div>
     </div>
 
+    <!--
     <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 10px;" >
-        <div class="col-md-12">
-            <pre id="console" style="width: 100%; height: 100%; background-color: #eeeeee; border-radius: 5px; padding: 5px;">{{console.text}}</pre>
-        </div>
+
     </div>
+    -->
 
 
     <div id="div_table_pagination" style="margin-top: 5px;" v-bind:class="{'row' :true, gone: table.data.length <= setting.table.page_size }">

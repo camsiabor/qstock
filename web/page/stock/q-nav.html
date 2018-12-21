@@ -1,7 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">
-        <span v-if="setting.mode=='query'">查询．{{script.name}} ． {{portfolio.name}}</span>
-        <span v-if="setting.mode=='portfolio'">组合．{{script.name}} ． {{portfolio.name}}</span>
+        <span>{{setting.mode}}．{{script.name}} ． {{portfolio.name}}</span>
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -34,8 +33,9 @@
                     模式
                 </a>
                 <div class="dropdown-menu" aria-labelledby="" >
-                    <a class="dropdown-item" href="#" v-on:click="toggle('query', 'mode')">查询</a>
-                    <a class="dropdown-item" href="#" v-on:click="toggle('statistic', 'mode')">统计</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('hit', 'mode')">查询</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('anti', 'mode')">反向</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('debug', 'mode')">统计</a>
                     <a class="dropdown-item" href="#" v-on:click="toggle('portfolio', 'mode')">组合</a>
                     <a class="dropdown-item" href="#" v-on:click="toggle('silent', 'mode')">静默</a>
                 </div>

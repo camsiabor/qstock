@@ -182,11 +182,10 @@ vue_options.methods = {
         } else if (type === "mode") {
             this.setting.mode = target;
             switch (target) {
-                case "query":
-                    this.script_select();
-                    break;
-                case "statistic":
-                    this.script_test();
+                case "hit":
+                case "anti":
+                case "debug":
+                    this.script_query(target);
                     break;
                 case "portfolio":
                     this.portfolio_select();

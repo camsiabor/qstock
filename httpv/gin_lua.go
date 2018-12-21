@@ -231,7 +231,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		}
 
 		if trace != nil {
-			r["a.trace"] = trace
+			r["a.qtrace"] = trace
 		}
 
 		data = r

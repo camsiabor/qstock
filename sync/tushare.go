@@ -88,12 +88,14 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 
 	var err error
 	var calendar []interface{}
-	var start_date = time.Now().AddDate(0, 0, -180).Format("20060102")
-	var end_date = time.Now().AddDate(0, 0, +180).Format("20060102")
+	var each = util.GetInt(work.Profile, 365, "each")
+	var start_date = time.Now().AddDate(0, 0, -each).Format("20060102")
+	var end_date = time.Now().AddDate(0, 0, +each).Format("20060102")
 	var rargs = make(map[string]interface{})
 	rargs["exchange"] = "SSE"
 	rargs["start_date"] = start_date
 	rargs["end_date"] = end_date
+	rargs["is_open"] = 1
 	retry := util.GetInt(work.Profile, 3, "retry")
 	var cacher = scache.GetManager().Get(dict.CACHE_CALENDAR)
 	for i := 1; i <= retry; i++ {

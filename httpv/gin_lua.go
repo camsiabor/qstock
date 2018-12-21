@@ -9,24 +9,12 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/run/rlua"
 	"github.com/camsiabor/qstock/run/rscript"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"reflect"
 	"strings"
 	"time"
 )
-
-func getL() *lua.State {
-	var L = luar.Init()
-	defer L.Close()
-	L.OpenLibs()
-	L.OpenDebug()
-	L.OpenTable()
-	var Q = global.GetInstance().Data()
-	luar.Register(L, "Q", Q)
-	return L
-}
 
 func (o *HttpServer) getScriptParams(params interface{}) map[string]interface{} {
 	if params == nil {
@@ -46,6 +34,34 @@ func (o *HttpServer) getScriptParams(params interface{}) map[string]interface{} 
 		r[key] = value
 	}
 	return r
+}
+
+func embedLuaScript(L *lua.State) int {
+	var name = L.ToString(1)
+	var data, err = cacheScriptByName.Get(true, name)
+	if err != nil {
+		panic(err)
+	}
+	if data == nil {
+		L.PushString("no data for script " + name)
+		return 1
+	}
+	var meta = data.(*rscript.Meta)
+	if meta.Binary == nil {
+		err = rlua.Compile(meta, cacheScriptByHash)
+		if err != nil {
+			panic(err)
+		}
+	}
+	err = L.LoadBuffer(meta.Binary, meta.Name, "")
+	if err != nil {
+		panic(err)
+	}
+	L.MustCall(0, lua.LUA_MULTRET)
+	//L.CallHandle(0, lua.LUA_MULTRET, nil)
+
+	L.PushString("loaded " + name)
+	return 1
 }
 
 // TODO arguments
@@ -75,18 +91,10 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 				return
 			} else {
 				meta = &rscript.Meta{}
-				func() {
-					var L = luar.Init()
-					defer L.Close()
-					L.LoadString(script)
-					if L.Dump() == nil {
-						meta.Binary = L.ToBytes(-1)
-						meta.Name = name
-						meta.Script = script
-						meta.Lines = strings.Split(meta.Script, "\n")
-						cacheScriptByHash.Set(meta, hash)
-					}
-				}()
+				meta.Name = name
+				meta.Hash = hash
+				meta.Script = script
+				rlua.Compile(meta, cacheScriptByHash)
 			}
 		} else {
 			meta = cache.(*rscript.Meta)
@@ -107,16 +115,18 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	var trace interface{}
 	luar.Register(L, "", map[string]interface{}{
-		"R": func(data interface{}) {
+		"Qr": func(data interface{}) {
 			var interrupt = &lua.Interrupt{
 				Data: data,
 			}
 			panic(interrupt)
 		},
-		"Trace": func(data interface{}) {
+		"Qrace": func(data interface{}) {
 			trace = data
 		},
 	})
+
+	L.Register("Qembed", embedLuaScript)
 
 	var start, end int64
 	var consume float64
@@ -131,7 +141,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 			return
 		}
 		var ok bool
-		interrupt, ok = pan.(*lua.Interrupt)
+		L.Notice, ok = pan.(*lua.Interrupt)
 		if !ok {
 			goStackInfo = qref.StackInfo(5)
 			var stackstr = util.AsStr(goStackInfo["stack"], "")
@@ -160,9 +170,9 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	if err == nil {
 		if interrupt == nil {
-			data, err = rlua.LuaGetVal(L, 1)
+			data, err = rlua.GetVal(L, 1)
 			if err == nil {
-				r2, err := rlua.LuaGetVal(L, 2)
+				r2, err := rlua.GetVal(L, 2)
 				if err == nil && r2 != nil {
 					code = util.AsInt(r2, 0)
 				}
@@ -199,7 +209,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	} else {
 		code = 500
 		var luaStacks = L.StackTrace()
-		var luaStackInfo = rlua.LuaFormatStackToMap(luaStacks)
+		var luaStackInfo = rlua.FormatStackToMap(luaStacks)
 		var r = make(map[string]interface{})
 
 		var luaStockLen = len(luaStackInfo)

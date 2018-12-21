@@ -7,6 +7,7 @@ import (
 )
 
 type Meta struct {
+	Type   string
 	Name   string
 	Hash   string
 	Binary []byte
@@ -19,6 +20,7 @@ func (o *Meta) ToMap() map[string]interface{} {
 	if o.Map == nil {
 		o.Map = make(map[string]interface{})
 	}
+	o.Map["type"] = o.Type
 	o.Map["name"] = o.Name
 	o.Map["hash"] = o.Hash
 	o.Map["script"] = o.Script
@@ -31,6 +33,7 @@ func (o *Meta) FromMap(m map[string]interface{}) error {
 	if len(o.Name) == 0 {
 		return errors.New(" no name")
 	}
+	o.Type = util.GetStr(m, "lua", "type")
 	o.Script = util.GetStr(m, "", "script")
 	o.Hash = util.GetStr(m, "", "hash")
 	o.Lines = strings.Split(o.Script, "\n")

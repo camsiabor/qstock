@@ -55,6 +55,7 @@
         "dao" : "main",
         "db" : "calendar",
         "key" : "date",
+        "mapper" : "tushare.calendar",
         "handler" : "TuShare_trade_calendar"
       }
     }

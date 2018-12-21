@@ -206,7 +206,7 @@ func initCacher(g *global.G) {
 		var g = global.GetInstance()
 		var cmd = &global.Cmd{
 			Service:  dict.SERVICE_SYNC,
-			Function: "k.history.sz",
+			Function: "k.history",
 			SFlag:    "go",
 		}
 		cmd.SetData("from", datestr)

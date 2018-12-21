@@ -422,12 +422,18 @@ func (o *Syncer) PersistAndCache(
 	var key = util.GetStr(profile, "code", "key")
 	var group = util.GetStr(profile, "", "group")
 	var groupkey = util.GetStr(profile, "", "groupkey")
-
 	var mappername = util.GetStr(profile, "", "mapper")
+
 	var mapper = qref.GetMapperManager().Get(mappername)
 
+	var db = util.GetStr(profile, "", "db")
+	var cachername = util.GetStr(profile, "", "cacher")
+	var cacher = scache.GetManager().Get(cachername)
+
+	var groups = make([]string, datalen)
 	var idsss = make([]string, datalen)
 	ids = make([]interface{}, datalen)
+	var hasgroupkey = len(groupkey) > 0
 	for i, one := range data {
 		var m = one.(map[string]interface{})
 		m["_u"] = work.Id
@@ -437,23 +443,24 @@ func (o *Syncer) PersistAndCache(
 				return nil, nil, err
 			}
 		}
-		idsss[i] = util.GetStr(m, "", key)
+		var id = util.GetStr(m, "", key)
+		idsss[i] = id
 		ids[i] = idsss[i]
-		if len(group) == 0 && len(groupkey) > 0 {
-			group = util.GetStr(one, "", groupkey)
+		if hasgroupkey {
+			groups[i] = util.GetStr(one, "", groupkey)
+		} else {
+			groups[i] = group
+		}
+		if cacher != nil {
+			if len(groups[i]) == 0 {
+				cacher.Set(one, id)
+			} else {
+				cacher.SetSubVal(one, id, group)
+			}
 		}
 	}
 
-	var db = util.GetStr(profile, "", "db")
-	var cachername = util.GetStr(profile, "", "cacher")
-	var cacher = scache.GetManager().Get(cachername)
-	_, err = work.Dao.Updates(db, group, ids, data, true, -1, nil)
-	if cacher != nil {
-		if len(group) == 0 {
-			cacher.Sets(data, idsss)
-		} else {
-			cacher.SetSubVals(data, idsss, group)
-		}
-	}
+	_, err = work.Dao.UpdateBatch(db, groups, ids, data, true, -1, nil)
+
 	return data, ids, err
 }

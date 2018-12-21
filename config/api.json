@@ -8,7 +8,7 @@
     "concurrent" : 1,
     "nice" : 0,
     "profiles" : {
-      "a.snapshot.sz" : {
+      "a.snapshot" : {
         "api" : "?appid=c0c0d935f29c6d1fd97b28069a539f1f",
         "interval": 120,
         "dao" : "main",
@@ -20,7 +20,7 @@
         "handler" : "ShenJian_snapshot"
       },
       "i.snapshot" : {
-          "embed" : "a.snapshot.sz",
+          "embed" : "a.snapshot",
           "api" : "?appid=b4eb7f619470a41a27c402d143a30f86"
       }
     }

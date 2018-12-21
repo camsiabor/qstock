@@ -85,10 +85,6 @@ vue_options.data = {
         msg_success: "success",
     },
     token: {
-        snapshot_sz: "meta.a.snapshot.sz",
-        snapshot_sh: "meta.a.snapshot.sh",
-        khistory_sz: "meta.a.khistory.sz",
-        khistory_sh: "meta.a.khistory.sh"
     },
     css : cssmock
 

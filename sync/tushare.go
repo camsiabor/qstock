@@ -3,14 +3,13 @@ package sync
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qtime"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"github.com/pkg/errors"
-	"strings"
 	"time"
 )
 
@@ -121,16 +120,9 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 	var date_from_str string
 	if work.GCmd != nil {
 		var cmdata = work.GCmd.Data()
-
 		date_to_str = util.GetStr(cmdata, "", "to")
 		date_from_str = util.GetStr(cmdata, "", "from")
-		if len(date_from_str) > 0 {
-			codes = util.GetStringSlice(cmdata, "codes")
-			if codes == nil || len(codes) == 0 {
-				return nil, fmt.Errorf("codes is null %s : %v", work.GCmd.GetServFunc(), cmdata)
-			}
-		}
-
+		codes = util.GetStringSlice(cmdata, "codes")
 	}
 
 	var dao = work.Dao
@@ -171,44 +163,43 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		date_to_str = time.Now().Format("20060102")
 	}
 
-	var keyprefix string
-	var keysuffix string
-	var market = util.GetStr(profile, "", "marker")
-	market = strings.ToLower(market)
-	if market == "sz" {
-		keyprefix = "00*"
-		keysuffix = ".SZ"
-	} else if market == "ms" {
-		keyprefix = "3*"
-		keysuffix = ".SZ"
-	} else {
-		keyprefix = "60*"
-		keysuffix = ".SH"
-	}
-
 	var err error
-	if codes == nil || len(codes) == 0 {
-		codes, err = dao.Keys(dict.DB_DEFAULT, "", keyprefix, nil)
-		if err != nil {
-			qlog.Log(qlog.ERROR, "persist", "khistory", market, "fetch keys error", err)
-			return nil, err
-		}
+	var targets []string
+	var fetch_by_date bool = (codes == nil || len(codes) == 0)
+	if fetch_by_date {
+		var date_to, _ = time.Parse("20060102", date_to_str)
+		var date_from, _ = time.Parse("20060102", date_from_str)
+		targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102", time.Sunday, time.Saturday)
+	} else {
+		targets = codes
 	}
 
 	var data []interface{}
+	var data_part []interface{}
 	var rargs = make(map[string]interface{})
 	var retry = util.GetInt(work.Profile, 3, "retry")
+
 	for i := 1; i <= retry; i++ {
 		var fails = make([]string, len(codes))
 		var failcount = 0
-		for _, code := range codes {
-			if len(code) == 0 {
+		for _, target := range targets {
+			if len(target) == 0 {
 				continue
 			}
-			rargs["ts_code"] = code + keysuffix
-			rargs["start_date"] = date_from_str
-			rargs["end_date"] = date_to_str
-			data_part, err := o.TuShare_request(work, nil, rargs)
+			if fetch_by_date {
+				rargs["trade_date"] = target
+			} else {
+				var keysuffix string
+				if target[0] == '6' {
+					keysuffix = ".SH"
+				} else {
+					keysuffix = ".SZ"
+				}
+				rargs["ts_code"] = target + keysuffix
+				rargs["start_date"] = date_from_str
+				rargs["end_date"] = date_to_str
+			}
+			data_part, err = o.TuShare_request(work, nil, rargs)
 			if data_part != nil && len(data_part) > 0 {
 				if data == nil {
 					data = data_part
@@ -216,10 +207,10 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 				data = append(data, data_part...)
 			}
 			if err == nil {
-				qlog.Log(qlog.INFO, profilename, "persist", code, date_from_str, date_to_str)
+				qlog.Log(qlog.INFO, profilename, "persist", target, date_from_str, date_to_str)
 			} else {
-				qlog.Log(qlog.ERROR, profilename, "persist", "fail", code, date_from_str, date_to_str, err.Error())
-				fails[failcount] = code
+				qlog.Log(qlog.ERROR, profilename, "persist", "fail", target, date_from_str, date_to_str, err.Error())
+				fails[failcount] = target
 				failcount++
 			}
 		}
@@ -234,5 +225,6 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 			break
 		}
 	}
+
 	return data, err
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/run/rlua"
+	"github.com/camsiabor/qstock/run/rscript"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -50,6 +51,12 @@ func (o *HttpServer) getScriptParams(params interface{}) map[string]interface{} 
 // TODO arguments
 func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
+	var name = util.GetStr(m, "", "name")
+	if len(name) == 0 {
+		o.RespJsonEx(0, errors.New("script name is null"), c)
+		return
+	}
+
 	var hash = util.GetStr(m, "", "hash")
 	var script = util.GetStr(m, "", "script")
 	if len(script) == 0 && len(hash) == 0 {
@@ -58,27 +65,31 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	}
 	var mode = util.GetStr(m, "debug", "mode")
 	var debug = mode == "debug"
-	var chunk []byte
 
+	var meta *rscript.Meta
 	if len(hash) > 0 {
-		var cache = o.GetData(hash)
+		var cache, _ = cacheScriptByHash.Get(false, hash)
 		if cache == nil {
 			if len(script) == 0 {
 				o.RespJson(404, "no script", c)
 				return
 			} else {
+				meta = &rscript.Meta{}
 				func() {
 					var L = luar.Init()
 					defer L.Close()
 					L.LoadString(script)
 					if L.Dump() == nil {
-						chunk = L.ToBytes(-1)
-						o.SetData(hash, chunk)
+						meta.Binary = L.ToBytes(-1)
+						meta.Name = name
+						meta.Script = script
+						meta.Lines = strings.Split(meta.Script, "\n")
+						cacheScriptByHash.Set(meta, hash)
 					}
 				}()
 			}
 		} else {
-			chunk = cache.([]byte)
+			meta = cache.(*rscript.Meta)
 		}
 	}
 
@@ -133,10 +144,10 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		start = time.Now().UnixNano()
 	}
 	var err error
-	if chunk == nil {
+	if meta == nil || meta.Binary == nil {
 		err = L.DoStringHandle(script, errhandler)
 	} else {
-		err = L.LoadBuffer(chunk, "chunk", "")
+		err = L.LoadBuffer(meta.Binary, "chunk", "")
 		if err == nil {
 			err = L.CallHandle(0, lua.LUA_MULTRET, errhandler)
 		}

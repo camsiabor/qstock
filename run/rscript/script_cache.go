@@ -25,22 +25,51 @@ func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, k
 }
 
 func updateScriptByName(cache *scache.SCache, flag int, val interface{}, keys ...string) error {
+
+	if flag&scache.FLAG_UPDATE_ASPECT_BEFORE == 0 {
+		return nil
+	}
+
 	dao, err := qdao.GetManager().Get(cache.Dao)
 	if err != nil {
 		return err
 	}
 
-	switch flag {
-	case scache.FLAG_UPDATE_SET:
-		var meta, ok = val.(*Meta)
-		if ok {
-			val = meta.ToMap()
+	/*
+		old, _ := cache.GetEx(false, 0, 0, keys[0])
+		if old != nil {
+			var oldmeta = val.(*Meta)
+			oldmeta.Lines = nil
+			oldmeta.Binary = nil
+			if len(oldmeta.Hash) > 0 {
+				cache.Twin.Delete(oldmeta.Hash)
+			}
 		}
+	*/
+
+	if flag&scache.FLAG_UPDATE_SET > 0 {
+		var meta *Meta = val.(*Meta)
+		val = meta.ToMap()
 		_, err = dao.Update(cache.Db, cache.Group, keys[0], val, true, -1, nil)
-	case scache.FLAG_UPDATE_DELETE:
+	} else if flag&scache.FLAG_UPDATE_DELETE > 0 {
 		_, err = dao.Delete(cache.Db, cache.Group, keys[0], nil)
 	}
+
 	return err
+}
+
+func clearScriptByHash() {
+	var cache_script_by_hash = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_HASH)
+	var ticker = time.Tick(time.Hour * 6)
+	for {
+		<-ticker
+		var keys, _ = cache_script_by_hash.Keys()
+		if keys != nil {
+			for _, key := range keys {
+				cache_script_by_hash.Delete(key)
+			}
+		}
+	}
 }
 
 func InitScript(g *global.G) {
@@ -54,4 +83,5 @@ func InitScript(g *global.G) {
 	cache_script_by_name.Loader = loadScriptByName
 	cache_script_by_name.Updater = updateScriptByName
 
+	go clearScriptByHash()
 }

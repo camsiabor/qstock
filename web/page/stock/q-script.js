@@ -28,11 +28,11 @@ const script_methods = {
         }
         this.setting.script.last = this.script.name;
         this.script.script = this.editor.getValue().trim();
-
-        axios.post("/script/update", this.script).then(function (resp) {
+        return axios.post("/script/update", this.script).then(function (resp) {
             util.handle_response(resp, this.console, "script saved @ " + this.script.name)
             util.popover("#button_script_save", "保存成功", "bottom");
             this.script_list();
+            return resp
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
@@ -58,23 +58,25 @@ const script_methods = {
             return;
         }
         mode = mode  || this.setting.mode;
+
         let nohash = window.location.href.indexOf('nohash') > 0
         let hash = md5(script);
         if (!this.hash[hash]) {
             this.hash[hash] = hash
-            this.script_save()
         }
         if (!carrayscript) {
             script = hash ? "" : script;
         }
         this.console.text = "";
+
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
             hash : nohash ? "" : hash,
             mode : mode,
+            script : script,
             params : this.params,
-            script : script
+            name : this.script.name,
         }).then(function (resp) {
             if (resp.data.code === 404) {
                 return this.script_query(mode, true);
@@ -89,7 +91,9 @@ const script_methods = {
             } else {
                 return this.stock_get_data_by_code(resp)
             }
-        }.bind(this))
+        }.bind(this));
+
+
     },
 
 

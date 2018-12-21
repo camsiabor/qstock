@@ -10,10 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var cacheScriptByName *scache.SCache
+var cacheScriptByHash *scache.SCache
+
 func (o *HttpServer) routeScript() {
 	var group = o.Engine.Group("/script")
-
-	var cache_script_by_name = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_NAME)
+	cacheScriptByName = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_NAME)
+	cacheScriptByHash = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_HASH)
 
 	group.POST("/update", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
@@ -24,7 +27,7 @@ func (o *HttpServer) routeScript() {
 			o.RespJsonEx(nil, err, c)
 			return
 		}
-		err = cache_script_by_name.Set(meta, name)
+		err = cacheScriptByName.Set(meta, name)
 		//var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		//var data, err = dao.Update(dict.DB_COMMON, "script", name, m, true, -1, nil)
 		o.RespJsonEx("done", err, c)
@@ -39,7 +42,11 @@ func (o *HttpServer) routeScript() {
 	group.POST("/get", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var name = util.GetStr(m, "", "name")
-		var data, err = cache_script_by_name.Get(true, name)
+		var data, err = cacheScriptByName.Get(true, name)
+		if data != nil {
+			var meta = data.(*rscript.Meta)
+			data = meta.ToMap()
+		}
 		//var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		//var data, err = dao.Get(dict.DB_COMMON, "script", name, 1, nil)
 		o.RespJsonEx(data, err, c)
@@ -48,7 +55,7 @@ func (o *HttpServer) routeScript() {
 	group.POST("/delete", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var name = util.GetStr(m, "", "name")
-		var err = cache_script_by_name.Delete(name)
+		var err = cacheScriptByName.Delete(name)
 		//var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		//var data, err = dao.Delete(dict.DB_COMMON, "script", name, nil)
 		o.RespJsonEx("done", err, c)

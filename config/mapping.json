@@ -4,6 +4,7 @@
   },
 
   "shenjian.snapshot" : {
+    "change" : "change_rate",
     "changepercent" : "change_rate",
     "mktcap" : "vtotal",
     "nmc" : "vcir",

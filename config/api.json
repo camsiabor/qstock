@@ -18,6 +18,10 @@
         "cacher" : "stock.snapshot",
         "mapper" : "shenjian.snapshot",
         "handler" : "ShenJian_snapshot"
+      },
+      "i.snapshot" : {
+          "embed" : "a.snapshot.sz",
+          "api" : "?appid=b4eb7f619470a41a27c402d143a30f86"
       }
     }
   },

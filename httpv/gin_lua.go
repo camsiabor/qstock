@@ -103,7 +103,11 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	var L = luar.Init()
 	defer L.Close()
+	L.OpenBase()
 	L.OpenLibs()
+	L.OpenTable()
+	L.OpenString()
+
 	var Q = global.GetInstance().Data()
 	Q["mode"] = mode
 	luar.Register(L, "Q", Q)

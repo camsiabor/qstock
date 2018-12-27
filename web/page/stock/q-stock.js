@@ -1,5 +1,7 @@
 
 
+// sh000001
+// sz399106
 
 // noinspection JSUnusedGlobalSymbols
 const stock_methods = {
@@ -10,7 +12,7 @@ const stock_methods = {
             if (confirm("going to sync? " + profile)) {
                 axios.post("/stock/sync", {
                     profile: profile
-                }).then(util.handle_response)
+                }).then(util.handle_response);
             }
         }
     },
@@ -340,5 +342,10 @@ const stock_methods = {
             });
         }
 
+    },
+    stock_index_fetch : function () {
+        return axios.post("/stock/sync", {
+            profile: profile
+        }).then(util.handle_response)
     }
 };

@@ -373,7 +373,7 @@ const stock_methods = {
         }
 
     },
-    stock_index_fetch : function () {
+    stock_indice_fetch : function () {
         // const sz_index = "sz399001";
         const sh_index = "sh000001";
         let codes = [ sh_index ];

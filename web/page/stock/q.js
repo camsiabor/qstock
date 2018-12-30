@@ -230,6 +230,7 @@ vue_options.methods = {
         $('#div_setting').modal('hide');
         this.table_paging();
         this.editor_init();
+        this.stock_indice_fetch();
     },
     /* [portfolio] ------------------------------------------------------------------- */
     table_get_selection: function (retrow) {
@@ -447,7 +448,7 @@ DB.new_db_promise({
                     let minutes = date.getMinutes();
                     if ((hours >= 9 && minutes >= 15) || (hours <= 15)) {
                         if (this.calendar[datestr]) {
-                            this.stock_index_fetch();
+                            this.stock_indice_fetch();
                         }
                     }
                 }.bind(this), 45 * 1000);
@@ -474,7 +475,7 @@ DB.new_db_promise({
                 this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
             }
 
-            this.stock_index_fetch();
+            this.stock_indice_fetch();
 
             this.ready = true;
         }.bind(this));

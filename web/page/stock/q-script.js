@@ -2,7 +2,7 @@ const script_methods = {
     script_list: function () {
         return axios.post("/script/list").then(function (json) {
             let names = util.handle_response(json, this.console, "");
-            this.script_names = names.sort();
+            this.script_names = names.sort().reverse();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
@@ -88,6 +88,8 @@ const script_methods = {
             script : script,
             params : this.params,
             name : this.script.name,
+        }, {
+            timeout: this.setting.script.timeout || 300000
         }).then(function (resp) {
             if (resp.data.code === 404) {
                 return this.script_query(mode, true);

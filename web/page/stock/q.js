@@ -27,7 +27,8 @@ const def_setting = {
     mode: "query",
     exclude: "buy,sell",
     script: {
-        last: ""
+        last: "",
+        timeout : 300000
     },
     params : {
         last: ""

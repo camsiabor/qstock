@@ -438,7 +438,7 @@ DB.new_db_promise({
                 }
                 this.timer_index_fetch = setInterval(function () {
                     let date  = new Date();
-                    let datestr = util.date_format(date, "");
+                    let datestr = QUtil.date_format(date, "");
                     let hours = date.getHours();
                     let minutes = date.getMinutes();
                     if ((hours >= 9 && minutes >= 15) || (hours <= 15)) {

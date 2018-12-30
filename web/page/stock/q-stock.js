@@ -5,6 +5,23 @@
 
 // noinspection JSUnusedGlobalSymbols
 const stock_methods = {
+
+
+    stock_calendar_get : function(from, to) {
+        from = from || 3;
+        to = to || 3;
+        return axios.post("/stock/calendar", {
+            from: from,
+            to: to
+        }).then(function(resp) {
+            let data = util.handle_response(resp);
+            for (let i = 0; i < data.length; i++) {
+                let date = data[i];
+                this.calendar[date] = true;
+            }
+        }.bind(this))
+    },
+
     stock_sync : function() {
         let profiles = arguments;
         for(let i = 0; i < profiles.length; i++) {
@@ -31,7 +48,17 @@ const stock_methods = {
 
     stock_get_data_by_code: function (resp, time_from, time_to, refresh_view) {
 
-        let codes = util.handle_response(resp);
+        let codes;
+        if (resp instanceof Array) {
+            codes = resp;
+        } else {
+            codes = util.handle_response(resp);
+        }
+
+        if (typeof refresh_view === 'undefined') {
+            refresh_view = false;
+        }
+
         if (!codes || !(codes instanceof Array)) {
             if (refresh_view) {
                 this.table_init([]);
@@ -45,7 +72,7 @@ const stock_methods = {
             if (!time_to || !time_to.length) {
                 let to = new Date();
                 while(true) {
-                    let dayofweek = to.getDay()
+                    let dayofweek = to.getDay();
                     if (dayofweek === 6 || dayofweek === 0) {
                         to.setTime(to.getTime() - (24 * 3600 * 1000));
                     } else {
@@ -202,9 +229,6 @@ const stock_methods = {
 
     stock_data_adapt: function (wrap) {
         let refresh_view = wrap.refresh_view;
-        if (typeof refresh_view === 'undefined') {
-            refresh_view = true;
-        }
         let stocks = wrap.stocks;
         let stocks_local = wrap.stocks_local;
         if (!stocks instanceof Array) {
@@ -344,8 +368,13 @@ const stock_methods = {
 
     },
     stock_index_fetch : function () {
-        return axios.post("/stock/sync", {
-            profile: profile
-        }).then(util.handle_response)
+        // sh000001
+        // sz399106
+        let codes = [ "sz399106", "sh000001"  ];
+        return this.stock_get_data_by_code(codes, "", "", false).then(function (resp) {
+            let indice = resp;
+            this.indice.sz = indice[0];
+            this.indice.sh = indice[1];
+        }.bind(this));
     }
 };

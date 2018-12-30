@@ -89,7 +89,7 @@ const script_methods = {
                 this.console.text = data;
                 return data;
             } else {
-                return this.stock_get_data_by_code(resp)
+                return this.stock_get_data_by_code(resp, "", "", true);
             }
         }.bind(this));
 

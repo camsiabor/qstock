@@ -202,4 +202,20 @@ func (o *HttpServer) routeStock() {
 		o.RespJson(0, data[:index], c)
 	})
 
+	group.POST("/calendar", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var nfrom = util.GetInt(m, 3, "from")
+		var nto = util.GetInt(m, 3, "to")
+		var calendar = scache.GetManager().Get(dict.CACHE_CALENDAR)
+		var to = time.Now().AddDate(0, 0, nto)
+		var from = time.Now().AddDate(0, 0, -nfrom)
+		array, err := qtime.GetTimeFormatIntervalArray(&from, &to, "20060102", time.Saturday, time.Sunday)
+		if err != nil {
+			o.RespJsonEx(array, err, c)
+			return
+		}
+		data, err := calendar.List(true, array...)
+		o.RespJsonEx(data, err, c)
+	})
+
 }

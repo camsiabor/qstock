@@ -53,6 +53,19 @@ const vue_options = {
 vue_options.data = {
     db: null,
     stocks: [],
+    indice : {
+        sz : {
+            close : 0,
+            change_rate : 0
+        },
+        sh : {
+            close : 0,
+            change_rate : 0
+        }
+    },
+    calendar : {
+
+    },
     columns: [],
     table: {
         data: datamock,
@@ -417,6 +430,30 @@ DB.new_db_promise({
         this.editor_init();
         this.table_init();
 
+
+        const fetch_calendar = function() {
+            this.stock_calendar_get().then(function () {
+                if (this.timer_index_fetch) {
+                    clearInterval(this.timer_index_fetch);
+                }
+                this.timer_index_fetch = setInterval(function () {
+                    let date  = new Date();
+                    let datestr = util.date_format(date, "");
+                    let hours = date.getHours();
+                    let minutes = date.getMinutes();
+                    if ((hours >= 9 && minutes >= 15) || (hours <= 15)) {
+                        if (this.calendar[datestr]) {
+                            this.stock_index_fetch();
+                        }
+                    }
+                }.bind(this), 45 * 1000);
+            }.bind(this));
+        }.bind(this);
+
+        fetch_calendar();
+
+        setInterval(fetch_calendar, 12 * 60 * 60 * 1000);
+
         this.params_list();
         this.script_list();
         this.portfolio_list();
@@ -433,8 +470,9 @@ DB.new_db_promise({
                 this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
             }
 
-            this.ready = true;
+            this.stock_index_fetch();
 
+            this.ready = true;
         }.bind(this));
     };
 

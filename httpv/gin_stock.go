@@ -214,7 +214,7 @@ func (o *HttpServer) routeStock() {
 			o.RespJsonEx(array, err, c)
 			return
 		}
-		data, err := calendar.List(true, array...)
+		data, err := calendar.ListKVEx(false, 0, 0, array)
 		o.RespJsonEx(data, err, c)
 	})
 

@@ -15,9 +15,8 @@ const stock_methods = {
             to: to
         }).then(function(resp) {
             let data = util.handle_response(resp);
-            for (let i = 0; i < data.length; i++) {
-                let date = data[i];
-                this.calendar[date] = true;
+            for (let date in data) {
+                this.calendar[date] = data[date];
             }
         }.bind(this))
     },

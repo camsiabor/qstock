@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qstock/dict"
+	"github.com/camsiabor/qstock/sync/calendar"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"time"
 )
@@ -58,8 +61,30 @@ func (o *Syncer) ShenJian_snapshot(
 	if phrase != "work" {
 		return nil
 	}
+
+	var cache_khistory_name = util.GetStr(work.Profile, dict.CACHE_STOCK_KHISTORY, "cache_khistory")
+	var cache_khistory = scache.GetManager().Get(cache_khistory_name)
+	var now = time.Now()
+	var hour = now.Hour()
+	var todaystr = now.Format("20060102")
+	var todaytrade = false
+	if hour >= 9 && hour < 15 {
+		var cal = calendar.GetStockCalendar()
+		if cal.Is(todaystr) {
+			todaytrade = true
+		}
+	}
 	for i := 0; i < 2; i++ {
-		_, _, err = o.ShenJian_request(work, nil, nil)
+		data, _, err := o.ShenJian_request(work, nil, nil)
+		if todaytrade {
+			var datalen = len(data)
+			for n := 0; n < datalen; n++ {
+				var stock = data[n].(map[string]interface{})
+				var code = util.GetStr(stock, "", "code")
+				stock["date"] = todaystr
+				cache_khistory.SetSubVal(stock, code, todaystr)
+			}
+		}
 		if err == nil {
 			qlog.Log(qlog.INFO, work.ProfileName, "persist", "success")
 			break

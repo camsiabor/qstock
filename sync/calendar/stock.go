@@ -13,6 +13,7 @@ import (
 type StockCal struct {
 	lock              sync.RWMutex
 	todayDay          int
+	todayTrade        bool
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 	dates             []string
@@ -77,6 +78,8 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 						break
 					}
 				}
+
+				o.todayTrade = (now.Format("20060102") == o.lastTradeDayStr)
 
 				var count = len(o.dates)
 				for i := 0; i < count; i++ {

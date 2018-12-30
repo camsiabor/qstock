@@ -329,19 +329,26 @@ const stock_methods = {
         }.bind(this));
     },
 
-    chart_kagi_init: function (codes) {
+    chart_kagi_init: function (codes, chart_children) {
         if (!codes) {
             codes = QUtil.array_field(this.table.stocks_view, "code");
         }
-        let vuetable = this.$refs.vuetable;
-        let children = vuetable.$children;
-        let chart_children = [];
-        for(let i = 0; i < children.length; i++) {
-            let one = children[i];
-            let code = one.chart_render && one.rowData && one.rowData.code;
-            if (code) {
-                // codes.push(code);
-                chart_children.push(one);
+
+
+        let chart_children_define = false;
+        if (chart_children) {
+            chart_children_define = true;
+        } else {
+            chart_children = [];
+            let vuetable = this.$refs.vuetable;
+            let children = vuetable.$children;
+            for (let i = 0; i < children.length; i++) {
+                let one = children[i];
+                let code = one.chart_render && one.rowData && one.rowData.code;
+                if (code) {
+                    // codes.push(code);
+                    chart_children.push(one);
+                }
             }
         }
 
@@ -367,13 +374,18 @@ const stock_methods = {
 
     },
     stock_index_fetch : function () {
-        // sh000001
-        // sz399001
-        let codes = [ "sz399001", "sh000001"  ];
+        // const sz_index = "sz399001";
+        const sh_index = "sh000001";
+        let codes = [ sh_index ];
         return this.stock_get_data_by_code(codes, "", "", false).then(function (resp) {
             let indice = resp;
-            this.indice.sz = indice[0];
-            this.indice.sh = indice[1];
+            this.indice.sh = indice[0];
+            this.indice.sz = indice[1];
+            if (this.setting.indice.kagi) {
+                let index_kagi = this.$refs.index_kagi;
+                index_kagi.code = sh_index;
+                this.chart_kagi_init(codes, [index_kagi]);
+            }
         }.bind(this));
     }
 };

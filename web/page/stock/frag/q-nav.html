@@ -26,6 +26,8 @@
                     <a class="dropdown-item" href="#" v-on:click="toggle('editor', 'view')">脚本编辑</a>
                     <a class="dropdown-item" href="#" v-on:click="setting.editor.height_mode = 'min';editor_init();">编辑器小</a>
                     <a class="dropdown-item" href="#" v-on:click="setting.editor.height_mode = 'max';editor_init();">编辑器大</a>
+                    <a class="dropdown-item" href="#" v-on:click="setting.indice.num = !setting.indice.num">指数数字</a>
+                    <a class="dropdown-item" href="#" v-on:click="setting.indice.kagi = !setting.indice.kagi">指数图形</a>
                 </div>
             </li>
             <li class="nav-item dropdown">

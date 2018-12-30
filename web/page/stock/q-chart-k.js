@@ -6,8 +6,7 @@ Vue.component('vuetable-chart', {
     template : "<div v-bind:id='cid' style='width: 99%; height: 99%;'></div>",
     props: {
         rowData: {
-            type: Object,
-            required: true
+            type: Object
         },
         rowIndex: {
             type: Number
@@ -19,7 +18,8 @@ Vue.component('vuetable-chart', {
         }
     },
     methods: {
-        chart_render : function (stocks_map) {
+
+        chart_render : function(stocks_map) {
 
             if (this.timer_render) {
                 clearTimeout(this.timer_render);
@@ -32,16 +32,21 @@ Vue.component('vuetable-chart', {
                 this.chart = null;
             }
 
-            if (!this.rowData || !this.rowData.code) {
-                console.log(this.cid, "no row data", this.rowData);
-                return;
+            let code = this.code;
+            if (!code) {
+                if (!this.rowData || !this.rowData.code) {
+                    console.log(this.cid, "no row data", this.rowData);
+                    return;
+                }
+                code = this.rowData.code;
             }
-            let code = this.rowData.code;
             let stock = stocks_map[code];
+
             if (!stock) {
                 console.log(this.cid, "no stock data", code, stocks_map);
                 return;
             }
+
             let data = stock.khistory;
             if (!data || !data.length) {
                 console.log(this.cid, "khistory null", stock, data);
@@ -97,7 +102,7 @@ Vue.component('vuetable-chart', {
             let time_start = QUtil.date_add_day(time_end, -kagi_count);
             let time_end_str = QUtil.date_format(time_end, "");
             let time_start_str = QUtil.date_format(time_start, "");
-;
+            ;
             let ds = new DataSet({
                 state: {
                     end: time_end_str * 1,
@@ -244,10 +249,9 @@ Vue.component('vuetable-chart', {
                 };
             });
 
-
             this.chart.render();
-
         }
+
     }
 });
 

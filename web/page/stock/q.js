@@ -14,6 +14,10 @@ const def_setting = {
         page_size : 5,
         fields : _columns_default
     },
+    indice : {
+        num : true,
+        kagi : true
+    },
     kagi : {
         count : 50,
         width : -2,

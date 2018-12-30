@@ -87,7 +87,10 @@ const _columns_default = [
             let high_color = QUtil.stock_color(row.high * 1 - row.pre_close * 1);
             let html = [];
             html.push("<span class='s-bold' style='color:" + now_color + ";border:1px dotted " + now_color + ";border-radius: 3px; padding: 2px;'>" + row.change_rate + "%</span>");
-            html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
+            value = value || row.close;
+            if (value) {
+                html.push("<div class='s-bold' style='color:" + now_color + "'>" + value + "</div>");
+            }
             html.push("<div class='s-bold s-tiny' style='color:" + open_color + "'>"  + row.pre_close + " > " + row.open + "</div>");
             html.push("<div class='s-bold s-tiny'>");
             html.push("<span style='color:" + low_color + "'>" + row.low + "</span>");

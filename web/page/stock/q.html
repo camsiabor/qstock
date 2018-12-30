@@ -54,11 +54,11 @@
     </div>
 
     <div id="div_index" style="margin-top: 5px;" v-bind:class="{'row':true }">
-        <div class="col-sm-3" v-bind:style="{color: indice.sz.change_rate.indexOf('-') >= 0 ? 'green' : 'red' }">
-            SZ | {{indice.sz.close}} | {{indice.sz.change_rate}}
+        <div class="col-sm-9" v-bind:style="{display: setting.indice.kagi ? 'inherit' : 'none' }" >
+            <vuetable-chart ref="index_kagi"></vuetable-chart>
         </div>
-        <div class="col-sm-3" v-bind:style="{color: indice.sh.change_rate.indexOf('-') >= 0 ? 'green' : 'red' }">
-            SH | {{indice.sh.close}} | {{indice.sh.change_rate}}
+        <div class="col-sm-3" v-bind:style="{color: indice.sh.change_rate.indexOf('-') >= 0 ? 'green' : 'red', 'font-size' : '1.5em' }" v-if="setting.indice.num">
+            SH | {{indice.sh.close}} | {{indice.sh.change_rate}} %
         </div>
     </div>
 

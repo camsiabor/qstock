@@ -4,7 +4,19 @@
   },
 
   "shenjian.snapshot" : {
-    "change" : "change_rate",
+    "code" : {
+      "acts" : [{
+        "act" : "Replace",
+        "args": [ ["\n" ], ""]
+      }]
+    },
+    "change" :  {
+      "nameto" : "change_rate",
+      "acts" : [{
+        "act" : "Replace",
+        "args": [ ["%"], "" ]
+      }]
+    },
     "changepercent" : "change_rate",
     "mktcap" : "vtotal",
     "nmc" : "vcir",
@@ -44,6 +56,27 @@
     "pct_chg" : "change_rate",
     "vol" : null,
     "amount" : null
+  },
+
+  "tushare.index.khistory" : {
+    "ts_code" : {
+      "nameto" : "code",
+      "acts" : [{
+        "act" : "Correspond",
+        "args": [ {
+          "000001.SH" : "sh000001",
+          "399001.SZ" : "sz399001"
+        }]
+      }]
+    },
+    "trade_date" : "date",
+    "pct_chg" : {
+      "nameto" : "change_rate",
+      "acts" : [{
+        "act" : "Replace",
+        "args": [ ["%"], "" ]
+      }]
+    }
   },
 
   "tushare.calendar" : {

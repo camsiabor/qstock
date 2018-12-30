@@ -49,6 +49,13 @@
         "mapper" : "tushare.khistory",
         "handler" : "TuShare_khistory"
       },
+      "k.i.history" : {
+        "api" : "index_daily",
+        "embed" : "k.history",
+        "addsuffix" : false,
+        "mapper" : "tushare.index.khistory",
+        "codes" : [ "399001.SZ", "000001.SH" ]
+      },
       "trade.calendar" : {
         "api" : "trade_cal",
         "interval" : 86400,

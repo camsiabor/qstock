@@ -9,6 +9,11 @@ const script_methods = {
     script_select: function (name) {
         this.script.name = name;
         this.setting.script.last = name;
+
+
+
+
+
         return axios.post("/script/get", {
             name: name
         }).then(function (resp) {
@@ -18,6 +23,12 @@ const script_methods = {
             this.editor.setValue(this.script.script);
             this.editor.clearSelection();
             this.script_query();
+
+            if (this.timer_script_save) {
+                clearTimeout(this.timer_script_save);
+            }
+            this.timer_script_save = setTimeout(this.script_save.bind(this), 10 * 60 * 1000);
+
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 

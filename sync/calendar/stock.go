@@ -109,7 +109,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 			resultn = resultn + 1
 		}
 	} else {
-		for i := lower; i < upper; i++ {
+		for i := lower; i <= upper; i++ {
 			result[resultn] = o.dates[i]
 			resultn = resultn + 1
 		}

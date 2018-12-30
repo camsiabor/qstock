@@ -368,8 +368,8 @@ const stock_methods = {
     },
     stock_index_fetch : function () {
         // sh000001
-        // sz399106
-        let codes = [ "sz399106", "sh000001"  ];
+        // sz399001
+        let codes = [ "sz399001", "sh000001"  ];
         return this.stock_get_data_by_code(codes, "", "", false).then(function (resp) {
             let indice = resp;
             this.indice.sz = indice[0];

@@ -56,11 +56,11 @@ vue_options.data = {
     indice : {
         sz : {
             close : 0,
-            change_rate : 0
+            change_rate : ""
         },
         sh : {
             close : 0,
-            change_rate : 0
+            change_rate : ""
         }
     },
     calendar : {

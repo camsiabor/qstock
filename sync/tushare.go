@@ -10,6 +10,7 @@ import (
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -117,14 +118,19 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 
 func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}, error) {
 
-	var codes []string
 	var date_to_str string
 	var date_from_str string
+	var codes []string = util.GetStringSlice(work.Profile, "codes")
+	var addsuffix = util.GetBool(work.Profile, true, "addsuffix")
 	if work.GCmd != nil {
 		var cmdata = work.GCmd.Data()
 		date_to_str = util.GetStr(cmdata, "", "to")
 		date_from_str = util.GetStr(cmdata, "", "from")
-		codes = util.GetStringSlice(cmdata, "codes")
+
+		var cmdcodes = util.GetStringSlice(cmdata, "codes")
+		if cmdcodes != nil {
+			codes = cmdcodes
+		}
 	}
 
 	var dao = work.Dao
@@ -150,13 +156,15 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		var to_date = time.Now()
 		date_to_str = to_date.Format("20060102")
 		if date_from_str == date_to_str {
-			if to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday {
-				qlog.Log(qlog.DEBUG, o.Name, "sunday & saturday need a rest")
-				return nil, nil
-			}
-			if to_date.Hour() < 15 {
-				qlog.Log(qlog.DEBUG, o.Name, "wait for the market to rest ", to_date.Hour())
-				return nil, nil
+			if work.GCmd == nil || !strings.Contains(work.GCmd.SFlag, "force") {
+				if to_date.Weekday() == time.Saturday || to_date.Weekday() <= time.Sunday {
+					qlog.Log(qlog.DEBUG, o.Name, "sunday & saturday need a rest")
+					return nil, nil
+				}
+				if to_date.Hour() < 15 {
+					qlog.Log(qlog.DEBUG, o.Name, "wait for the market to rest ", to_date.Hour())
+					return nil, nil
+				}
 			}
 		}
 	}
@@ -192,10 +200,12 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 				rargs["trade_date"] = target
 			} else {
 				var keysuffix string
-				if target[0] == '6' {
-					keysuffix = ".SH"
-				} else {
-					keysuffix = ".SZ"
+				if addsuffix {
+					if target[0] == '6' {
+						keysuffix = ".SH"
+					} else {
+						keysuffix = ".SZ"
+					}
 				}
 				rargs["ts_code"] = target + keysuffix
 				rargs["start_date"] = date_from_str

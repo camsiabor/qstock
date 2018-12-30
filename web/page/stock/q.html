@@ -37,10 +37,10 @@
     -->
 
     <!-- nav bar -->
-    <div class="qam-html-fragment" include="q-nav.html"></div>
+    <div class="qam-html-fragment" include="frag/q-nav.html"></div>
 
     <!-- tool -->
-    <div class="qam-html-fragment" include="q-tool.html"></div>
+    <div class="qam-html-fragment" include="frag/q-tool.html"></div>
 
     <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 8px;" >
         <div class="col-sm-6" style="border: 1px solid #f0f0f0; border-radius: 5px">
@@ -54,11 +54,11 @@
     </div>
 
     <div id="div_index" style="margin-top: 5px;" v-bind:class="{'row':true }">
-        <div class="col-sm-6">
-            {{indice.sz.close}}
+        <div class="col-sm-3" v-bind:style="{color: indice.sz.change_rate.indexOf('-') >= 0 ? 'green' : 'red' }">
+            SZ | {{indice.sz.close}} | {{indice.sz.change_rate}}
         </div>
-        <div class="col-sm-6">
-            {{indice.sh.close}}
+        <div class="col-sm-3" v-bind:style="{color: indice.sh.change_rate.indexOf('-') >= 0 ? 'green' : 'red' }">
+            SH | {{indice.sh.close}} | {{indice.sh.change_rate}}
         </div>
     </div>
 
@@ -113,10 +113,10 @@
 
 
     <!-- table setting -->
-    <div class="qam-html-fragment" include="q-table-setting.html"></div>
+    <div class="qam-html-fragment" include="frag/q-table-setting.html"></div>
 
     <!-- params setting -->
-    <div class="qam-html-fragment" include="q-param-setting.html"></div>
+    <div class="qam-html-fragment" include="frag/q-param-setting.html"></div>
 
 </div>
 

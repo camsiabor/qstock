@@ -79,6 +79,7 @@ func (o *HttpServer) routeStock() {
 		var ofetchs = util.Get(m, nil, "fetchs")
 		var time_from_str = util.GetStr(m, "", "time_from")
 		var time_to_str = util.GetStr(m, "", "time_to")
+		var date = util.GetStr(m, "", "date")
 
 		var index = 0
 		var fetchs = util.AsSlice(ofetchs, 0)
@@ -121,6 +122,7 @@ func (o *HttpServer) routeStock() {
 			}
 		}
 
+		var do_date_pin = len(date) > 0
 		var data = make([]interface{}, len(fetchs))
 		for _, fetch := range fetchs {
 			if fetch == nil {
@@ -136,7 +138,13 @@ func (o *HttpServer) routeStock() {
 				scode = util.GetStr(mfetch, "", "code")
 			}
 
-			snapshoto, err := cacher_stock_snapshot.Get(true, scode)
+			var err error
+			var snapshoto interface{}
+			if do_date_pin {
+				snapshoto, err = cacher_stock_khistory.GetSubVal(true, scode, date)
+			} else {
+				snapshoto, err = cacher_stock_snapshot.GetEx(true, 0, 0, scode)
+			}
 			snapshot := util.AsMap(snapshoto, false)
 			if err != nil {
 				o.RespJsonEx(0, err, c)

@@ -53,7 +53,6 @@ const stock_methods = {
      */
     stock_get_data_by_code: function (codes_meta) {
         let codes = codes_meta["codes"];
-        let target_date = codes_meta["date"];
         let refresh_view = codes_meta.refresh_view;
         let time_to = codes_meta.time_to;
         let time_from = codes_meta.time_from;
@@ -191,6 +190,7 @@ const stock_methods = {
             }
 
             let wrap = {
+                date : codes_meta.date,
                 stocks : stocks_stay,
                 stocks_local : stocks_stay,
                 fetch_pending : fetch_pending,
@@ -217,9 +217,10 @@ const stock_methods = {
             }
         }
         return axios.post("/stock/gets", {
+            "date" : wrap.date,
             "fetchs": wrap.fetch_pending,
-            "time_from" : wrap.time_from,
             "time_to" : wrap.time_to,
+            "time_from" : wrap.time_from,
             "zlib" : false
         }).then(function (resp) {
             wrap.stocks = util.handle_response(resp);

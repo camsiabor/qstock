@@ -94,15 +94,17 @@ const script_methods = {
             if (resp.data.code === 404) {
                 return this.script_query(mode, true);
             }
+            let data = util.handle_response(resp);
             if (mode === "debug") {
-                let data = util.handle_response(resp);
+
                 if (typeof data === 'object') {
                     data = JSON.stringify(data, null, 2);
                 }
                 this.console.text = data;
                 return data;
             } else {
-                return this.stock_get_data_by_code(resp, "", "", true);
+                data.refresh_view = true;
+                return this.stock_get_data_by_code(data);
             }
         }.bind(this));
 

@@ -97,7 +97,11 @@ const portfoilio_methods = {
             let codes = QUtil.keys(data, function (m, k, v) {
                 return v;
             });
-            return this.stock_get_data_by_code(codes, "", "", true);
+            let codes_meta = {
+                codes : codes,
+                refresh_view : true
+            };
+            return this.stock_get_data_by_code(codes_meta);
         }.bind(this));
     },
     portfolio_delete: function (name) {

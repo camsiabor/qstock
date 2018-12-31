@@ -45,14 +45,18 @@ const stock_methods = {
         }
     },
 
-    stock_get_data_by_code: function (resp, time_from, time_to, refresh_view) {
-
-        let codes;
-        if (resp instanceof Array) {
-            codes = resp;
-        } else {
-            codes = util.handle_response(resp);
+    /*
+        {
+            "date" : "20181222",
+            "codes" : []
         }
+     */
+    stock_get_data_by_code: function (codes_meta) {
+        let codes = codes_meta["codes"];
+        let target_date = codes_meta["date"];
+        let refresh_view = codes_meta.refresh_view;
+        let time_to = codes_meta.time_to;
+        let time_from = codes_meta.time_from;
 
         if (typeof refresh_view === 'undefined') {
             refresh_view = false;
@@ -358,7 +362,15 @@ const stock_methods = {
             let now = new Date();
             let from = QUtil.date_add_day(now, -kagi_setting.count);
             let time_from = QUtil.date_format(from, "");
-            this.stock_get_data_by_code(codes, time_from, "", false).then(function (stocks) {
+
+            let codes_meta = {
+                codes : codes,
+                time_from : time_from,
+                time_to: "",
+                refresh_view : false
+            };
+
+            this.stock_get_data_by_code(codes_meta).then(function (stocks) {
                 let stocks_map = QUtil.array_to_map(stocks, "code");
                 stocks_map.kagi = kagi_setting;
                 for(let i = 0; i < chart_children.length; i++) {
@@ -377,7 +389,11 @@ const stock_methods = {
         // const sz_index = "sz399001";
         const sh_index = "sh000001";
         let codes = [ sh_index ];
-        return this.stock_get_data_by_code(codes, "", "", false).then(function (resp) {
+        let codes_meta = {
+            codes : codes,
+            refresh_view : false
+        };
+        return this.stock_get_data_by_code(codes_meta).then(function (resp) {
             let indice = resp;
             this.indice.sh = indice[0];
             this.indice.sz = indice[1];

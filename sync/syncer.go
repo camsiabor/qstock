@@ -11,6 +11,7 @@ import (
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/camsiabor/qstock/sync/calendar"
 	"github.com/pkg/errors"
 	"strings"
 	"sync"
@@ -136,6 +137,7 @@ func (o *Syncer) heartbeat() {
 
 	var g = global.GetInstance()
 	var select_interval = 1
+	var calendi = calendar.GetStockCalendar()
 	for {
 		var timeout = time.After(time.Duration(select_interval) * time.Second)
 
@@ -169,6 +171,7 @@ func (o *Syncer) heartbeat() {
 			}
 			var factor = 1.0
 			if !force {
+
 				var agendaName = util.GetStr(profile, agendaNameDefault, "agenda")
 				var agendi = agenda.GetAgendaManager().Get(agendaName)
 				if agendi != nil {
@@ -178,6 +181,15 @@ func (o *Syncer) heartbeat() {
 					}
 					factor = util.GetFloat64(slice, 1, "factor")
 				}
+
+				var useCalendar = util.GetBool(profile, false, "calendar")
+				if useCalendar {
+					var todayStr = time.Now().Format("20060102")
+					if !calendi.Is(todayStr) {
+						continue
+					}
+				}
+
 				var interval = util.GetInt64(profile, 0, "interval")
 				if interval <= 0 || factor <= 0 {
 					continue

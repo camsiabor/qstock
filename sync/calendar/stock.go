@@ -13,7 +13,9 @@ import (
 type StockCal struct {
 	lock              sync.RWMutex
 	todayDay          int
+	todayIndex        int
 	todayTrade        bool
+	todayStr          string
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 	dates             []string
@@ -71,6 +73,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 			if o.todayDay != now.Day() {
 				o.load()
 				o.todayDay = now.Day()
+				o.todayStr = now.Format("20060102")
 				for i := 0; i < 30; i++ {
 					var lastTradeDay = now.AddDate(0, 0, -i)
 					o.lastTradeDayStr = lastTradeDay.Format("20060102")
@@ -79,7 +82,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 					}
 				}
 
-				o.todayTrade = (now.Format("20060102") == o.lastTradeDayStr)
+				o.todayTrade = (o.todayStr == o.lastTradeDayStr)
 
 				var count = len(o.dates)
 				for i := 0; i < count; i++ {
@@ -88,6 +91,14 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 						break
 					}
 				}
+
+				for i := 0; i < count; i++ {
+					if o.dates[i] == o.todayStr {
+						o.todayIndex = i
+						break
+					}
+				}
+
 			}
 		}()
 	}
@@ -102,14 +113,26 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 	if upper >= len(o.dates) {
 		upper = len(o.dates) - 1
 	}
+
+	var ignoreToday = false
+	if o.todayTrade {
+		var n = now.Hour()*100 + now.Minute()
+		ignoreToday = n < 920
+	}
 	var result = make([]string, upper-lower+1)
 	if reverse {
 		for i := upper; i >= lower; i-- {
+			if ignoreToday && i == o.todayIndex {
+				continue
+			}
 			result[resultn] = o.dates[i]
 			resultn = resultn + 1
 		}
 	} else {
 		for i := lower; i <= upper; i++ {
+			if ignoreToday && i == o.todayIndex {
+				continue
+			}
 			result[resultn] = o.dates[i]
 			resultn = resultn + 1
 		}

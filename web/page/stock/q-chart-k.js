@@ -241,7 +241,7 @@ Vue.component('vuetable-chart', {
                 html.push(low);
                 html.push('</span><br/>');
                 html.push('<span style="padding-left: 1px;color:' + color + '">rate ');
-                html.push((change_rate+"").substring(0, 4) + "%");
+                html.push((change_rate+"").substring(0, 5) + "%");
                 html.push('</span>');
                 return {
                     name: date2.substring(5),

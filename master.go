@@ -20,11 +20,15 @@ import (
 	"github.com/camsiabor/qstock/sync"
 	"github.com/camsiabor/qstock/sync/calendar"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"strings"
 	"time"
 )
 
 func master(g *global.G) {
+
+	go initPerfAnalysis(g)
 
 	var jsonstr, _ = json.Marshal(g.Config)
 	qlog.Log(qlog.INFO, "config", string(jsonstr[:]))
@@ -66,6 +70,19 @@ func master(g *global.G) {
 
 	initSyncer(g)
 
+}
+
+func initPerfAnalysis(g *global.G) {
+	var config = util.GetMap(g.Config, false, "debug", "http")
+	if config == nil {
+		return
+	}
+	var active = util.GetBool(config, false, "active")
+	if !active {
+		return
+	}
+	var endpoint = util.GetStr(config, ":8080", "endpoint")
+	http.ListenAndServe(endpoint, nil)
 }
 
 func initDao(g *global.G) {

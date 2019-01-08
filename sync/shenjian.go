@@ -65,10 +65,10 @@ func (o *Syncer) ShenJian_snapshot(
 	var cache_khistory_name = util.GetStr(work.Profile, dict.CACHE_STOCK_KHISTORY, "cache_khistory")
 	var cache_khistory = scache.GetManager().Get(cache_khistory_name)
 	var now = time.Now()
-	var hour = now.Hour()
+	var hm = now.Hour()*100 + now.Minute()
 	var todaystr = now.Format("20060102")
 	var todaytrade = false
-	if hour >= 9 && hour < 15 {
+	if hm >= 920 {
 		var cal = calendar.GetStockCalendar()
 		if cal.Is(todaystr) {
 			todaytrade = true
@@ -80,9 +80,10 @@ func (o *Syncer) ShenJian_snapshot(
 			var datalen = len(data)
 			for n := 0; n < datalen; n++ {
 				var stock = data[n].(map[string]interface{})
+				var clone = util.MapCloneShallow(stock)
 				var code = util.GetStr(stock, "", "code")
 				stock["date"] = todaystr
-				cache_khistory.SetSubVal(stock, code, todaystr)
+				cache_khistory.SetSubVal(clone, code, todaystr)
 			}
 		}
 		if err == nil {

@@ -1,7 +1,6 @@
 package httpv
 
 import (
-	"fmt"
 	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
@@ -11,7 +10,6 @@ import (
 	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -189,18 +187,18 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	if err == nil {
 
-		if data != nil {
-			var vdata = reflect.ValueOf(data)
-			vdata, _ = qref.IterateMapSlice(vdata, true, func(val reflect.Value, pval reflect.Value) (err error) {
-				fmt.Printf("%v | %v\n", val.Type(), pval.Type())
-				switch pval.Interface().(type) {
-				case *interface{}:
-					pval.Elem().Set(reflect.ValueOf("power"))
-				}
-				return nil
-			})
-			data = vdata.Interface()
-		}
+		//if data != nil {
+		//	var vdata = reflect.ValueOf(data)
+		//	vdata, _ = qref.IterateMapSlice(vdata, true, func(val reflect.Value, pval reflect.Value) (err error) {
+		//		//fmt.Printf("%v | %v\n", val.Type(), pval.Type())
+		//		switch pval.Interface().(type) {
+		//		case *interface{}:
+		//			pval.Elem().Set(reflect.ValueOf("power"))
+		//		}
+		//		return nil
+		//	})
+		//	data = vdata.Interface()
+		//}
 
 		if debug {
 			var wrap = map[string]interface{}{}

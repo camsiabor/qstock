@@ -56,7 +56,8 @@ Vue.component('vuetable-chart', {
                 return;
             }
 
-            let nowdate = QUtil.date_format(new Date(), "");
+            let now = new Date();
+            let nowdate = QUtil.date_format(now, "");
             let data_newest = QUtil.array_most(data, function (most, one) {
                 return one.date * 1 > most.date * 1;
             });

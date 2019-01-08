@@ -57,6 +57,8 @@
           "start" : 915, "end" : 1145, "factor" : 1
         }, {
           "start" : 1255, "end" : 1515, "factor" : 1
+        }, {
+          "start" : 1516, "end" : 1600, "factor" : 10
         }
       ]
     },
@@ -74,10 +76,16 @@
   },
 
   "debug" : {
-    "active" : false,
-    "debugger" : "dlv",
-    "port" : 2345,
-    "args" : ""
+    "dlv" : {
+      "active" : false,
+      "debugger" : "dlv",
+      "endpoint" : ":2345",
+      "args" : ""
+    },
+    "http" : {
+       "active" : true,
+       "endpoint" : ":8080"
+    }
   },
 
   "includes" : {

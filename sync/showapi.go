@@ -186,7 +186,7 @@ func (o *Syncer) ShowAPI_khistory(phrase string, work *ProfileWork) (err error) 
 			infos[index] = minfo
 			index = index + 1
 			if cacher != nil {
-				cacher.SetSubVal(minfo, code, datestr)
+				cacher.SetSubVal(true, minfo, code, datestr)
 			}
 		}
 		var _, rerr = dao.Updates(dict.DB_HISTORY, code, dates, infos, true, -1, nil)

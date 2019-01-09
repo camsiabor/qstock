@@ -470,7 +470,7 @@ func (o *Syncer) PersistAndCache(
 			if len(groups[i]) == 0 {
 				cacher.Set(one, id)
 			} else {
-				cacher.SetSubVal(one, groupid, id)
+				cacher.SetSubVal(true, one, groupid, id)
 			}
 		}
 	}

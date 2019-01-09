@@ -53,8 +53,8 @@ func (o *StockCal) load() error {
 		return cmd.RetErr
 	}
 
-	var err error
-	o.dates, err = o.cache.Keys()
+	dates, err := o.cache.Keys(true)
+	o.dates = util.AsStringSlice(dates, len(dates))
 	sort.Strings(o.dates)
 	return err
 }

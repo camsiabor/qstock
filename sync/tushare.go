@@ -103,13 +103,13 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 		calendar, err = o.TuShare_request(work, nil, rargs)
 		if err == nil {
 			var list = util.AsSlice(calendar, 0)
-			var dates = make([]string, len(list))
+			var dates = make([]interface{}, len(list))
 			var is_opens = make([]interface{}, len(list))
 			for i, one := range list {
 				dates[i] = util.GetStr(one, "", "date") // after mapping cal_date -> date
 				is_opens[i] = util.GetInt(one, 0, "is_open")
 			}
-			cacher.Sets(is_opens, dates)
+			cacher.Sets(true, is_opens, dates)
 			break
 		}
 	}

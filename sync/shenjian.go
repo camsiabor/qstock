@@ -83,7 +83,7 @@ func (o *Syncer) ShenJian_snapshot(
 				stock["date"] = todaystr
 				var clone = util.MapCloneShallow(stock)
 				var code = util.GetStr(stock, "", "code")
-				cache_khistory.SetSubVal(clone, code, todaystr)
+				cache_khistory.SetSubVal(true, clone, code, todaystr)
 			}
 		}
 		if err == nil {

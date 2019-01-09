@@ -55,7 +55,7 @@ func (o *HttpServer) routeScript() {
 	group.POST("/delete", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var name = util.GetStr(m, "", "name")
-		var err = cacheScriptByName.Delete(name)
+		var err = cacheScriptByName.Delete(name, true)
 		//var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 		//var data, err = dao.Delete(dict.DB_COMMON, "script", name, nil)
 		o.RespJsonEx("done", err, c)

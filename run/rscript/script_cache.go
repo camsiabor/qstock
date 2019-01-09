@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, keys ...interface{}) (interface{}, error) {
+func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
 	dao, err := qdao.GetManager().Get(cache.Dao)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, k
 	return meta, nil
 }
 
-func updateScriptByName(cache *scache.SCache, flag int, val interface{}, keys ...interface{}) error {
+func updateScriptByName(cache *scache.SCache, flag int, val interface{}, lock bool, keys ...interface{}) error {
 
 	if flag&scache.FLAG_UPDATE_ASPECT_BEFORE == 0 {
 		return nil
@@ -63,10 +63,10 @@ func clearScriptByHash() {
 	var ticker = time.Tick(time.Hour * 6)
 	for {
 		<-ticker
-		var keys, _ = cache_script_by_hash.Keys()
+		var keys, _ = cache_script_by_hash.Keys(true)
 		if keys != nil {
 			for _, key := range keys {
-				cache_script_by_hash.Delete(key)
+				cache_script_by_hash.Delete(key, true)
 			}
 		}
 	}

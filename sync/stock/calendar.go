@@ -21,6 +21,8 @@ type StockCal struct {
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 	dates             []string
+	weeks             []string
+	months            []string
 	cache             *scache.SCache
 }
 
@@ -146,4 +148,16 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 
 	return result[:resultn]
 
+}
+
+func (o *StockCal) ListWeek(iprev int, pin int, inext int, reverse bool) []string {
+	var result = make([]string, iprev+inext+1)
+	return result
+}
+
+func (o *StockCal) ListMonth(iprev int, pin int, inext int, reverse bool) []string {
+	var result = make([]string, iprev+inext+1)
+	var now = time.Now()
+	now = now.AddDate(0, pin, 0)
+	return result
 }

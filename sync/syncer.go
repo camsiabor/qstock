@@ -455,19 +455,22 @@ func (o *Syncer) PersistAndCache(
 				return nil, nil, err
 			}
 		}
+		var groupid string
 		var id = util.GetStr(m, "", key)
 		idsss[i] = id
 		ids[i] = idsss[i]
+
 		if hasgroupkey {
-			groups[i] = util.GetStr(one, "", groupkey)
+			groupid = util.GetStr(one, "", groupkey)
 		} else {
-			groups[i] = group
+			groupid = group
 		}
+		groups[i] = groupid
 		if cacher != nil {
 			if len(groups[i]) == 0 {
 				cacher.Set(one, id)
 			} else {
-				cacher.SetSubVal(one, id, group)
+				cacher.SetSubVal(one, groupid, id)
 			}
 		}
 	}

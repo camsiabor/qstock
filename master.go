@@ -210,9 +210,14 @@ func initCacher(g *global.G) {
 				return nil, err
 			}
 
-			var code = keys[0]
+			var code string
+			if len(prefix) == 0 {
+				code = keys[0]
+			} else {
+				code = prefix + keys[0]
+			}
 			var datestr = keys[1]
-			data, err := conn.Get(scache.Db, prefix+code, datestr, 1, nil)
+			data, err := conn.Get(scache.Db, code, datestr, 1, nil)
 			if data != nil {
 				return data, err
 			}

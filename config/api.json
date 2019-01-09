@@ -50,6 +50,20 @@
         "mapper" : "tushare.khistory",
         "handler" : "TuShare_khistory"
       },
+      "k.history.week" : {
+        "embed" : "k.history",
+        "api" : "weekly",
+        "each" : 180,
+        "interval" : 86400,
+        "cacher" : "stock.khistory.week"
+      },
+      "k.history.month" : {
+        "embed" : "k.history",
+        "api" : "monthly",
+        "each" : 180,
+        "interval" : 86400,
+        "cacher" : "stock.khistory.month"
+      },
       "k.i.history" : {
         "api" : "index_daily",
         "embed" : "k.history",

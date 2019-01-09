@@ -4,12 +4,14 @@
   },
 
   "shenjian.snapshot" : {
+
     "code" : {
       "acts" : [{
         "act" : "Replace",
         "args": [ ["\n" ], ""]
       }]
     },
+    "now" : "close",
     "change" :  {
       "nameto" : "change_rate",
       "acts" : [{

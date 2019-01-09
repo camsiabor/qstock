@@ -65,6 +65,13 @@
         "key" : "date",
         "mapper" : "tushare.calendar",
         "handler" : "TuShare_trade_calendar"
+      },
+      "stock.group" : {
+        "api" : "concept",
+        "interval" : 86400,
+        "dao" : "main",
+        "db" : "common",
+        "handler" : "TuShare_trade_concept"
       }
     }
   },

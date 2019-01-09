@@ -240,3 +240,7 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 
 	return data, err
 }
+
+func (o *Syncer) TuShare_trade_concept(phrase string, work *ProfileWork) (interface{}, error) {
+	return nil, nil
+}

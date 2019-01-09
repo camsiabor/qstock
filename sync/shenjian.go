@@ -80,9 +80,9 @@ func (o *Syncer) ShenJian_snapshot(
 			var datalen = len(data)
 			for n := 0; n < datalen; n++ {
 				var stock = data[n].(map[string]interface{})
+				stock["date"] = todaystr
 				var clone = util.MapCloneShallow(stock)
 				var code = util.GetStr(stock, "", "code")
-				stock["date"] = todaystr
 				cache_khistory.SetSubVal(clone, code, todaystr)
 			}
 		}

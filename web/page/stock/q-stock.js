@@ -8,16 +8,22 @@ const stock_methods = {
 
 
     stock_calendar_get : function(from, to) {
-        from = from || 3;
+        from = from || 30;
         to = to || 3;
         return axios.post("/stock/calendar", {
             from: from,
             to: to
         }).then(function(resp) {
             let data = util.handle_response(resp);
+            this.calendar.array = [];
             for (let date in data) {
-                this.calendar[date] = data[date];
+                let valid = data[date];
+                this.calendar.map[date] = valid;
+                if (valid) {
+                    this.calendar.array.push(date)
+                }
             }
+            this.calendar.array.sort();
         }.bind(this))
     },
 
@@ -298,6 +304,7 @@ const stock_methods = {
         }
 
 
+        // console.log("khistory len", khistory.length);
         let promise;
         if (update_data.length) {
             let fields_update = [ "_u" ];
@@ -318,15 +325,15 @@ const stock_methods = {
         }.bind(this)).then(function () {
             return stocks;
         }).then(function () {
-            /*
-            if (khistory.length > 0) {
-                for (let i = 0; i < stocks.length; i++) {
-                    let stock = stocks[i];
-                    let code = stock.code;
-                    stock.khistory = khistory_map[code];
-                }
-            }
-            */
+            // console.log(khistory_map);
+            // if (khistory.length > 0) {
+
+                // for (let i = 0; i < stocks.length; i++) {
+                //     let stock = stocks[i];
+                //     let code = stock.code;
+                //     stock.khistory = khistory_map[code];
+                // }
+            // }
             if (refresh_view) {
                 this.table_init(view_data);
             }

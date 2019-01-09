@@ -19,7 +19,7 @@ Vue.component('vuetable-chart', {
     },
     methods: {
 
-        chart_render : function(stocks_map) {
+        chart_render : function(stocks_map, retry) {
 
             if (this.timer_render) {
                 clearTimeout(this.timer_render);
@@ -49,10 +49,16 @@ Vue.component('vuetable-chart', {
 
             let data = stock.khistory;
             if (!data || !data.length) {
-                console.log(this.cid, "khistory null", stock, data);
-                // this.timer_render = setTimeout(function () {
-                //     this.chart_render(stocks_map);
-                // }.bind(this), 2000);
+                if (retry > 3) {
+                    console.log(this.cid, "khistory null", stock, data);
+                } else {
+                    this.timer_render = setTimeout(function () {
+                        if (typeof retry === 'undefined') {
+                            retry = 0;
+                        }
+                        this.chart_render(stocks_map, retry + 1);
+                    }.bind(this), 1000);
+                }
                 return;
             }
 

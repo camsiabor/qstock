@@ -58,6 +58,9 @@ const vue_options = {
 vue_options.data = {
     db: null,
     stocks: [],
+    stock : {
+        date_offset : 0
+    },
     indice : {
         sz : {
             close : 0,
@@ -69,21 +72,23 @@ vue_options.data = {
         }
     },
     calendar : {
-
+        map : {},
+        array : []
     },
     columns: [],
-    table: {
-        data: datamock,
-        datamap : {}
-    },
-    setting: def_setting,
     hash : {
 
     },
+    setting: def_setting,
+
     script_names: [],
     script: {
         name: "",
         script: "--[[lua]]--"
+    },
+    table: {
+        data: datamock,
+        datamap : {}
     },
     params_names: [],
     params_map : {},
@@ -108,8 +113,7 @@ vue_options.data = {
         msg_error: "error",
         msg_success: "success",
     },
-    token: {
-    },
+    token: { },
     css : cssmock
 
 };
@@ -448,7 +452,7 @@ DB.new_db_promise({
                     let hours = date.getHours();
                     let minutes = date.getMinutes();
                     if ((hours >= 9 && minutes >= 15) || (hours <= 15)) {
-                        if (this.calendar[datestr]) {
+                        if (this.calendar.map[datestr]) {
                             this.stock_indice_fetch();
                         }
                     }

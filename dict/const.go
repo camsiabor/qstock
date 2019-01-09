@@ -10,6 +10,8 @@ const STARTUP = "su"
 
 const CACHE_STOCK_SNAPSHOT = "stock.snapshot"
 const CACHE_STOCK_KHISTORY = "stock.khistory"
+const CACHE_STOCK_KHISTORY_WEEK = "stock.khistory.week"
+const CACHE_STOCK_KHISTORY_MONTH = "stock.khistory.month"
 const CACHE_STOCK_CODE = "stock.code"
 const CACHE_TIMESTAMP = "timestamp"
 const CACHE_CALENDAR = "calendar"
@@ -23,6 +25,7 @@ const DB_DEFAULT = "def"
 const DB_HISTORY = "history"
 const DB_COMMON = "common"
 const DB_CALENDAR = "calendar"
+const DB_PROFILE = "profile"
 
 const GROUP_SCRIPT = "script"
 

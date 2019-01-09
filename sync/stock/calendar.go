@@ -1,4 +1,4 @@
-package calendar
+package stock
 
 import (
 	"github.com/camsiabor/qcom/global"
@@ -72,7 +72,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 
 	var needReset bool
 	if o.todayNeedReset {
-		needReset = hm >= 920
+		needReset = hm >= 925
 	} else {
 		needReset = o.todayDay != now.Day()
 	}
@@ -83,7 +83,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 			defer o.lock.Unlock()
 			if o.todayDay != now.Day() {
 				o.load()
-				if hm >= 920 {
+				if hm >= 925 {
 					o.todayNeedReset = false
 				} else {
 					o.todayNeedReset = true

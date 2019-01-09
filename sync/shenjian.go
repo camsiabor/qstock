@@ -8,8 +8,8 @@ import (
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
-	"github.com/camsiabor/qstock/sync/calendar"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
+	"github.com/camsiabor/qstock/sync/stock"
 	"time"
 )
 
@@ -68,8 +68,8 @@ func (o *Syncer) ShenJian_snapshot(
 	var hm = now.Hour()*100 + now.Minute()
 	var todaystr = now.Format("20060102")
 	var todaytrade = false
-	if hm >= 920 {
-		var cal = calendar.GetStockCalendar()
+	if hm >= 925 {
+		var cal = stock.GetStockCalendar()
 		if cal.Is(todaystr) {
 			todaytrade = true
 		}

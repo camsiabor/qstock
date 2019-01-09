@@ -173,13 +173,23 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		date_to_str = time.Now().Format("20060102")
 	}
 
+	var api = util.AsStr(work.Profile["api"], "")
 	var err error
 	var targets []string
 	var fetch_by_date bool = (codes == nil || len(codes) == 0)
 	if fetch_by_date {
 		var date_to, _ = time.Parse("20060102", date_to_str)
 		var date_from, _ = time.Parse("20060102", date_from_str)
-		targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102", time.Sunday, time.Saturday)
+		if api == "weekly" {
+			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
+				time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Sunday, time.Saturday)
+		} else if api == "monthly" {
+
+		} else {
+			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
+				time.Sunday, time.Saturday)
+		}
+
 	} else {
 		targets = codes
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
-	"github.com/camsiabor/qstock/sync/calendar"
+	"github.com/camsiabor/qstock/sync/stock"
 	"github.com/pkg/errors"
 	"strings"
 	"sync"
@@ -137,7 +137,7 @@ func (o *Syncer) heartbeat() {
 
 	var g = global.GetInstance()
 	var select_interval = 1
-	var calendi = calendar.GetStockCalendar()
+	var calendi = stock.GetStockCalendar()
 	for {
 		var timeout = time.After(time.Duration(select_interval) * time.Second)
 

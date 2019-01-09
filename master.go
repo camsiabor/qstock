@@ -18,7 +18,7 @@ import (
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/camsiabor/qstock/sync"
-	"github.com/camsiabor/qstock/sync/calendar"
+	"github.com/camsiabor/qstock/sync/stock"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -200,45 +200,61 @@ func initCacher(g *global.G) {
 		return conn.Get(scache.Db, "", code, 1, nil)
 	}
 
+	var cache_khistory_loader_generator = func(prefix string, profilesuffix string) scache.Loader {
+		return func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
+			if len(keys) < 1 {
+				return nil, fmt.Errorf("keys len invalid for this cache Loader %s", scache.Name)
+			}
+			conn, err := qdao.GetManager().Get(scache.Dao)
+			if err != nil {
+				return nil, err
+			}
+
+			var code = keys[0]
+			var datestr = keys[1]
+			data, err := conn.Get(scache.Db, prefix+code, datestr, 1, nil)
+			if data != nil {
+				return data, err
+			}
+			if factor <= 0 {
+				return data, err
+			}
+			var g = global.GetInstance()
+			var cmd = &global.Cmd{
+				Service:  dict.SERVICE_SYNC,
+				Function: "k.history" + profilesuffix,
+				SFlag:    "go",
+			}
+			cmd.SetData("from", datestr)
+			cmd.SetData("codes", []string{code})
+			var reply, _ = g.SendCmd(cmd, timeout)
+			if reply != nil {
+				err = reply.RetErr
+				data = reply.RetVal
+			}
+			return data, err
+		}
+	}
+
 	var scache_khistory = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY)
 	scache_khistory.Dao = dict.DAO_MAIN
 	scache_khistory.Db = dict.DB_HISTORY
 	scache_khistory.Timeout = -1 //time.Second * time.Duration(20);
-	scache_khistory.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
-		if len(keys) < 1 {
-			return nil, fmt.Errorf("keys len invalid for this cache Loader %s", scache.Name)
-		}
-		conn, err := qdao.GetManager().Get(scache.Dao)
-		if err != nil {
-			return nil, err
-		}
+	scache_khistory.Loader = cache_khistory_loader_generator("", "")
 
-		var code = keys[0]
-		var datestr = keys[1]
-		data, err := conn.Get(scache.Db, code, datestr, 1, nil)
-		if data != nil {
-			return data, err
-		}
-		if factor <= 0 {
-			return data, err
-		}
-		var g = global.GetInstance()
-		var cmd = &global.Cmd{
-			Service:  dict.SERVICE_SYNC,
-			Function: "k.history",
-			SFlag:    "go",
-		}
-		cmd.SetData("from", datestr)
-		cmd.SetData("codes", []string{code})
-		var reply, _ = g.SendCmd(cmd, timeout)
-		if reply != nil {
-			err = reply.RetErr
-			data = reply.RetVal
-		}
-		return data, err
-	}
+	var cache_stock_khistory_week = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY_WEEK)
+	cache_stock_khistory_week.Dao = dict.DAO_MAIN
+	cache_stock_khistory_week.Db = dict.DB_HISTORY
+	cache_stock_khistory_week.Timeout = -1 //time.Second * time.Duration(20);
+	cache_stock_khistory_week.Loader = cache_khistory_loader_generator("w.", "week")
 
-	g.SetData("calendar", calendar.GetStockCalendar())
+	var cache_stock_khistory_month = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY_MONTH)
+	cache_stock_khistory_month.Dao = dict.DAO_MAIN
+	cache_stock_khistory_month.Db = dict.DB_HISTORY
+	cache_stock_khistory_month.Timeout = -1 //time.Second * time.Duration(20);
+	cache_stock_khistory_month.Loader = cache_khistory_loader_generator("m.", "month")
+
+	g.SetData("calendar", stock.GetStockCalendar())
 
 }
 

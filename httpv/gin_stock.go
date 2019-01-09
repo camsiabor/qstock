@@ -143,7 +143,7 @@ func (o *HttpServer) routeStock() {
 			if do_date_pin {
 				snapshoto, err = cacher_stock_khistory.GetSubVal(true, scode, date)
 			} else {
-				snapshoto, err = cacher_stock_snapshot.GetEx(true, 0, 0, scode)
+				snapshoto, err = cacher_stock_snapshot.GetEx(true, 0, 0, true, scode)
 			}
 			snapshot := util.AsMap(snapshoto, false)
 			if err != nil {

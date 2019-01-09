@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, keys ...string) (interface{}, error) {
+func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, keys ...interface{}) (interface{}, error) {
 	dao, err := qdao.GetManager().Get(cache.Dao)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func loadScriptByName(cache *scache.SCache, factor int, timeout time.Duration, k
 	return meta, nil
 }
 
-func updateScriptByName(cache *scache.SCache, flag int, val interface{}, keys ...string) error {
+func updateScriptByName(cache *scache.SCache, flag int, val interface{}, keys ...interface{}) error {
 
 	if flag&scache.FLAG_UPDATE_ASPECT_BEFORE == 0 {
 		return nil

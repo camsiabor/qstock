@@ -109,7 +109,7 @@ func (o *HttpServer) routeStock() {
 				return
 			}
 
-			times, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "20060102", time.Saturday, time.Sunday)
+			times, perr := qtime.GetTimeFormatIntervalArray(&time_from, &time_to, "20060102", false, time.Saturday, time.Sunday)
 			if perr != nil {
 				o.RespJsonEx(nil, perr, c)
 				return
@@ -217,7 +217,7 @@ func (o *HttpServer) routeStock() {
 		var calendar = scache.GetManager().Get(dict.CACHE_CALENDAR)
 		var to = time.Now().AddDate(0, 0, nto)
 		var from = time.Now().AddDate(0, 0, -nfrom)
-		array, err := qtime.GetTimeFormatIntervalArray(&from, &to, "20060102", time.Saturday, time.Sunday)
+		array, err := qtime.GetTimeFormatIntervalArray(&from, &to, "20060102", false, time.Saturday, time.Sunday)
 		if err != nil {
 			o.RespJsonEx(array, err, c)
 			return

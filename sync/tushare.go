@@ -133,13 +133,22 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		}
 	}
 
+	var api = util.AsStr(work.Profile["api"], "")
 	var dao = work.Dao
 	var profile = work.Profile
 	var profilename = work.ProfileName
 	var metatoken = o.GetMetaToken(profilename)
 	var db = util.GetStr(profile, dict.DB_HISTORY, "db")
 	if len(date_to_str) == 0 {
-		var fetcheach = util.GetInt(profile, 60, "each")
+
+		var fetcheach_default int
+		if api == "daily" {
+			fetcheach_default = 90
+		} else {
+			fetcheach_default = 180
+		}
+
+		var fetcheach = util.GetInt(profile, fetcheach_default, "each")
 		date_from_str = time.Now().AddDate(0, 0, -fetcheach).Format("20060102")
 		var fetch_last_date_from, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", 0, nil))
 		if len(fetch_last_date_from) > 0 {
@@ -173,7 +182,6 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		date_to_str = time.Now().Format("20060102")
 	}
 
-	var api = util.AsStr(work.Profile["api"], "")
 	var err error
 	var targets []string
 	var fetch_by_date bool = (codes == nil || len(codes) == 0)
@@ -182,12 +190,13 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		var date_from, _ = time.Parse("20060102", date_from_str)
 		if api == "weekly" {
 			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
-				time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Sunday, time.Saturday)
+				false, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Sunday, time.Saturday)
 		} else if api == "monthly" {
-
+			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
+				true)
 		} else {
 			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
-				time.Sunday, time.Saturday)
+				false, time.Sunday, time.Saturday)
 		}
 
 	} else {

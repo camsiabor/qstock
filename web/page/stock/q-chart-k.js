@@ -96,20 +96,33 @@ Vue.component('vuetable-chart', {
                 kagi_height = 100;
             }
 
+            let todaystr = QUtil.date_format(now, "");
             for(let i = 0; i < data.length; i++) {
                 let one = data[i];
                 let date = one.date;
+                if (!date) {
+                    date = todaystr;
+                }
+                if (one.now) {
+                    one.close = one.now;
+                }
                 let date2 = date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6, 8);
                 one.date2 = date2;
             }
 
             // console.log(this.cid, data, this.chart);
-
+            let stock_setting = stocks_map.stock_setting;
+            let calendar = stocks_map.calendar;
             let time_end = new Date();
+            if (stock_setting.date_offset > 0) {
+                time_end = new Date();
+            } else {
+                time_end = new Date();
+            }
             let time_start = QUtil.date_add_day(time_end, -kagi_count);
             let time_end_str = QUtil.date_format(time_end, "");
             let time_start_str = QUtil.date_format(time_start, "");
-            ;
+
             let ds = new DataSet({
                 state: {
                     end: time_end_str * 1,

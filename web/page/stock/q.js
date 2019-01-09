@@ -59,6 +59,7 @@ vue_options.data = {
     db: null,
     stocks: [],
     stock : {
+        date : "",
         date_offset : 0
     },
     indice : {
@@ -72,8 +73,8 @@ vue_options.data = {
         }
     },
     calendar : {
-        map : {},
-        array : []
+        map : { },
+        array : [ ]
     },
     columns: [],
     hash : {
@@ -127,6 +128,14 @@ vue_options.computed = {
 
 /* [watch] ------------------------------------------------------------------- */
 vue_options.watch = {
+    "stock.date_offset" : function (n, o) {
+        if (n < this.calendar.array.length) {
+            this.stock.date = this.calendar.array[n];
+        }
+        if (!this.stock.date) {
+            this.stock.date = QUtil.date_format(new Date(), "");
+        }
+    },
     "table.data" : function(n, o) {
         for(let i = 0; i < n.length; i++) {
             let one = n[i];
@@ -451,7 +460,7 @@ DB.new_db_promise({
                     let datestr = QUtil.date_format(date, "");
                     let hours = date.getHours();
                     let minutes = date.getMinutes();
-                    if ((hours >= 9 && minutes >= 15) || (hours <= 15)) {
+                    if ((hours >= 9 && minutes >= 15) && (hours <= 15)) {
                         if (this.calendar.map[datestr]) {
                             this.stock_indice_fetch();
                         }

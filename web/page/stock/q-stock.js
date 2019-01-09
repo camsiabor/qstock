@@ -9,7 +9,7 @@ const stock_methods = {
 
     stock_calendar_get : function(from, to) {
         from = from || 30;
-        to = to || 3;
+        to = to || 0;
         return axios.post("/stock/calendar", {
             from: from,
             to: to
@@ -20,11 +20,11 @@ const stock_methods = {
                 let valid = data[date];
                 this.calendar.map[date] = valid;
                 if (valid) {
-                    this.calendar.array.push(date)
+                    this.calendar.array.push(date);
                 }
             }
-            this.calendar.array.sort();
-        }.bind(this))
+            this.calendar.array.sort().reverse();
+        }.bind(this));
     },
 
     stock_sync : function() {
@@ -381,6 +381,8 @@ const stock_methods = {
             this.stock_get_data_by_code(codes_meta).then(function (stocks) {
                 let stocks_map = QUtil.array_to_map(stocks, "code");
                 stocks_map.kagi = kagi_setting;
+                stocks_map.calendar = this.calendar;
+                stocks_map.stock_setting = this.stock;
                 for(let i = 0; i < chart_children.length; i++) {
                     let one = chart_children[i];
                     try {
@@ -389,7 +391,7 @@ const stock_methods = {
                         console.error(ex);
                     }
                 }
-            });
+            }.bind(this));
         }
 
     },

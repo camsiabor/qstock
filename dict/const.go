@@ -4,9 +4,11 @@ const MODE_MASTER = "master"
 const MODE_DAEMON = "daemon"
 const MODE_MOCKEE = "mockee"
 
+const CHINA = "ch"
 const SHENZHEN = "sz"
 const SHANGHAI = "sh"
 const STARTUP = "su"
+const HONGKONG = "hk"
 
 const CACHE_STOCK_SNAPSHOT = "stock.snapshot"
 const CACHE_STOCK_KHISTORY = "stock.khistory"

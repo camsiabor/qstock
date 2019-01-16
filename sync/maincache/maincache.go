@@ -59,25 +59,35 @@ func InitMainCache(g *global.G) {
 		var sz, szn = make([]string, 5000), 0
 		var sh, shn = make([]string, 5000), 0
 		var su, sun = make([]string, 5000), 0
-		var all, alln = make([]string, 15000), 0
+		var ch, chn = make([]string, 15000), 0
+		var hk, hkn = make([]string, 10000), 0
 		for _, code := range codes {
 			var include = true
-			switch code[0] {
-			case '0':
-				sz[szn] = code
-				szn++
-			case '3':
-				su[szn] = code
-				sun++
-			case '6':
-				sh[shn] = code
-				shn++
-			default:
-				include = false
-			}
-			if include {
-				all[alln] = code
-				alln++
+
+			var first = code[0]
+			var third = code[2]
+
+			if first == 'c' {
+				switch third {
+				case '0':
+					sz[szn] = code
+					szn++
+				case '3':
+					su[szn] = code
+					sun++
+				case '6':
+					sh[shn] = code
+					shn++
+				default:
+					include = false
+				}
+				if include {
+					ch[chn] = code
+					chn++
+				}
+			} else if first == 'h' {
+				hk[hkn] = code
+				hkn++
 			}
 		}
 
@@ -85,12 +95,13 @@ func InitMainCache(g *global.G) {
 		sz_sh = append(sz_sh, sz[:szn]...)
 		sz_sh = append(sz_sh, sh[:shn]...)
 
-		scache.SetEx(all[:alln], "all", lock)
+		scache.SetEx(ch[:chn], dict.CHINA, lock)
 		scache.SetEx(sz[:szn], dict.SHENZHEN, lock)
 		scache.SetEx(sh[:shn], dict.SHANGHAI, lock)
 		scache.SetEx(su[:sun], dict.STARTUP, lock)
 		scache.SetEx(sz_sh, dict.SHENZHEN+"."+dict.SHANGHAI, lock)
-		qlog.Log(qlog.INFO, "cache", "code", "shenzhen", szn, "shanghai", shn, "startup", sun, "all", alln)
+		scache.SetEx(hk[:hkn], dict.HONGKONG, lock)
+		qlog.Log(qlog.INFO, "cache", "code", "shenzhen", szn, "shanghai", shn, "startup", sun, "china", chn, "hongkong", hkn)
 		return scache, nil
 	}
 	scache_code.Loader(scache_code, 1, 0, true)

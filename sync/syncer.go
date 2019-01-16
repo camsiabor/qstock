@@ -464,6 +464,7 @@ func (o *Syncer) PersistAndCache(
 		var id = util.GetStr(m, "", key)
 		if has_key_prefix {
 			id = key_prefix + id
+			m[key] = id
 		}
 		idsss[i] = id
 		ids[i] = idsss[i]
@@ -474,6 +475,9 @@ func (o *Syncer) PersistAndCache(
 		}
 		if has_group_prefix {
 			groupid = group_prefix + groupid
+			if has_group_key {
+				m[group_key] = groupid
+			}
 		}
 		groups[i] = groupid
 		if cacher != nil {

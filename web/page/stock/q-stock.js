@@ -224,6 +224,7 @@ const stock_methods = {
         }
         return axios.post("/stock/gets", {
             "date" : wrap.date,
+            "market" : this.stock.market,
             "fetchs": wrap.fetch_pending,
             "time_to" : wrap.time_to,
             "time_from" : wrap.time_from,
@@ -345,8 +346,6 @@ const stock_methods = {
         if (!codes) {
             codes = QUtil.array_field(this.table.stocks_view, "code");
         }
-
-
         let chart_children_define = false;
         if (chart_children) {
             chart_children_define = true;

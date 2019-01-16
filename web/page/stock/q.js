@@ -59,6 +59,7 @@ vue_options.data = {
     db: null,
     stocks: [],
     stock : {
+        market : "",
         date : "",
         date_offset : 0
     },

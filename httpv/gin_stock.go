@@ -76,6 +76,7 @@ func (o *HttpServer) routeStock() {
 
 	group.POST("/gets", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
+		var market = util.GetStr(m, "", "market")
 		var ofetchs = util.Get(m, nil, "fetchs")
 		var time_from_str = util.GetStr(m, "", "time_from")
 		var time_to_str = util.GetStr(m, "", "time_to")
@@ -123,6 +124,7 @@ func (o *HttpServer) routeStock() {
 		}
 
 		var do_date_pin = len(date) > 0
+		var has_market = len(market) > 0
 		var data = make([]interface{}, len(fetchs))
 		for _, fetch := range fetchs {
 			if fetch == nil {
@@ -136,6 +138,9 @@ func (o *HttpServer) routeStock() {
 					continue
 				}
 				scode = util.GetStr(mfetch, "", "code")
+			}
+			if has_market {
+				scode = market + scode
 			}
 
 			var err error

@@ -433,8 +433,11 @@ func (o *Syncer) PersistAndCache(
 	var profile = work.Profile
 	var key = util.GetStr(profile, "code", "key")
 	var group = util.GetStr(profile, "", "group")
-	var groupkey = util.GetStr(profile, "", "groupkey")
+	var group_key = util.GetStr(profile, "", "group_key")
 	var mappername = util.GetStr(profile, "", "mapper")
+
+	var key_prefix = util.GetStr(profile, "", "key_prefix")
+	var group_prefix = util.GetStr(profile, "", "group_prefix")
 
 	var mapper = qref.GetMapperManager().Get(mappername)
 
@@ -445,7 +448,9 @@ func (o *Syncer) PersistAndCache(
 	var groups = make([]string, datalen)
 	var idsss = make([]string, datalen)
 	ids = make([]interface{}, datalen)
-	var hasgroupkey = len(groupkey) > 0
+	var has_group_key = len(group_key) > 0
+	var has_key_prefix = len(key_prefix) > 0
+	var has_group_prefix = len(group_prefix) > 0
 	for i, one := range data {
 		var m = one.(map[string]interface{})
 		m["_u"] = work.Id
@@ -457,13 +462,18 @@ func (o *Syncer) PersistAndCache(
 		}
 		var groupid string
 		var id = util.GetStr(m, "", key)
+		if has_key_prefix {
+			id = key_prefix + id
+		}
 		idsss[i] = id
 		ids[i] = idsss[i]
-
-		if hasgroupkey {
-			groupid = util.GetStr(one, "", groupkey)
+		if has_group_key {
+			groupid = util.GetStr(one, "", group_key)
 		} else {
 			groupid = group
+		}
+		if has_group_prefix {
+			groupid = group_prefix + groupid
 		}
 		groups[i] = groupid
 		if cacher != nil {

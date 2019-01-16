@@ -119,6 +119,33 @@ func TestLuaBenchmark(t *testing.T) {
 	var g = global.GetInstance()
 
 	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
+
+		var cache = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
+
+		var start = time.Now()
+		for i := 1; i <= 10000; i++ {
+			cache.Get(true, 601965)
+		}
+		var end = time.Now()
+
+		fmt.Println("int", end.Nanosecond()-start.Nanosecond())
+
+		start = time.Now()
+		for i := 1; i <= 10000; i++ {
+			cache.Get(true, "601965")
+		}
+		end = time.Now()
+		fmt.Println("str", end.Nanosecond()-start.Nanosecond())
+	}
+
+	main()
+	time.Sleep(time.Hour)
+}
+
+func TestLuaBenchmark2(t *testing.T) {
+	var g = global.GetInstance()
+
+	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
 		var data = g.Data()
 		for k, one := range data {
 			var v = reflect.ValueOf(one)

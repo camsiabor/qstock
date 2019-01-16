@@ -14,6 +14,7 @@
         "dao" : "main",
         "db" : "def",
         "key" : "code",
+        "key_prefix" : "ch",
         "calendar" : true,
         "agenda" : "stock.snapshot",
         "cacher" : "stock.snapshot",
@@ -43,7 +44,8 @@
         "interval": 10800,
         "dao" : "main",
         "db" : "history",
-        "groupkey" : "code",
+        "group_key" : "code",
+        "group_prefix" : "ch",
         "key" : "date",
         "agenda" : "stock.khistory",
         "cacher" : "stock.khistory",
@@ -55,6 +57,7 @@
         "api" : "weekly",
         "each" : 180,
         "interval" : 86400,
+        "key_prefix" : "w",
         "cacher" : "stock.khistory.week"
       },
       "k.history.month" : {
@@ -62,6 +65,7 @@
         "api" : "monthly",
         "each" : 180,
         "interval" : 86400,
+        "key_prefix" : "m",
         "cacher" : "stock.khistory.month"
       },
       "k.i.history" : {
@@ -90,6 +94,31 @@
     }
   },
 
+  "nowapi" : {
+    "active" : false,
+    "appsecret" : "144706364372fe8f436c4eba0425aa16",
+    "domain" : "http://api.k780.com",
+    "nice" : 300,
+    "timeout" : 20,
+    "concurrent" : 1,
+    "select_interval" : 120,
+    "profiles" : {
+      "k.history" : {
+        "api" : "finance.globalindex",
+        "nice" : 100,
+        "each": 90,
+        "interval": 10800,
+        "dao" : "main",
+        "db" : "history",
+        "groupkey" : "code",
+        "key" : "date",
+        "agenda" : "stock.khistory",
+        "cacher" : "stock.khistory",
+        "mapper" : "tushare.khistory",
+        "handler" : "TuShare_khistory"
+      }
+    }
+  },
 
   "showapi": {
     "active" : false,

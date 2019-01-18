@@ -146,7 +146,8 @@ Vue.component('vuetable-chart', {
                     callback: function callback(k) {
                         k.trend = k.open <= k.close ? '上涨' : '下跌';
                         k.range = [ k.open, k.close, k.high, k.low ];
-                        k.exrate = (k.amount * 10) / vcir;
+                        k.exrate = ((k.amount * 10) / vcir) + "";
+                        k.exrate = k.exrate.substring(0, 5) * 1;
                         return k;
                     }
                 });

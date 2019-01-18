@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,height=device-height">
+    <title>股票图与范围区域图</title>
+    <style>::-webkit-scrollbar{display:none;}html,body{overflow:hidden;height:100%;margin:0;}</style>
+</head>
+<body>
+<div id="mountNode"></div>
+<script>/*Fixing iframe window.innerHeight 0 issue in Safari*/document.body.clientHeight;</script>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g2-3.4.1/dist/g2.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.10.1/dist/data-set.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/antv/assets/lib/jquery-3.2.1.min.js"></script>
+<script>
+    var _DataSet = DataSet,
+            DataView = _DataSet.DataView;
+
+    $.getJSON('/assets/data/stock-03.json', function(data) {
+        var dv = new DataView();
+        dv.source(data).transform({
+            type: 'map',
+            callback: function callback(obj) {
+                obj.stockRange = [obj.start, obj.end, obj.highest, obj.lowest];
+                return obj;
+            }
+        });
+        var chart = new G2.Chart({
+            container: 'mountNode',
+            forceFit: true,
+            height: window.innerHeight,
+            animate: false
+        });
+        chart.source(dv, {
+            'date': {
+                type: 'time',
+                nice: false,
+                mask: 'MM-DD',
+                tickCount: 10
+            },
+            range: {
+                min: 20,
+                max: 35,
+                nice: false,
+                tickInterval: 2
+            },
+            mean: {
+                min: 20,
+                max: 35,
+                nice: false
+            },
+            'stockRange': {
+                min: 20,
+                max: 35,
+                nice: false
+            }
+        });
+        chart.axis('mean', false);
+        chart.axis('stockRange', false);
+        chart.tooltip({
+            crosshairs: {
+                type: 'line'
+            }
+        });
+        chart.area().position('date*range').color('#64b5f6');
+        chart.schema().position('date*stockRange').color('trend', function(val) {
+            if (val === 'up') {
+                return '#f04864';
+            }
+
+            if (val === 'down') {
+                return '#2fc25b';
+            }
+        }).shape('candle').tooltip('start*end*highest*lowest');
+        chart.line().position('date*mean').color('#FACC14');
+        chart.render();
+    });
+</script>
+</body>
+</html>

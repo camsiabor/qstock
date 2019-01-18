@@ -129,7 +129,7 @@ Vue.component('vuetable-chart', {
                     start: time_start_str * 1
                 }
             });
-
+            let vcir = stock.vcir * 1;
             let dv = ds.createView();
             try {
                 dv.source(data).transform({
@@ -143,10 +143,11 @@ Vue.component('vuetable-chart', {
                     }
                 }).transform({
                     type: 'map',
-                    callback: function callback(obj) {
-                        obj.trend = obj.open <= obj.close ? '上涨' : '下跌';
-                        obj.range = [obj.open, obj.close, obj.high, obj.low];
-                        return obj;
+                    callback: function callback(k) {
+                        k.trend = k.open <= k.close ? '上涨' : '下跌';
+                        k.range = [ k.open, k.close, k.high, k.low ];
+                        k.exrate = (k.amount * 10) / vcir;
+                        return k;
                     }
                 });
             } catch (e) {
@@ -200,13 +201,6 @@ Vue.component('vuetable-chart', {
                 }
             });
 
-            // this.chart.axis('date2', {
-            //     label: {
-            //         formatter: val => {
-            //             return val.substring(5);
-            //         }
-            //     }
-            // });
 
             this.chart.axis('date2', {
                 label: null
@@ -245,7 +239,7 @@ Vue.component('vuetable-chart', {
                 if (val === '下跌') {
                     return QUtil.COLOR_DOWN;
                 }
-            }).shape('candle').tooltip('date2*open*close*high*low*change_rate', function(date2, open, close, high, low, change_rate) {
+            }).shape('candle').tooltip('date2*open*close*high*low*change_rate*vol', function(date2, open, close, high, low, change_rate, vol) {
                 let html = [];
                 let color = QUtil.stock_color(change_rate);
                 html.push('<br><span style="padding-left: 1px">open ');
@@ -262,12 +256,57 @@ Vue.component('vuetable-chart', {
                 html.push('</span><br/>');
                 html.push('<span style="padding-left: 1px;color:' + color + '">rate ');
                 html.push((change_rate+"").substring(0, 5) + "%");
+                html.push('</span><br/>');
+                html.push('<span style="padding-left: 1px;color:' + color + '">vol ');
+                html.push(vol + "");
                 html.push('</span>');
                 return {
                     name: date2.substring(5),
                     value: html.join("")
                 };
             });
+
+
+            /* == lower == */
+            if (kagi.lower_field) {
+                let lowerView = this.chart.view({
+                    end: {
+                        x: 0.9,
+                        y: kagi_scale_y * (kagi.lower_offset || 1.2)
+                    }
+                });
+                lowerView.source(dv, {
+                    exrate: {
+                        tickCount: 2
+                    }
+                });
+                lowerView.axis('date2', {
+                    tickLine: null,
+                    label: null
+                });
+                lowerView.axis(kagi.lower_field, {
+                    label: null
+                });
+                lowerView.scale('y', {
+                    nice: false,
+                    range : [0, 100]
+                });
+                lowerView.interval().position('date2*' + kagi.lower_field).color('trend', function(val) {
+                    if (val === '上涨') {
+                        return '#f04864';
+                    }
+                    if (val === '下跌') {
+                        return '#2fc25b';
+                    }
+                });
+                // .tooltip('date2*vol', function(date2, vol) {
+                //     return {
+                //         name: date2,
+                //         value: '<br/><span style="padding-left: 16px">成交量：' + vol + '</span><br/>'
+                //     };
+                // });
+            }
+
 
             this.chart.render();
         }

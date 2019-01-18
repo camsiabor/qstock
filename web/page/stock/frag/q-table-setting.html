@@ -66,6 +66,30 @@
                     </div>
                 </div>
 
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-lower-field</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi lower field"
+                               aria-label="kagi lower field" v-model="setting.kagi.lower_field">
+                    </div>
+                </div>
+
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">k-lower-offset</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="kagi lower offset"
+                               aria-label="kagi lower offset" v-model="setting.kagi.lower_offset">
+                    </div>
+                </div>
+
                 <br/>
                 <div style="margin: 5px">
                     <div class="input-group sm-3" style="width: 90%">
@@ -97,8 +121,8 @@
                         </div>
                         <input style="width: 75%"
                                class="form-control mr-sm-2"
-                               type="search" placeholder="kagi height"
-                               aria-label="kagi height" v-model="setting.editor.font_size">
+                               type="search" placeholder="editor font size"
+                               aria-label="editor font size" v-model="setting.editor.font_size">
                     </div>
                 </div>
 

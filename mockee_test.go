@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
+	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"os"
 	"reflect"
+	"runtime/pprof"
 	"testing"
 	"time"
 )
@@ -115,29 +118,27 @@ func testCycle() {
 	}
 }
 
+// go tool pprof http://localhost:8080/debug/pprof/profile
 func TestLuaBenchmark(t *testing.T) {
 	var g = global.GetInstance()
 
 	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
+		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
 
-		var cache = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
-
-		var start = time.Now()
+		var file, _ = os.OpenFile("cpu_profile", os.O_RDWR|os.O_CREATE, 0644)
+		defer file.Close()
+		pprof.StartCPUProfile(file)
+		var start = time.Now().Nanosecond()
 		for i := 1; i <= 10000; i++ {
-			cache.Get(true, 601965)
+			var v, _ = dao.Get(dict.DB_HISTORY, "ch000001", "20190115", 0, nil)
+			if v != nil && i%500 == 0 {
+				fmt.Printf("%v\n", v)
+			}
 		}
-		var end = time.Now()
-
-		fmt.Println("int", end.Nanosecond()-start.Nanosecond())
-
-		start = time.Now()
-		for i := 1; i <= 10000; i++ {
-			cache.Get(true, "601965")
-		}
-		end = time.Now()
-		fmt.Println("str", end.Nanosecond()-start.Nanosecond())
+		var end = time.Now().Nanosecond()
+		fmt.Println((end - start) / int(time.Millisecond))
+		pprof.StopCPUProfile()
 	}
-
 	main()
 	time.Sleep(time.Hour)
 }

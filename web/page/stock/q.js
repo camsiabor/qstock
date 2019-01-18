@@ -22,7 +22,9 @@ const def_setting = {
         count : 50,
         width : -2,
         height : 100,
-        scale_y : 5
+        scale_y : 5,
+        lower_field: "exrate",
+        lower_offset: 1.2
     },
     mode: "query",
     exclude: "buy,sell",

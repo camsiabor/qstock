@@ -288,9 +288,9 @@ Vue.component('vuetable-chart', {
                 lowerView.axis(kagi.lower_field, {
                     label: null
                 });
-                lowerView.scale('y', {
-                    nice: false,
-                    range : [0, 100]
+                lowerView.scale(kagi.lower_field, {
+                    type : 'linear',
+                    range : [0, (kagi.lower_scale || 0.33) ]
                 });
                 lowerView.interval().position('date2*' + kagi.lower_field).color('trend', function(val) {
                     if (val === '上涨') {

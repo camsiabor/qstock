@@ -24,7 +24,8 @@ const def_setting = {
         height : 100,
         scale_y : 5,
         lower_field: "exrate",
-        lower_offset: 1.2
+        lower_scale: 0.33,
+        lower_offset: 1
     },
     mode: "query",
     exclude: "buy,sell",

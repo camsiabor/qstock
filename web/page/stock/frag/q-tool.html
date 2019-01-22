@@ -1,11 +1,4 @@
 
-<!--
-<div class="row" xmlns:v-bind="http://www.w3.org/1999/xhtml">
-    <div class="col-sm-12">
-        <treeselect v-model="value" :multiple="true" :options="test" />
-    </div>
-</div>
--->
 
 <div id="div_tool" class="row" style="margin-top: 3px">
 
@@ -36,10 +29,13 @@
             -->
 
             <div>
-                <treeselect v-model="script.name"
+                <treeselect
+                            ref="treeselect_script"
+                            v-model="script.name"
                             :multiple="false"
                             :options="script_group.tree"
                             :open-on-click="true"
+                            value-consists-of="LEAF_PRIORITY"
                             @select="script_select"
                             style="width:99%"/>
             </div>

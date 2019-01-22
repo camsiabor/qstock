@@ -129,30 +129,12 @@ vue_options.data = {
         name: ""
     },
     console: {
-        text: "redis.lua console",
+        text: "",
         msg_error: "error",
         msg_success: "success",
     },
     token: { },
-    css : cssmock,
-
-    test : [ {
-        id: 'a',
-        label: 'a',
-        children: [ {
-            id: 'aa',
-            label: 'aa',
-        }, {
-            id: 'ab',
-            label: 'ab',
-        } ],
-    }, {
-        id: 'b',
-        label: 'b',
-    }, {
-        id: 'c',
-        label: 'c',
-    } ]
+    css : cssmock
 
 };
 

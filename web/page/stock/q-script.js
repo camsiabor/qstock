@@ -72,7 +72,6 @@ const script_methods = {
             name: this.script.name
         }).then(function (resp) {
             let info = util.handle_response(resp);
-            this.script.name = info.name;
             this.script.script = info.script;
             this.editor.setValue(this.script.script);
             this.editor.clearSelection();
@@ -201,7 +200,7 @@ const script_methods = {
                 name: this.script.name
             }).then(function (resp) {
                 util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
-                this.script.name = "---";
+                this.script.name = null;
                 this.script_list();
             }.bind(this)).catch(util.handle_error.bind(this));
         } else {
@@ -212,12 +211,11 @@ const script_methods = {
 
 
     script_query: function (mode, carrayscript) {
-
         let script = this.editor.getValue().trim();
-        // if (script.length === 0) {
-        //     alert("need script!");
-        //     return;
-        // }
+        if (script.length === 0) {
+            this.console.text = "script content is empty";
+            return;
+        }
         mode = mode  || this.setting.mode;
 
         let nohash = window.location.href.indexOf('nohash') > 0

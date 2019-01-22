@@ -23,7 +23,7 @@ const script_methods = {
                     }
                 }
                 if (all) {
-                    all.children.clear();
+                    all.children = [];
                 } else {
                     all = { id : "all", label : "all", children : [] };
                     tree.push(all);
@@ -33,17 +33,29 @@ const script_methods = {
                     all.children.push({ id : name, label : name });
                 }
             } else {
-                let script_group = data[0];
-                if (script_group) {
-                    if (script_group.tree) {
+                let script_group = data[0] || {
+                    "id" : "system",  "label" : "system"
+                };
+                if (script_group.tree) {
+                    if (typeof script_group.tree === "string") {
                         script_group.tree = JSON.parse(script_group.tree);
-                    } else {
-                        script_group.tree = [];
                     }
-                    this.script_group.id = this.script_group.id || "system";
-                    this.script_group.name = this.script_group.name || this.script_group.id;
-                    this.script_group = script_group;
+                } else {
+                    script_group.tree = [];
                 }
+                if (script_group.tree.length === 0) {
+                    script_group.tree.push({ id : "all", label : "all", children : [] });
+                }
+                this.script_group_only.id = this.script_group.id = this.script_group.id || "system";
+                this.script_group_only.name = this.script_group.name = this.script_group.name || this.script_group.id;
+                this.script_group = script_group;
+                this.script_group_only.tree = QUtil.tree_clone(this.script_group.tree, {
+                    cloner : function (tree, node, opts) {
+                        if (node.children) {
+                            return QUtil.map_clone(node);
+                        }
+                    }
+                });
             }
         }.bind(this)).catch(util.handle_error.bind(this));
     },
@@ -75,6 +87,10 @@ const script_methods = {
 
             this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
+    },
+
+    script_group_select : function(node, id) {
+        this.script_setting_opts.node = node;
     },
 
     script_save: function (opts) {
@@ -119,17 +135,25 @@ const script_methods = {
         }
     },
 
-    script_delete: function () {
-        if (!confirm("sure to delete? " + this.script.name)) {
-            return;
+    script_delete: function (opts) {
+
+        let type = opts.type;
+
+        if (type === "script") {
+            if (!confirm("sure to delete? " + this.script.name)) {
+                return;
+            }
+            axios.post("/script/delete", {
+                name: this.script.name
+            }).then(function (resp) {
+                util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
+                this.script.name = "---";
+                this.script_list();
+            }.bind(this)).catch(util.handle_error.bind(this));
+        } else {
+
         }
-        axios.post("/script/delete", {
-            name: this.script.name
-        }).then(function (resp) {
-            util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
-            this.script.name = "---";
-            this.script_list();
-        }.bind(this)).catch(util.handle_error.bind(this));
+
     },
 
 

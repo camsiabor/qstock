@@ -101,6 +101,11 @@ vue_options.data = {
         name : "system",
         tree : []
     },
+    script_group_only : {
+        id : "system",
+        name : "system",
+        tree : []
+    },
     table: {
         data: datamock,
         datamap : {}

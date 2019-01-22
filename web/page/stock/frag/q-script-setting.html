@@ -31,9 +31,11 @@
                 <div>
                     <treeselect v-model="script_setting_opts.value"
                                 :multiple="false"
-                                :options="script_group.tree"
                                 :open-on-click="true"
-                                style="width:99%"/>
+                                :options="script_setting_opts.tree"
+
+                                @select="script_group_select"
+                                style="width:99%" />
                 </div>
 
                 <div>

@@ -419,7 +419,7 @@ QUtil.array_clone = function(arr, filter) {
         }
     }
     return clone;
-}
+};
 
 QUtil.array_to_map = function (arr, keyname) {
     let m = {};
@@ -445,7 +445,7 @@ QUtil.str_to_uint8array = function(str){
         arr[i] = raw.charCodeAt(i);
     }
     return new Uint8Array(arr);
-}
+};
 
 
 QUtil.uint8array_to_str = function(data){
@@ -454,4 +454,63 @@ QUtil.uint8array_to_str = function(data){
         sarr.push(String.fromCharCode(data[i]));
     }
     return sarr.join("");
-}
+};
+
+
+QUtil.tree_clone = function(tree, opts) {
+    opts =  opts || {};
+    let len = tree.length;
+    let field_children = opts.field_children || "children";
+    opts.current = opts.current || [];
+    for (let i = 0; i < len; i++) {
+        let clone;
+        let one = tree[i];
+        if (opts.cloner) {
+            clone = opts.cloner(tree, one, opts);
+        } else {
+            clone = QUtil.map_clone(one);
+        }
+        if (clone) {
+            opts.current.push(clone);
+        } else {
+            continue;
+        }
+        let subtree = one[field_children];
+        if (subtree && subtree.length > 0) {
+            let current = opts.current;
+            opts.current = clone[field_children] = [];
+            QUtil.tree_clone(subtree, opts);
+            opts.current = current;
+        }
+    }
+    return opts.current;
+};
+
+QUtil.tree_locate = function(tree, node, opts) {
+    opts = opts || {};
+    let len = tree.length;
+    let field_id = opts.field_id || "id";
+    let field_children = opts.field_children || "children";
+    opts.depth = opts.depth || 0;
+    opts.pathes = opts.pathes || [];
+    for (let i = 0; i < len; i++) {
+        let one = tree[i];
+        if (one[field_id] === node[field_id]) {
+            opts.target = one;
+            return opts;
+        }
+        let subtree = one[field_children];
+        if (subtree && subtree.length > 0) {
+            opts.pathes[opts.depth] = one;
+            opts.depth = opts.depth + 1;
+            let ret = QUtil.tree_locate(subtree, node, opts);
+            if (ret) {
+                opts.target = ret;
+                return ret;
+            }
+            opts.pathes[opts.depth] = null;
+            opts.depth = opts.depth - 1;
+        }
+    }
+    return null;
+};

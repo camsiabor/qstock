@@ -507,8 +507,9 @@ DB.new_db_promise({
         setInterval(fetch_calendar, 12 * 60 * 60 * 1000);
 
         this.params_list();
-        this.script_list("group");
-        this.script_list("script");
+        this.script_list("group").then(function() {
+            this.script_list("script");
+        }.bind(this));
         this.portfolio_list();
 
         // data init

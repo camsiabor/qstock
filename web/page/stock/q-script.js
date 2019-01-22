@@ -11,6 +11,23 @@ const script_methods = {
             let data = util.handle_response(json, this.console, "");
             if (type === "script") {
                 this.script_names = data.sort().reverse();
+                let all;
+                let tree = this.script_group.tree;
+                for (let i = 0, n = tree.length; i < n; i++) {
+                    let one = tree[i];
+                    if (one.id === "all") {
+                        all = one;
+                        break;
+                    }
+                }
+                if (!all) {
+                    all = { id : "all", label : "all", children : [] };
+                    tree.push(all);
+                }
+                for(let i = 0, n = this.script_names.length; i < n; i++) {
+                    let name = this.script_names[i];
+                    all.children.push({ id : name, label : name });
+                }
             } else {
                 let script_group = data[0];
                 if (script_group) {
@@ -76,7 +93,10 @@ const script_methods = {
                 });
             }
             let script_group_obj = QUtil.map_clone(this.script_group);
-            script_group_obj.tree = JSON.stringify(this.script_group.tree);
+            script_group_obj.tree = QUtil.array_clone(this.script_group.tree, function (one) {
+               return one && one.id !== "all";
+            });
+            script_group_obj.tree = JSON.stringify(script_group_obj.tree);
             return axios.post("/cmd/go", {
                 "type": "db",
                 "cmd": "Update",

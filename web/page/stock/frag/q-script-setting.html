@@ -1,5 +1,5 @@
 <div class="modal fade" id="div_script_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
-    <div class="modal-dialog" style="min-width: 600px">
+    <div class="modal-dialog" style="min-width: 300px">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">{{script_setting_opts.title}}</h4>
@@ -12,8 +12,12 @@
                     <i class="fa fa-save"></i>
                 </button>
 
+                <button class="btn btn-sm btn-outline-danger">
+                    <i class="fa fa-minus-circle" v-on:click="script_delete(script_setting_opts)"></i>
+                </button>
+
                 <div style="margin: 5px">
-                    <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group sm-3" style="width: 99%">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="basic-addon1">名字</span>
                         </div>
@@ -25,7 +29,7 @@
                 </div>
 
                 <div>
-                    <treeselect v-model="script_setting_opts.value" :multiple="false" :options="script_group.tree" style="width:90%"/>
+                    <treeselect v-model="script_setting_opts.value" :multiple="false" :options="script_group.tree" style="width:99%"/>
                 </div>
 
                 <div>

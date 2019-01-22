@@ -406,6 +406,21 @@ QUtil.map_is_same_by_field_val = function(m1, m2, fields, nrange) {
     return same;
 };
 
+QUtil.array_clone = function(arr, filter) {
+    let clone = [];
+    for(let i = 0, n = arr.length; i < n; i++) {
+        let one = arr[i];
+        if (filter) {
+            if (filter(one)) {
+                clone[i] = one;
+            }
+        } else {
+            clone[i] = one;
+        }
+    }
+    return clone;
+}
+
 QUtil.array_to_map = function (arr, keyname) {
     let m = {};
     let len = arr.length;

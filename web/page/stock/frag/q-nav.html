@@ -18,6 +18,15 @@
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    脚本
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="script_setting({title:'新增脚本',type:'group',act:'add'})">新增脚本</a>
+                    <a class="dropdown-item" href="#" v-on:click="script_setting({title:'新增脚本分组',type:'group',act:'add'})">新增分组</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     显示
                 </a>
                 <div class="dropdown-menu" aria-labelledby="" >

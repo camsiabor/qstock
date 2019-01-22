@@ -1,0 +1,16 @@
+
+[function]
+1. script group
+2. hong kong data
+3. sigsegv
+4. daemon process
+
+[strategy]
+1. approach historical lowest (month / week)
+2. serial big swing
+3. low swing yet high volume
+4. market message facet
+
+[performance]
+1. zlib utf8
+

@@ -34,9 +34,17 @@ func (o *HttpServer) routeScript() {
 	})
 
 	group.POST("/list", func(c *gin.Context) {
+		var err error
+		var data interface{}
+		var m, _ = o.ReqParse(c)
+		var stype = util.GetStr(m, "script", "type")
 		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var scripts, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
-		o.RespJsonEx(scripts, err, c)
+		if stype == "script" {
+			data, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
+		} else {
+			//var groupids, err = dao.Keys(dict.DB_COMMON, "script_group", "*", nil)
+		}
+		o.RespJsonEx(data, err, c)
 	})
 
 	group.POST("/get", func(c *gin.Context) {

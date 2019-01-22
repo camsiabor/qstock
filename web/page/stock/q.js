@@ -4,6 +4,8 @@
 
 Vue.component('vuetable', Vuetable.Vuetable);
 Vue.component('vuetable-pagination', Vuetable.VuetablePagination);
+Vue.component('treeselect', VueTreeselect.Treeselect);
+
 // Vue.component('vuetable-pagination', Vuetable.VuetablePaginationMixin)
 // Vue.component('vuetable-pagination', Vuetable.VuetablePaginationInfoMixin);
 // Vue.component('vuetable-pagination-dropdown', Vuetable.VuetablePaginationDropDown);
@@ -85,12 +87,18 @@ vue_options.data = {
 
     },
     setting: def_setting,
-
     script_names: [],
+    script_setting_opts : {
+        type : "",
+        act : ""
+    },
     script: {
         name: "",
         script: "--[[lua]]--"
     },
+    scripts : [
+
+    ],
     table: {
         data: datamock,
         datamap : {}
@@ -119,7 +127,25 @@ vue_options.data = {
         msg_success: "success",
     },
     token: { },
-    css : cssmock
+    css : cssmock,
+
+    test : [ {
+        id: 'a',
+        label: 'a',
+        children: [ {
+            id: 'aa',
+            label: 'aa',
+        }, {
+            id: 'ab',
+            label: 'ab',
+        } ],
+    }, {
+        id: 'b',
+        label: 'b',
+    }, {
+        id: 'c',
+        label: 'c',
+    } ]
 
 };
 

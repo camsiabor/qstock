@@ -1,19 +1,37 @@
 const script_methods = {
+
+
+    script_setting: function(opts) {
+        this.script_setting_opts = opts;
+        $('#div_script_setting').modal('toggle');
+    },
+
     script_list: function () {
         return axios.post("/script/list").then(function (json) {
             let names = util.handle_response(json, this.console, "");
             this.script_names = names.sort().reverse();
-        }.bind(this)).catch(util.handle_error.bind(this))
+        }.bind(this)).catch(util.handle_error.bind(this));
+    },
+
+    script_group_list : function() {
+        return axios.post("/cmd/go", {
+            "type": "db",
+            "cmd": "Keys",
+            "args": ["common", "script_group", "portf_*", null],
+        }).then(function (resp) {
+            let data = util.handle_response(resp);
+            for (let i = 0; i < data.length; i++) {
+                // let name = data[i];
+                // name = name.replace("portf_", "");
+                // data[i] = name;
+            }
+            // this.portfolio_names = data.sort();
+        }.bind(this));
     },
 
     script_select: function (name) {
         this.script.name = name;
         this.setting.script.last = name;
-
-
-
-
-
         return axios.post("/script/get", {
             name: name
         }).then(function (resp) {

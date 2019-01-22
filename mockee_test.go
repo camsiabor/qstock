@@ -118,8 +118,20 @@ func testCycle() {
 	}
 }
 
-// go tool pprof http://localhost:8080/debug/pprof/profile
 func TestLuaBenchmark(t *testing.T) {
+	var g = global.GetInstance()
+
+	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
+		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
+		var data, cursor, err = dao.List(dict.DB_COMMON, "script", 0, 100, 1, nil)
+		fmt.Println(data, cursor, err)
+	}
+	main()
+	time.Sleep(time.Hour)
+}
+
+// go tool pprof http://localhost:8080/debug/pprof/profile
+func TestLuaBenchmark3(t *testing.T) {
 	var g = global.GetInstance()
 
 	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {

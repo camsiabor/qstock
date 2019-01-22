@@ -6,33 +6,22 @@ const script_methods = {
         $('#div_script_setting').modal('toggle');
     },
 
-
-
     script_list: function (type) {
         return axios.post("/script/list", { type : type }).then(function (json) {
             let data = util.handle_response(json, this.console, "");
-            if (type === "script") {
-                this.script_names = data.sort().reverse();
 
-                let tree = this.script_group.tree;
-                let result = QUtil.tree_locate(this.script_group.tree, { id : "all" },  {
-                    depth_limit : 0
-                });
-                let all = result && result.target;
-                if (all) {
-                    all.children = [];
+            if (type.indexOf("group") >= 0) {
+
+                let script_group;
+                if (type.indexOf(",") >= 0) {
+                    script_group = data["script_group"]
                 } else {
-                    all = { id : "all", label : "all", children : [] };
-                    tree.push(all);
+                    script_group = data[0];
                 }
-                for(let i = 0, n = this.script_names.length; i < n; i++) {
-                    let name = this.script_names[i];
-                    all.children.push({ id : name, label : name });
-                }
-            } else {
-                let script_group = data[0] || {
+                script_group = script_group || {
                     "id" : "system",  "label" : "system"
                 };
+
                 if (script_group.tree) {
                     if (typeof script_group.tree === "string") {
                         script_group.tree = JSON.parse(script_group.tree);
@@ -58,6 +47,33 @@ const script_methods = {
                     }
                 });
             }
+
+            if (type.indexOf("script") >= 0) {
+                let script_names;
+                if (type.indexOf(",") >= 0) {
+                    script_names = data["script_names"];
+                } else {
+                    script_names = data;
+                }
+                this.script_names = script_names.sort().reverse();
+
+                let tree = this.script_group.tree;
+                let result = QUtil.tree_locate(this.script_group.tree, {id: "all"}, {
+                    depth_limit: 0
+                });
+                let all = result && result.target;
+                if (all) {
+                    all.children = [];
+                } else {
+                    all = {id: "all", label: "all", children: []};
+                    tree.push(all);
+                }
+                for (let i = 0, n = this.script_names.length; i < n; i++) {
+                    let name = this.script_names[i];
+                    all.children.push({id: name, label: name});
+                }
+            }
+
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
@@ -201,7 +217,7 @@ const script_methods = {
             }).then(function (resp) {
                 util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
                 this.script.name = null;
-                this.script_list();
+                this.script_list( { type : "script,group" } );
             }.bind(this)).catch(util.handle_error.bind(this));
         } else {
 

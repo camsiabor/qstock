@@ -37,9 +37,8 @@
                 <div>
                     <treeselect v-model="script_setting_opts.value"
                                 :multiple="true"
-                                :open-on-click="true"
+                                :open-on-focus="true"
                                 :options="script_setting_opts.tree"
-
                                 @select="script_group_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>

@@ -493,12 +493,10 @@ DB.new_db_promise({
         setInterval(fetch_calendar, 12 * 60 * 60 * 1000);
 
         this.params_list();
-        this.script_list("group").then(function() {
-            this.script_list("script").then(function() {
-                if (this.setting.script.last) {
-                    this.script_select({ id : this.setting.script.last } );
-                }
-            }.bind(this));
+        this.script_list("script,group").then(function() {
+            if (this.setting.script.last) {
+                this.script_select({ id : this.setting.script.last } );
+            }
         }.bind(this));
         this.portfolio_list();
 

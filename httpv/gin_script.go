@@ -42,7 +42,7 @@ func (o *HttpServer) routeScript() {
 		if stype == "script" {
 			data, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
 		} else {
-			//var groupids, err = dao.Keys(dict.DB_COMMON, "script_group", "*", nil)
+			data, err = qdao.ListAll(dao, dict.DB_COMMON, "script_group", 0, 256, 1, nil)
 		}
 		o.RespJsonEx(data, err, c)
 	})

@@ -123,8 +123,9 @@ func TestLuaBenchmark(t *testing.T) {
 
 	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
 		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var data, cursor, err = dao.List(dict.DB_COMMON, "script", 0, 100, 1, nil)
-		fmt.Println(data, cursor, err)
+		var data, err = qdao.ListAll(dao, dict.DB_COMMON, "script", 0, 1, 1, nil)
+		//var data, cursor, err = dao.List(dict.DB_COMMON, "script", 0, 1000, 1, nil)
+		fmt.Println(len(data), err)
 	}
 	main()
 	time.Sleep(time.Hour)

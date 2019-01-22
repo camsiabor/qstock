@@ -6,6 +6,7 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/run/rscript"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,11 +40,31 @@ func (o *HttpServer) routeScript() {
 		var m, _ = o.ReqParse(c)
 		var stype = util.GetStr(m, "script", "type")
 		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		if stype == "script" {
-			data, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
-		} else {
-			data, err = qdao.ListAll(dao, dict.DB_COMMON, "script_group", 0, 256, 1, nil)
+
+		var datamap map[string]interface{}
+		var multiple = strings.Index(stype, ",") >= 0
+		if multiple {
+			datamap = make(map[string]interface{})
 		}
+
+		if strings.Index(stype, "script") >= 0 {
+			data, err = dao.Keys(dict.DB_COMMON, "script", "*", nil)
+			if multiple {
+				datamap["script_names"] = data
+			}
+		}
+
+		if err == nil && strings.Index(stype, "group") >= 0 {
+			data, err = qdao.ListAll(dao, dict.DB_COMMON, "script_group", 0, 256, 1, nil)
+			if multiple {
+				datamap["script_group"] = data
+			}
+		}
+
+		if multiple {
+			data = datamap
+		}
+
 		o.RespJsonEx(data, err, c)
 	})
 

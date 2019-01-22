@@ -20,25 +20,30 @@
                     <i class="fa fa-minus-circle" v-on:click="script_delete(script_setting_opts)"></i>
                 </button>
 
-                <!--
-                <div style="margin: 5px">
-                    <div class="input-group sm-3" style="width: 99%">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1">名字</span>
-                        </div>
-                        <input
-                                class="form-control mr-sm-2"
-                                type="search" placeholder=""
-                                aria-label="" v-model="script_setting_opts.name">
-                    </div>
-                </div>
-                -->
+                <button class="btn btn-sm btn-outline-primary" v-if="script_setting_opts.type === 'script'">
+                    <i class="fa fa-copy" v-on:click="script_delete(script_setting_opts)"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-angle-right" v-on:click="script_delete(script_setting_opts)"></i>
+                </button>
 
                 <div>
-                    <treeselect v-model="script_setting_opts.value"
+                    <treeselect v-model="script_setting_opts.tree_src_value"
                                 :multiple="true"
                                 :open-on-focus="true"
-                                :options="script_setting_opts.tree"
+                                :options="script_setting_opts.tree_src"
+                                :placeholder="script_setting_opts.tree_src_desc"
+                                @select="script_group_select"
+                                style="width:99%; margin-top: 6px;" />
+                </div>
+
+                <div>
+                    <treeselect v-model="script_setting_opts.tree_des_value"
+                                :multiple="false"
+                                :open-on-focus="true"
+                                :options="script_setting_opts.tree_des"
+                                :placeholder="script_setting_opts.tree_des_desc"
                                 @select="script_group_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>

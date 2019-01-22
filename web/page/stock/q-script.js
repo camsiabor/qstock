@@ -1,8 +1,32 @@
 const script_methods = {
 
 
-    script_setting: function(opts) {
-        this.script_setting_opts = opts;
+    script_setting: function(type) {
+
+        if (type === "script") {
+            this.script_setting_opts = {
+                type : type,
+                title : "脚本设置",
+                tree_src_value : null,
+                tree_des_value : null,
+                tree_src_desc : "选择脚本",
+                tree_des_desc : "选择分组",
+                tree_src : this.script_group.tree,
+                tree_des : this.script_group_only.tree
+            };
+        } else {
+            this.script_setting_opts = {
+                type : type,
+                title : "脚本分组设置",
+                tree_src_value : null,
+                tree_des_value : null,
+                tree_src_desc : "选择来源分组",
+                tree_des_desc : "选择目标分组",
+                tree_src : this.script_group_only.tree,
+                tree_des : this.script_group_only.tree
+            };
+        }
+
         $('#div_script_setting').modal('toggle');
     },
 
@@ -14,7 +38,7 @@ const script_methods = {
 
                 let script_group;
                 if (type.indexOf(",") >= 0) {
-                    script_group = data["script_group"]
+                    script_group = data["script_group"][0];
                 } else {
                     script_group = data[0];
                 }

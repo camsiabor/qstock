@@ -22,7 +22,9 @@ const script_methods = {
                         break;
                     }
                 }
-                if (!all) {
+                if (all) {
+                    all.children.clear();
+                } else {
                     all = { id : "all", label : "all", children : [] };
                     tree.push(all);
                 }
@@ -77,9 +79,10 @@ const script_methods = {
 
     script_save: function (opts) {
         let type = opts.type;
-        let name = opts.name.trim() || this.script.name;
+        let name = opts.name || this.script.name;
+        name = name.trim();
         if (type === "script") {
-            if (!this.name) {
+            if (!name) {
                 util.popover("#button_script_save", "需要名字", "bottom");
                 return;
             }

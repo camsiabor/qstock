@@ -47,10 +47,10 @@
             <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_query('debug')" style="margin-left: 3px;">
                 <i class="fa fa-running"></i>
             </button>
-            <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
+            <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save({ type : 'script' })" >
                 <i class="fa fa-save"></i>
             </button>
-            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete()">
+            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete( { type : 'script' })">
                 <i class="fa fa-trash"></i>
             </button>
         </div>

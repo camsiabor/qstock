@@ -6,27 +6,25 @@ const script_methods = {
         $('#div_script_setting').modal('toggle');
     },
 
-    script_list: function () {
-        return axios.post("/script/list").then(function (json) {
-            let names = util.handle_response(json, this.console, "");
-            this.script_names = names.sort().reverse();
-        }.bind(this)).catch(util.handle_error.bind(this));
-    },
-
-    script_group_list : function() {
-        return axios.post("/cmd/go", {
-            "type": "db",
-            "cmd": "Keys",
-            "args": ["common", "script_group", "portf_*", null],
-        }).then(function (resp) {
-            let data = util.handle_response(resp);
-            for (let i = 0; i < data.length; i++) {
-                // let name = data[i];
-                // name = name.replace("portf_", "");
-                // data[i] = name;
+    script_list: function (type) {
+        return axios.post("/script/list", { type : type }).then(function (json) {
+            let data = util.handle_response(json, this.console, "");
+            if (type === "script") {
+                this.script_names = data.sort().reverse();
+            } else {
+                let script_group = data[0];
+                if (script_group) {
+                    if (script_group.tree) {
+                        script_group.tree = JSON.parse(script_group.tree);
+                    } else {
+                        script_group.tree = [];
+                    }
+                    this.script_group.id = this.script_group.id || "system";
+                    this.script_group.name = this.script_group.name || this.script_group.id;
+                    this.script_group = script_group;
+                }
             }
-            // this.portfolio_names = data.sort();
-        }.bind(this));
+        }.bind(this)).catch(util.handle_error.bind(this));
     },
 
     script_select: function (name) {
@@ -50,19 +48,45 @@ const script_methods = {
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
-    script_save: function () {
-        if (!this.script.name) {
-            util.popover("#button_script_save", "需要脚本名字", "bottom");
-            return;
+    script_save: function (opts) {
+
+        let type = opts.type;
+
+        let name = opts.name.trim();
+        if (type === "script") {
+
+            if (!this.name) {
+                util.popover("#button_script_save", "需要名字", "bottom");
+                return;
+            }
+            this.setting.script.last = this.script.name = name;
+            this.script.script = this.editor.getValue().trim();
+            return axios.post("/script/update", this.script).then(function (resp) {
+                util.handle_response(resp, this.console, "script saved @ " + this.script.name)
+                util.popover("#button_script_save", "保存成功", "bottom");
+                this.script_list(opts.type);
+                return resp
+            }.bind(this)).catch(util.handle_error.bind(this));
+        } else {
+            if (name) {
+                this.script_group.tree.push({
+                    id : name,
+                    label : name,
+                    children : []
+                });
+            }
+            let script_group_obj = QUtil.map_clone(this.script_group);
+            script_group_obj.tree = JSON.stringify(this.script_group.tree);
+            return axios.post("/cmd/go", {
+                "type": "db",
+                "cmd": "Update",
+                "args": ["common", "script_group", script_group_obj.id, script_group_obj, true, 1, null]
+            }).then(function (resp) {
+                util.handle_response(resp, this.console, "");
+                this.script_setting_opts.msg = "保存群组成功";
+                this.script_list(opts.type);
+            }.bind(this));
         }
-        this.setting.script.last = this.script.name;
-        this.script.script = this.editor.getValue().trim();
-        return axios.post("/script/update", this.script).then(function (resp) {
-            util.handle_response(resp, this.console, "script saved @ " + this.script.name)
-            util.popover("#button_script_save", "保存成功", "bottom");
-            this.script_list();
-            return resp
-        }.bind(this)).catch(util.handle_error.bind(this));
     },
 
     script_delete: function () {
@@ -82,10 +106,10 @@ const script_methods = {
     script_query: function (mode, carrayscript) {
 
         let script = this.editor.getValue().trim();
-        if (script.length === 0) {
-            alert("need script!");
-            return;
-        }
+        // if (script.length === 0) {
+        //     alert("need script!");
+        //     return;
+        // }
         mode = mode  || this.setting.mode;
 
         let nohash = window.location.href.indexOf('nohash') > 0

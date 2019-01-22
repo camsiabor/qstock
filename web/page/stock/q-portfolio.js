@@ -32,7 +32,7 @@ const portfoilio_methods = {
         }
 
         let portfolio_name = "portf_" + this.portfolio.name;
-        axios.post("/cmd/go", {
+        return axios.post("/cmd/go", {
             "type": "db",
             "cmd": "Updates",
             "args": ["common", portfolio_name, codes_sel, codes_sel, true, 0, null]

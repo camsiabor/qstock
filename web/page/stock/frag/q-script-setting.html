@@ -8,7 +8,7 @@
 
             <div class="modal-body">
 
-                <button type="button" class="btn btn-sm btn-info" v-on:click="script_update();">
+                <button type="button" class="btn btn-sm btn-info" v-on:click="script_save(script_setting_opts);">
                     <i class="fa fa-save"></i>
                 </button>
 
@@ -20,12 +20,16 @@
                         <input
                                 class="form-control mr-sm-2"
                                 type="search" placeholder=""
-                                aria-label="" v-model="script_setting.name">
+                                aria-label="" v-model="script_setting_opts.name">
                     </div>
                 </div>
 
                 <div>
-                    <treeselect v-model="value" :multiple="false" :options="test" width="100px" />
+                    <treeselect v-model="script_setting_opts.value" :multiple="false" :options="script_group.tree" style="width:90%"/>
+                </div>
+
+                <div>
+                    {{script_setting_opts.msg}}
                 </div>
 
             </div>

@@ -90,15 +90,18 @@ vue_options.data = {
     script_names: [],
     script_setting_opts : {
         type : "",
-        act : ""
+        act : "",
+
     },
     script: {
         name: "",
         script: "--[[lua]]--"
     },
-    scripts : [
-
-    ],
+    script_group : {
+        id : "system",
+        name : "system",
+        tree : []
+    },
     table: {
         data: datamock,
         datamap : {}
@@ -504,7 +507,8 @@ DB.new_db_promise({
         setInterval(fetch_calendar, 12 * 60 * 60 * 1000);
 
         this.params_list();
-        this.script_list();
+        this.script_list("group");
+        this.script_list("script");
         this.portfolio_list();
 
         // data init

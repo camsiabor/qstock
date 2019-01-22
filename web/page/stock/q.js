@@ -91,10 +91,9 @@ vue_options.data = {
     script_setting_opts : {
         type : "",
         act : "",
-
     },
     script: {
-        name: "",
+        name: null,
         script: "--[[lua]]--"
     },
     script_group : {
@@ -508,7 +507,11 @@ DB.new_db_promise({
 
         this.params_list();
         this.script_list("group").then(function() {
-            this.script_list("script");
+            this.script_list("script").then(function() {
+                if (this.setting.script.last) {
+                    this.script_select({ id : this.setting.script.last } );
+                }
+            }.bind(this));
         }.bind(this));
         this.portfolio_list();
 
@@ -517,15 +520,10 @@ DB.new_db_promise({
             if (this.setting.params.last) {
                 this.params_select(this.setting.params.last);
             }
-            if (this.setting.script.last) {
-                this.script_select(this.setting.script.last);
-            }
             if (this.setting.portfolio.last || this.setting.portfolio_last) {
                 this.portfolio_select(this.setting.portfolio.last || this.setting.portfolio_last);
             }
-
             this.stock_indice_fetch();
-
             this.ready = true;
         }.bind(this));
     };

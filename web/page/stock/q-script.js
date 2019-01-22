@@ -6,6 +6,8 @@ const script_methods = {
         $('#div_script_setting').modal('toggle');
     },
 
+
+
     script_list: function (type) {
         return axios.post("/script/list", { type : type }).then(function (json) {
             let data = util.handle_response(json, this.console, "");
@@ -44,11 +46,15 @@ const script_methods = {
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
-    script_select: function (name) {
-        this.script.name = name;
-        this.setting.script.last = name;
+    script_select: function (node, id) {
+
+        if (node.children) {
+            return;
+        }
+
+        this.setting.script.last = this.script.name = node.id;
         return axios.post("/script/get", {
-            name: name
+            name: this.script.name
         }).then(function (resp) {
             let info = util.handle_response(resp);
             this.script.name = info.name;
@@ -60,18 +66,19 @@ const script_methods = {
             if (this.timer_script_save) {
                 clearTimeout(this.timer_script_save);
             }
-            this.timer_script_save = setTimeout(this.script_save.bind(this), 10 * 60 * 1000);
+            this.timer_script_save = setTimeout(
+            function() {
+                this.script_save( { type : "script" } );
+            }.bind(this), 10 * 60 * 1000);
 
+            this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
     script_save: function (opts) {
-
         let type = opts.type;
-
-        let name = opts.name.trim();
+        let name = opts.name.trim() || this.script.name;
         if (type === "script") {
-
             if (!this.name) {
                 util.popover("#button_script_save", "需要名字", "bottom");
                 return;
@@ -79,7 +86,7 @@ const script_methods = {
             this.setting.script.last = this.script.name = name;
             this.script.script = this.editor.getValue().trim();
             return axios.post("/script/update", this.script).then(function (resp) {
-                util.handle_response(resp, this.console, "script saved @ " + this.script.name)
+                util.handle_response(resp, this.console, "script saved @ " + this.script.name);
                 util.popover("#button_script_save", "保存成功", "bottom");
                 this.script_list(opts.type);
                 return resp

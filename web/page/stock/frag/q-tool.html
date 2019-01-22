@@ -19,6 +19,7 @@
                 <i class="fa fa-search-dollar"></i>
             </button>
 
+            <!--
             <button type="button" class="btn btn-outline-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span class="sr-only"></span>
             </button>
@@ -29,12 +30,20 @@
                 </a>
             </div>
 
-            <div>
-                <treeselect v-model="script.name" :multiple="false" :options="script_group.tree" width="100px" />
-            </div>
-
             <input type="search" id="input_script_name" class="form-control"
                    placeholder="查询脚本" aria-label="script" aria-describedby="script" v-model="script.name" >
+
+            -->
+
+            <div>
+                <treeselect v-model="script.name"
+                            :multiple="false"
+                            :options="script_group.tree"
+                            :open-on-click="true"
+                            @select="script_select"
+                            style="width:99%"/>
+            </div>
+
             <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_query('debug')" style="margin-left: 3px;">
                 <i class="fa fa-running"></i>
             </button>

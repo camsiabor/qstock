@@ -465,6 +465,9 @@ QUtil.tree_clone = function(tree, opts) {
     for (let i = 0; i < len; i++) {
         let clone;
         let one = tree[i];
+        if (!one) {
+            continue;
+        }
         if (opts.cloner) {
             clone = opts.cloner(tree, one, opts);
         } else {
@@ -476,11 +479,14 @@ QUtil.tree_clone = function(tree, opts) {
             continue;
         }
         let subtree = one[field_children];
-        if (subtree && subtree.length > 0) {
-            let current = opts.current;
-            opts.current = clone[field_children] = [];
-            QUtil.tree_clone(subtree, opts);
-            opts.current = current;
+        if (subtree) {
+            clone[field_children] = [];
+            if (subtree.length > 0) {
+                let current = opts.current;
+                opts.current = clone[field_children];
+                    QUtil.tree_clone(subtree, opts);
+                opts.current = current;
+            }
         }
     }
     return opts.current;
@@ -492,6 +498,9 @@ QUtil.tree_locate = function(tree, node, opts) {
     let field_id = opts.field_id || "id";
     let field_children = opts.field_children || "children";
     opts.depth = opts.depth || 0;
+    if (typeof opts.depth_limit === "undefined") {
+        opts.depth_limit = 16;
+    }
     opts.pathes = opts.pathes || [];
     for (let i = 0; i < len; i++) {
         let one = tree[i];
@@ -499,14 +508,18 @@ QUtil.tree_locate = function(tree, node, opts) {
             opts.target = one;
             return opts;
         }
+
+        if (opts.depth + 1 > opts.depth_limit ) {
+            continue;
+        }
+
         let subtree = one[field_children];
         if (subtree && subtree.length > 0) {
             opts.pathes[opts.depth] = one;
             opts.depth = opts.depth + 1;
             let ret = QUtil.tree_locate(subtree, node, opts);
             if (ret) {
-                opts.target = ret;
-                return ret;
+                return opts;
             }
             opts.pathes[opts.depth] = null;
             opts.depth = opts.depth - 1;

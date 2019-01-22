@@ -12,10 +12,15 @@
                     <i class="fa fa-save"></i>
                 </button>
 
+                <button class="btn btn-sm btn-primary">
+                    <i class="fa fa-plus-circle" v-on:click="script_add(script_setting_opts)"></i>
+                </button>
+
                 <button class="btn btn-sm btn-danger">
                     <i class="fa fa-minus-circle" v-on:click="script_delete(script_setting_opts)"></i>
                 </button>
 
+                <!--
                 <div style="margin: 5px">
                     <div class="input-group sm-3" style="width: 99%">
                         <div class="input-group-prepend">
@@ -27,15 +32,16 @@
                                 aria-label="" v-model="script_setting_opts.name">
                     </div>
                 </div>
+                -->
 
                 <div>
                     <treeselect v-model="script_setting_opts.value"
-                                :multiple="false"
+                                :multiple="true"
                                 :open-on-click="true"
                                 :options="script_setting_opts.tree"
 
                                 @select="script_group_select"
-                                style="width:99%" />
+                                style="width:99%; margin-top: 6px;" />
                 </div>
 
                 <div>

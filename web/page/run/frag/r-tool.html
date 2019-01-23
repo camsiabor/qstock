@@ -21,13 +21,18 @@
                             style="width:99%"/>
             </div>
 
-            <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_query('raw')" style="margin-left: 3px;">
+            <button type="button" value="测试" class="btn btn-sm btn-outline-info"  v-on:click="script_query('raw')" style="margin-left: 3px;">
                 <i class="fa fa-running"></i>
             </button>
-            <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save({ type : 'script' })" >
+
+            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_select()" >
+                <i class="fa fa-circle-notch"></i>
+            </button>
+
+            <button type="button" value="保存" id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
                 <i class="fa fa-save"></i>
             </button>
-            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete( { type : 'script' })">
+            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete()">
                 <i class="fa fa-trash"></i>
             </button>
         </div>

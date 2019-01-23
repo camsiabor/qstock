@@ -22,89 +22,60 @@ const script_methods = {
 
     script_select: function (noderaw, id, node) {
 
-        if (!node && noderaw) { /* active select */
-            node = this.$refs.tree_script.getNode(noderaw.id);
+        if (!node) { /* active select */
+            if (noderaw) {
+                node = this.$refs.tree_script.getNode(noderaw.id);
+            } else {
+                node = this.$refs.tree_script.selectedNodes[0];
+            }
             if (node) {
                 this.$refs.tree_script.select(node);
-                return;
             }
-        }
-
-        /*
-        if (node.children) {
-            this.$refs.tree_script.clear();
             return;
         }
-        */
+
 
         this.setting.script.last = this.script.name = node.id;
-        return axios.post("/script/get", {
-            name: this.script.name
+        return axios.post("/os/file/text", {
+            path: node.id
         }).then(function (resp) {
-            let info = util.handle_response(resp);
-            this.script.script = info.script;
+            let text = util.handle_response(resp);
+            this.script.script = text;
             this.editor.setValue(this.script.script);
             this.editor.clearSelection();
             this.script_query();
-
-            if (this.timer_script_save) {
-                clearTimeout(this.timer_script_save);
-            }
-            this.timer_script_save = setTimeout(
-            function() {
-                this.script_save( { type : "script" } );
-            }.bind(this), 10 * 60 * 1000);
-
             this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
+    script_current : function() {
+        return this.$refs.tree_script.selectedNodes[0];
+    },
 
 
+    script_save: function () {
 
-    script_save: function (opts) {
-        let type = opts.type;
-        let name = opts.name;
-        if (name) {
-            name = name.trim();
-        }
-        if (type === "script") {
-            if (!name) {
-                name = this.script.name;
-            }
-            if (!name) {
-                util.popover("#button_script_save", "需要名字", "bottom");
+        let current = this.script_current();
+        if (current) {
+            if (!confirm("do save " + current.id  + " ?")) {
                 return;
             }
-            this.setting.script.last = this.script.name = name;
-            this.script.script = this.editor.getValue().trim();
-            return axios.post("/script/update", this.script).then(function (resp) {
-                util.handle_response(resp, this.console, "script saved @ " + this.script.name);
-                util.popover("#button_script_save", "保存成功", "bottom");
-                this.script_list(opts.type);
-                return resp
-            }.bind(this)).catch(util.handle_error.bind(this));
         } else {
-            if (name) {
-                name = name.trim();
-                this.script_group.tree.push({
-                    id : "g" + new Date().getTime() + (Math.random() + "").substring(0, 8),
-                    label : name,
-                    children : []
-                });
-            }
-            let script_group_obj = QUtil.map_clone(this.script_group);
-            script_group_obj.tree = JSON.stringify(this.script_group.tree);
-            return axios.post("/cmd/go", {
-                "type": "db",
-                "cmd": "Update",
-                "args": ["common", "script_group", script_group_obj.id, script_group_obj, true, 1, null]
-            }).then(function (resp) {
-                util.handle_response(resp, this.console, "");
-                this.script_setting_opts.msg = "保存群组成功";
-                this.script_list(opts.type);
-            }.bind(this));
+            alert("need to select one first");
+            return;
         }
+
+        this.setting.script.last = this.script.name = name;
+        this.script.script = this.editor.getValue().trim();
+        return axios.post("/os/file/text", {
+            path : current.id,
+            text : this.script.script
+        }).then(function (resp) {
+            util.handle_response(resp, this.console, "saved @ " + current.id);
+            util.popover("#button_script_save", "save success", "bottom");
+            return resp
+        }.bind(this)).catch(util.handle_error.bind(this));
+
     },
 
 
@@ -161,23 +132,28 @@ const script_methods = {
     },
 
     script_delete: function (opts) {
-        if (opts.type === "script") {
-            if (!confirm("sure to delete? " + this.script.name)) {
+        let current = this.script_current();
+        if (current) {
+            if (!confirm("sure to delete " + current.id + " ?")) {
                 return;
             }
-            axios.post("/script/delete", {
-                name: this.script.name
-            }).then(function (resp) {
-                util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
-                this.script.name = null;
-                this.script_list( { type : "script,group" } );
-            }.bind(this)).catch(util.handle_error.bind(this));
         } else {
-
+            alert("need to select one first");
+            return;
         }
 
-    },
+        if (!confirm("sure to delete? " + this.script.name)) {
+            return;
+        }
+        axios.post("/os/file/delete", {
+            name: this.script.name
+        }).then(function (resp) {
+            util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
+            this.script.name = null;
+            this.script_list( { type : "script,group" } );
+        }.bind(this)).catch(util.handle_error.bind(this));
 
+    },
 
     script_query: function (mode, carrayscript) {
         let script = this.editor.getValue().trim();
@@ -230,108 +206,6 @@ const script_methods = {
     },
 
 
-    params_list: function() {
-        return axios.post("/cmd/go", {
-            "type": "db",
-            "cmd": "Keys",
-            "args": [ "common", "params", "*", null ],
-        }).then(function (resp) {
-            let data = util.handle_response(resp);
-            this.params_names = data.sort();
-        }.bind(this));
-    },
-
-    params_setting : function () {
-        if (!this.params.name) {
-            alert("请输入参数名字");
-            return;
-        }
-        $('#div_params_setting').modal('toggle');
-    },
-
-    params_get: function(name) {
-        if (!name) {
-            name = this.params.name;
-        }
-        if (!name) {
-            return;
-        }
-        return axios.post("/cmd/go", {
-            "type": "db",
-            "cmd": "Get",
-            "args": ["common", "params", name, 1, null]
-        }).then(function (resp) {
-            let data = util.handle_response(resp);
-            if (data) {
-                this.params = data;
-            }
-        }.bind(this));
-    },
-
-    params_select: function(name) {
-        name = name || this.params.name.trim();
-        if (name) {
-            this.setting.params.last = name;
-            this.params_get(name);
-        }
-    },
-
-    params_update : function (name) {
-        if (!name) {
-            name = this.params.name.trim();
-        }
-        if (!name) {
-            alert("需要参数名字");
-            return;
-        }
-        axios.post("/cmd/go", {
-            "type": "db",
-            "cmd": "Update",
-            "args": ["common", "params", name, this.params, true, 1, null]
-        }).then(function (resp) {
-            let msg = "保存参数 " + this.params.name + " 成功"
-            util.handle_response(resp, this.console, msg);
-            this.params_list();
-        }.bind(this));
-    },
-
-    params_delete : function (name) {
-        name = name || this.params.name.trim();
-        if (!confirm("sure to delete params? " + name)) {
-            return;
-        }
-        return axios.post("/cmd/go", {
-            "type": "db",
-            "cmd": "Delete",
-            "args": ["common", "params", name, null]
-        }).then(function (resp) {
-            util.handle_response(resp);
-            this.params.name = "";
-            return this.params_list();
-        }.bind(this));
-    },
-
-    params_list_add : function () {
-        if (!this.params) {
-            this.params = {};
-        }
-        if (!this.params.list) {
-            this.params.list = [];
-        }
-        let len = this.params.list.length;
-        this.params.list.push({
-            "key" : "key" + len,
-            "alias" : "key" + len,
-            "value" : "val" + len,
-            "expression" : ""
-        });
-    },
-    
-    params_list_delete : function (index) {
-        let head = this.params.list.slice(0, index);
-        let tail = this.params.list.slice(index + 1);
-        this.params.list = head.concat(tail);
-    },
 
     /* ======================================== script setting ====================================================== */
     script_setting: function(type) {
@@ -376,8 +250,8 @@ const script_methods = {
     },
 
     script_group_move : function() {
-        let tree_script_src = this.$ref.tree_script_src;
-        let tree_script_des = this.$ref.tree_script_des;
+        let tree_script_src = this.$refs.tree_script_src;
+        let tree_script_des = this.$refs.tree_script_des;
 
         let nodes_src = tree_script_src.selectedNodes;
         let nodes_des = tree_script_des.selectedNodes;

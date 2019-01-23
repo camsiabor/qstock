@@ -427,8 +427,8 @@ const script_methods = {
     },
 
     script_group_move : function() {
-        let tree_script_src = this.$ref.tree_script_src;
-        let tree_script_des = this.$ref.tree_script_des;
+        let tree_script_src = this.$refs.tree_script_src;
+        let tree_script_des = this.$refs.tree_script_des;
 
         let nodes_src = tree_script_src.selectedNodes;
         let nodes_des = tree_script_des.selectedNodes;

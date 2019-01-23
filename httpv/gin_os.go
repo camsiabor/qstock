@@ -4,13 +4,14 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
 func (o *HttpServer) routeOS() {
 
-	var group = o.Engine.Group("/os/file")
-	group.POST("/list", func(c *gin.Context) {
+	var os_file = o.Engine.Group("/os/file")
+	os_file.POST("/list", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")
 
@@ -50,10 +51,33 @@ func (o *HttpServer) routeOS() {
 		o.RespJsonEx(data, err, c)
 	})
 
-	group.POST("/text", func(c *gin.Context) {
-		//var m, _ = o.ReqParse(c)
-		//var path = util.GetStr(m, "", "path")
+	os_file.POST("/text", func(c *gin.Context) {
+		var data interface{}
+		var m, _ = o.ReqParse(c)
+		var path = util.GetStr(m, "", "path")
+		var bytes, err = ioutil.ReadFile(path)
+		if err == nil {
+			data = string(bytes[:])
+		}
+		o.RespJsonEx(data, err, c)
+	})
 
+	os_file.POST("/write", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var path = util.GetStr(m, "", "path")
+		var text = util.GetStr(m, "", "text")
+		var stat, err = os.Stat(path)
+		if err == nil {
+			err = ioutil.WriteFile(path, []byte(text), stat.Mode())
+		}
+		o.RespJsonEx("written", err, c)
+	})
+
+	os_file.POST("/delete", func(c *gin.Context) {
+		var m, _ = o.ReqParse(c)
+		var path = util.GetStr(m, "", "path")
+		var err = os.Remove(path)
+		o.RespJsonEx("deleted", err, c)
 	})
 
 }

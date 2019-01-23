@@ -33,15 +33,11 @@
 
 <div id="dcontainer" class="container"  style="max-width: 9999px"  >
 
-    <!--
-    <div class="qam-html-fragment nosuffix" include="../common/mask.html" v-if="!ready"></div>
-    -->
-
     <!-- nav bar -->
-    <div class="qam-html-fragment" include="frag/q-nav.html"></div>
+    <div class="qam-html-fragment" include="frag/r-nav.html"></div>
 
     <!-- tool -->
-    <div class="qam-html-fragment" include="frag/q-tool.html"></div>
+    <div class="qam-html-fragment" include="frag/r-tool.html"></div>
 
     <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 8px;" >
         <div class="col-sm-6" style="border: 1px solid #f0f0f0; border-radius: 5px">
@@ -102,7 +98,7 @@
     </div>
 
     <!-- general setting -->
-    <div class="qam-html-fragment" include="frag/q-general-setting.html"></div>
+    <div class="qam-html-fragment" include="frag/r-general-setting.html"></div>
 
 </div>
 
@@ -144,8 +140,8 @@
         "/js/common/util.js",
         "/js/db/db.js",
         "coldef.js",
-        "q-script.js",
-        "q.js"
+        "r-script.js",
+        "r.js"
     ]);
 
     QLoader.fetch_if('/js/eruda/eruda.js', "", {

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>stock query</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-grid.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap-reboot.css"/>
+    <link rel="stylesheet" href="/css/vue/vuetable-2.css"/>
+    <link rel="stylesheet" href="/css/vue/treeselect.css"/>
+    <link ref="stylesheet" href="/css/fontawe/all.min.css"/>
+    <link ref="stylesheet" href="/css/fontawe/v4-shims.min.css"/>
+
+    <style>
+
+        body {
+            font-size: 0.8em;
+        }
+
+        .gone { display: none; }
+        .s-bolxd { font-weight: bolder; }
+        .s-tiny { font-size: 0.8em; }
+        .s-up { color: red; }
+        .s-down { color: forestgreen; }
+        .s-grey { color: grey; }
+
+    </style>
+</head>
+<body>
+
+<div id="dcontainer" class="container"  style="max-width: 9999px"  >
+
+    <!--
+    <div class="qam-html-fragment nosuffix" include="../common/mask.html" v-if="!ready"></div>
+    -->
+
+    <!-- nav bar -->
+    <div class="qam-html-fragment" include="frag/q-nav.html"></div>
+
+    <!-- tool -->
+    <div class="qam-html-fragment" include="frag/q-tool.html"></div>
+
+    <div v-bind:class="{row :true, gone: !setting.display.editor}" style="margin-top: 8px;" >
+        <div class="col-sm-6" style="border: 1px solid #f0f0f0; border-radius: 5px">
+            <pre id="editor" style="width: 100%; height: 120px;"><textarea></textarea></pre>
+        </div>
+        <div  class="col-sm-6" >
+            <div>
+                <pre id="console" style="width: 100%; height: 100%; background-color: #fafafa; border-radius: 5px; padding: 5px;">{{console.text}}</pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="div_table_pagination" style="margin-top: 5px;" v-bind:class="{'row' :true, gone: table.data.length <= setting.table.page_size }">
+        <div class="col-sm-3 align-self-start">
+            <div class="input-group sm-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" style="background-color: white">total</span>
+                </div>
+                <input class="form-control sm-2" type="search" v-model="table.data.length" disable style="background-color: white" >
+            </div>
+        </div>
+        <div class="col-sm-4 align-self-end" style="margin-left: 3px">
+            <vuetable-pagination
+                    ref="pagination"
+                    :css="css.pagination"
+                    @vuetable-pagination:change-page="table_paging_change"
+            >
+            </vuetable-pagination>
+        </div>
+        <div class="col-sm-2 align-self-end" style="margin-left: 10px">
+            <div class="input-group sm-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1" style="background-color: white">p</span>
+                </div>
+                <input class="form-control sm-1" type="search" v-model="setting.table.page_size">
+            </div>
+        </div>
+    </div>
+
+    <div id="div_table" class="row" style="margin-top: 5px;">
+        <div class="col-md-12">
+            <div id="table">
+                <vuetable ref="vuetable"
+                          table-wrapper="#table"
+                          :css="css.table"
+                          :api-mode="false"
+                          :per-age="setting.table.page_size"
+                          :fields="table_fields"
+                          track-by="code"
+                          :data-manager="table_data_manage"
+                          :multi-sort="true"
+                          multi-sort-key="ctrl"
+                          pagination-path="pagination"
+                          @vuetable:pagination-data="table_paging">
+                ></vuetable>
+            </div>
+        </div>
+    </div>
+
+    <!-- general setting -->
+    <div class="qam-html-fragment" include="frag/q-general-setting.html"></div>
+
+</div>
+
+
+<!-- -->
+
+<script type="text/javascript" src="/js/fontawe/solid.js" ></script>
+<script type="text/javascript" src="/js/fontawe/fontawesome.js"></script>
+
+<script type="text/javascript" src="/js/ace/ace.js"></script>
+<script type="text/javascript" src="/js/axios/axios.min.js"></script>
+<script type="text/javascript" src="/js/jquery/jquery.js"></script>
+
+<script type="text/javascript" src="/js/bootstrap/popper.js"></script>
+<script type="text/javascript" src="/js/bootstrap/bootstrap.min.js" ></script>
+
+<script type="text/javascript" src="/js/vue/vue.js" ></script>
+<script type="text/javascript" src="/js/vue/vuetree/treeselect.js" ></script>
+<script type="text/javascript" src="/js/vue/vuetable/vuetable-2-full.js" ></script>
+
+<script type="text/javascript" src="/js/g2/g2.js" ></script>
+<script type="text/javascript" src="/js/g2/data-set.js" ></script>
+
+<script type="text/javascript" src="/js/common/md5.min.js"></script>
+<script type="text/javascript" src="/js/common/base64.js"></script>
+<script type="text/javascript" src="/js/common/pako.min.js"></script>
+
+<script type="text/javascript" src="/js/common/loader.js"> </script>
+<script type="text/javascript" src="/js/common/util.js"></script>
+
+
+<script type="text/javascript">
+
+    let suffix = QLoader.get_cookie_val("_u_js");
+    if (window.location.href.indexOf("raw") > 0) {
+        suffix = new Date().getTime();
+    }
+    QLoader.fetch_html_fragment_and_js(".qam-html-fragment", suffix, [
+        "/js/common/util.js",
+        "/js/db/db.js",
+        "coldef.js",
+        "q-script.js",
+        "q.js"
+    ]);
+
+    QLoader.fetch_if('/js/eruda/eruda.js', "", {
+        "url" : "eruda"
+    }).then(function () {
+        if (typeof eruda !== 'undefined') {
+            eruda.init();
+        }
+    });
+
+</script>
+</body>
+</html>

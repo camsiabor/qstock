@@ -1,0 +1,36 @@
+
+
+<div id="div_tool" class="row" style="margin-top: 3px">
+
+    <div aria-details="脚本" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
+        <div class="input-group-prepend">
+
+            <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_query('hit'); ">
+                <i class="fa fa-search-dollar"></i>
+            </button>
+
+            <div>
+                <treeselect
+                            ref="tree_script"
+                            v-model="script.name"
+                            :multiple="false"
+                            :options="script_group.tree"
+                            :open-on-focus="true"
+                            select-consists-of="LEAF"
+                            @select="script_select"
+                            style="width:99%"/>
+            </div>
+
+            <button type="button" value="测试" id="button_script_test" class="btn btn-sm btn-outline-info"  v-on:click="script_query('raw')" style="margin-left: 3px;">
+                <i class="fa fa-running"></i>
+            </button>
+            <button type="button" value="保存"  id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save({ type : 'script' })" >
+                <i class="fa fa-save"></i>
+            </button>
+            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete( { type : 'script' })">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+</div>

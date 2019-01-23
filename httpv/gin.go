@@ -342,6 +342,7 @@ func (o *HttpServer) Run() {
 	}))
 
 	o.routeStatic()
+	o.routeOS() // TODO control
 	o.routeCmd()
 	o.routeStock()
 	o.routeScript()

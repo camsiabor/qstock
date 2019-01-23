@@ -1,0 +1,49 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">
+        <span>{{setting.mode}}．{{script.name}} </span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    setting
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="setting_show()">setting</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    show
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="setting.editor.height_mode = 'min';editor_init();">small editor</a>
+                    <a class="dropdown-item" href="#" v-on:click="setting.editor.height_mode = 'max';editor_init();">large editor</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    mode
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="toggle('hit', 'mode')">query</a>
+                    <a class="dropdown-item" href="#" v-on:click="toggle('raw', 'mode')">statistic</a>
+                </div>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    action
+                </a>
+                <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('local', 'mode');">clear cache</a>
+                    <a class="dropdown-item" href="#" v-on:click="clear_cache('js', 'mode'); ">clear javascript</a>
+                </div>s
+            </li>
+        </ul>
+    </div>
+</nav>

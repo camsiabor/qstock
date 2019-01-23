@@ -9,7 +9,6 @@ import (
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
-	"github.com/camsiabor/qdaobundle/qelastic"
 	"github.com/camsiabor/qdaobundle/qredis"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
@@ -95,9 +94,9 @@ func initDao(g *global.G) {
 			var redis = &qredis.DaoRedis{}
 			redis.Framework = manager.GetSchema()
 			return redis, nil
-		case "elasticsearch":
-			var elastic = &qelastic.DaoElastic{}
-			return elastic, nil
+		//case "elasticsearch":
+		//	var elastic = &qelastic.DaoElastic{}
+		//	return elastic, nil
 		default:
 			panic("db not implement : " + daotype)
 		}

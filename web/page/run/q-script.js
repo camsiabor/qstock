@@ -1,73 +1,22 @@
 const script_methods = {
 
-    script_list: function (type) {
-        return axios.post("/script/list", { type : type }).then(function (json) {
+    script_list: function (opts) {
+        let path = opts.path || ".";
+        return axios.post("/os/file/list", opts).then(function (json) {
             let data = util.handle_response(json, this.console, "");
-
-            if (type.indexOf("group") >= 0) {
-
-                let script_group;
-                if (type.indexOf(",") >= 0) {
-                    script_group = data["script_group"][0];
-                } else {
-                    script_group = data[0];
-                }
-                script_group = script_group || {
-                    "id" : "system",  "label" : "system"
-                };
-
-                if (script_group.tree) {
-                    if (typeof script_group.tree === "string") {
-                        script_group.tree = JSON.parse(script_group.tree);
-                    }
-                } else {
-                    script_group.tree = [];
-                }
-                let result = QUtil.tree_locate(script_group.tree, { id : "all" },  {
-                    depth_limit : 0
-                });
-                let all = result && result.target;
-                if (!all) {
-                    script_group.tree.push({ id : "all", label : "all", children : [] });
-                }
-                script_group.id = script_group.id || "system";
-                script_group.name = script_group.name || this.script_group.id;
-                this.script_group = script_group;
-                this.script_group_only.tree = QUtil.tree_clone(this.script_group.tree, {
-                    cloner : function (tree, node, opts) {
-                        if (node.children) {
-                            return QUtil.map_clone(node);
-                        }
-                    }
-                });
-            }
-
-            if (type.indexOf("script") >= 0) {
-                let script_names;
-                if (type.indexOf(",") >= 0) {
-                    script_names = data["script_names"];
-                } else {
-                    script_names = data;
-                }
-                this.script_names = script_names.sort().reverse();
-
-                let tree = this.script_group.tree;
-                let result = QUtil.tree_locate(this.script_group.tree, {id: "all"}, {
-                    depth_limit: 0
-                });
-                let all = result && result.target;
-                if (all) {
-                    all.children = [];
-                } else {
-                    all = {id: "all", label: "all", children: []};
-                    tree.push(all);
-                }
-                for (let i = 0, n = this.script_names.length; i < n; i++) {
-                    let name = this.script_names[i];
-                    all.children.push({id: name, label: name});
+            for (let i = 0; i < data.length; i++) {
+                let one = data[i];
+                one.id = path + "/" + one.name;
+                one.label = one.name;
+                if (one.isdir) {
+                    one.children = null;
                 }
             }
+            if (opts.node) {
 
+            } else {
+                this.script_group.tree = data;
+            }
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
@@ -263,7 +212,7 @@ const script_methods = {
                 return this.script_query(mode, true);
             }
             let data = util.handle_response(resp);
-            if (mode === "debug") {
+            if (mode === "raw") {
                 if (typeof data === 'object') {
                     data = JSON.stringify(data, null, 2);
                 }

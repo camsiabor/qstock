@@ -89,4 +89,5 @@ func (o *HttpServer) routeScript() {
 		//var data, err = dao.Delete(dict.DB_COMMON, "script", name, nil)
 		o.RespJsonEx("done", err, c)
 	})
+
 }

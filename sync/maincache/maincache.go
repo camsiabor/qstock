@@ -104,7 +104,10 @@ func InitMainCache(g *global.G) {
 		qlog.Log(qlog.INFO, "cache", "code", "shenzhen", szn, "shanghai", shn, "startup", sun, "china", chn, "hongkong", hkn)
 		return scache, nil
 	}
-	scache_code.Loader(scache_code, 1, 0, true)
+	var apim = util.GetMap(g.Config, false, "api")
+	if apim != nil || len(apim) > 0 {
+		scache_code.Loader(scache_code, 1, 0, true)
+	}
 
 	var scache_snapshot = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
 	scache_snapshot.ArrayLimitInit = 1000000

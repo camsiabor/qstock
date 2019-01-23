@@ -557,11 +557,18 @@
                 },
                 valueFormat: {type: String, default: "id"},
                 zIndex: {type: [Number, String], default: 999},
+                // TODO insert begin ------------------------------ //
                 selectConsistsOf : {
                     type: String, default: "ALL", validator: function (e) {
                         return P(["ALL", "BRANCH", "LEAF" ], e)
                     }
+                },
+                displayConsistsOf : {
+                    type: String, default: "ALL", validator: function (e) {
+                        return P(["ALL", "BRANCH", "LEAF" ], e)
+                    }
                 }
+                // TODO insert end ------------------------------ //
             },
             data: function () {
                 return {
@@ -720,7 +727,8 @@
                         isNew: !1,
                         index: [-1],
                         level: 0,
-                        raw: t
+                        raw: t,
+                        context: this
                     };
                     return this.$set(this.forest.nodeMap, e, n)
                 }, extractCheckedNodeIdsFromValue: function () {
@@ -940,6 +948,9 @@
                                 var n
                             }), {}), m = u ? v.label : O.nestedSearchLabel + " " + v.label,
                             g = x.$set(x.forest.nodeMap, o, R());
+                        // TODO insert begin ------------------------------ //
+                        x.$set(g, "context", x);
+                        // TODO insert end ------------------------------ //
                         if (x.$set(g, "id", o), x.$set(g, "label", s), x.$set(g, "level", c), x.$set(g, "ancestors", u ? [] : [O].concat(O.ancestors)), x.$set(g, "index", (u ? [] : O.index).concat(t)), x.$set(g, "parentNode", O), x.$set(g, "lowerCased", v), x.$set(g, "nestedSearchLabel", m), x.$set(g, "isDisabled", f), x.$set(g, "isNew", p), x.$set(g, "isMatched", !1), x.$set(g, "isHighlighted", !1), x.$set(g, "isBranch", d), x.$set(g, "isLeaf", h), x.$set(g, "isRootNode", u), x.$set(g, "raw", r), d) {
                             var y, S = Array.isArray(a);
                             x.$set(g, "childrenStates", w()({}, {
@@ -1039,18 +1050,19 @@
                     }))
                 }, select: function (e) {
                     if (!this.disabled && !e.isDisabled) {
+                        // TODO insert begin ------------------------------ //
                         if (!this.selectConsistsOf || this.selectConsistsOf !== "ALL") {
-                            var isLeaf = typeof e.children === "undefined";
                             if (this.selectConsistsOf === "LEAF") {
-                                if (!isLeaf) {
+                                if (!e.isLeaf) {
                                     return;
                                 }
                             } else {
-                                if (isLeaf) {
+                                if (e.isLeaf) {
                                     return;
                                 }
                             }
                         }
+                        // TODO insert end ------------------------------ //
                         this.single && this.clear();
                         var t = this.multiple && !this.flat ? 0 === this.forest.checkedStateMap[e.id] : !this.isSelected(e);
                         t ? this._selectNode(e) : this._deselectNode(e), this.buildForestState(), t ? this.$emit("select", e.raw, this.getInstanceId(), e) : this.$emit("deselect", e.raw, this.getInstanceId(), e), this.localSearch.active && t && (this.single || this.clearOnSelect) && this.resetSearchQuery(), this.single && this.closeOnSelect && (this.closeMenu(), this.searchable && (this._blurOnSelect = !0))
@@ -1577,6 +1589,15 @@
                 }))
             },
             render: function () {
+                // TODO insert begin ------------------------------ //
+                var node = this.node;
+                var context = node.context;
+                if (context.displayConsistsOf && context.displayConsistsOf !== "ALL") {
+                    if (context.displayConsistsOf === "BRANCH" && node.isLeaf) {
+                        return;
+                    }
+                }
+                // TODO insert end ------------------------------ //
                 var e = arguments[0], t = this.node, n = this.instance.shouldFlattenOptions ? 0 : t.level;
                 return e("div", {class: E()({"vue-treeselect__list-item": !0}, "vue-treeselect__indent-level-".concat(n), !0)}, [this.renderOption(), e("transition", {props: {name: "vue-treeselect__list--transition"}}, [this.renderSubOptionsList()])])
             }

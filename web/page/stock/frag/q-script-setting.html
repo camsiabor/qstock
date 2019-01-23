@@ -37,6 +37,8 @@
                                 :options="script_setting_opts.tree_src"
                                 :placeholder="script_setting_opts.tree_src_desc"
                                 :value-consists-of="script_setting_opts.tree_src_value_consists_of"
+                                :select-consists-of="script_setting_opts.tree_src_select_consists_of"
+                                display-consists-of="script_setting_opts.tree_src_display_consists_of"
                                 @select="script_group_tree_src_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>
@@ -49,6 +51,7 @@
                                 :open-on-focus="true"
                                 :options="script_setting_opts.tree_des"
                                 :placeholder="script_setting_opts.tree_des_desc"
+                                display-consists-of="BRANCH"
                                 @select="script_group_tree_des_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>

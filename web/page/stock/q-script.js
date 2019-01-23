@@ -396,6 +396,7 @@ const script_methods = {
                 tree_src_desc : "选择脚本",
                 tree_des_desc : "选择分组",
                 tree_src_value_consists_of : "LEAF_PRIORITY",
+                tree_src_select_consists_of : "LEAF",
                 tree_src : this.script_group.tree,
                 tree_des : this.script_group_only.tree
             };
@@ -425,6 +426,17 @@ const script_methods = {
     },
 
     script_group_move : function() {
+        let tree_script_src = this.$ref.tree_script_src;
+        let tree_script_des = this.$ref.tree_script_des;
+
+        let nodes_src = tree_script_src.selectedNodes;
+        let nodes_des = tree_script_des.selectedNodes;
+
+        if (nodes_src.length === 0 || nodes_des.length === 0) {
+            alert("需要选择來源及目标");
+            return;
+        }
+
 
     },
 

@@ -29,22 +29,27 @@
                 </button>
 
                 <div>
-                    <treeselect v-model="script_setting_opts.tree_src_value"
+                    <treeselect
+                                ref="tree_script_src"
+                                v-model="script_setting_opts.tree_src_value"
                                 :multiple="true"
                                 :open-on-focus="true"
                                 :options="script_setting_opts.tree_src"
                                 :placeholder="script_setting_opts.tree_src_desc"
-                                @select="script_group_select"
+                                :value-consists-of="script_setting_opts.tree_src_value_consists_of"
+                                @select="script_group_tree_src_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>
 
                 <div>
-                    <treeselect v-model="script_setting_opts.tree_des_value"
+                    <treeselect
+                                ref="tree_script_des"
+                                v-model="script_setting_opts.tree_des_value"
                                 :multiple="false"
                                 :open-on-focus="true"
                                 :options="script_setting_opts.tree_des"
                                 :placeholder="script_setting_opts.tree_des_desc"
-                                @select="script_group_select"
+                                @select="script_group_tree_des_select"
                                 style="width:99%; margin-top: 6px;" />
                 </div>
 

@@ -1,35 +1,5 @@
 const script_methods = {
 
-
-    script_setting: function(type) {
-
-        if (type === "script") {
-            this.script_setting_opts = {
-                type : type,
-                title : "脚本设置",
-                tree_src_value : null,
-                tree_des_value : null,
-                tree_src_desc : "选择脚本",
-                tree_des_desc : "选择分组",
-                tree_src : this.script_group.tree,
-                tree_des : this.script_group_only.tree
-            };
-        } else {
-            this.script_setting_opts = {
-                type : type,
-                title : "脚本分组设置",
-                tree_src_value : null,
-                tree_des_value : null,
-                tree_src_desc : "选择来源分组",
-                tree_des_desc : "选择目标分组",
-                tree_src : this.script_group_only.tree,
-                tree_des : this.script_group_only.tree
-            };
-        }
-
-        $('#div_script_setting').modal('toggle');
-    },
-
     script_list: function (type) {
         return axios.post("/script/list", { type : type }).then(function (json) {
             let data = util.handle_response(json, this.console, "");
@@ -101,11 +71,22 @@ const script_methods = {
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
-    script_select: function (node, id) {
+    script_select: function (noderaw, id, node) {
 
+        if (!node && noderaw) { /* active select */
+            node = this.$refs.tree_script.getNode(noderaw.id);
+            if (node) {
+                this.$refs.tree_script.select(node);
+                return;
+            }
+        }
+
+        /*
         if (node.children) {
+            this.$refs.tree_script.clear();
             return;
         }
+        */
 
         this.setting.script.last = this.script.name = node.id;
         return axios.post("/script/get", {
@@ -129,9 +110,8 @@ const script_methods = {
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
-    script_group_select : function(node, id) {
-        this.script_setting_opts.node = node;
-    },
+
+
 
     script_save: function (opts) {
         let type = opts.type;
@@ -284,15 +264,16 @@ const script_methods = {
             }
             let data = util.handle_response(resp);
             if (mode === "debug") {
-
                 if (typeof data === 'object') {
                     data = JSON.stringify(data, null, 2);
                 }
                 this.console.text = data;
                 return data;
             } else {
-                data.refresh_view = true;
-                return this.stock_get_data_by_code(data);
+                if (data) {
+                    data.refresh_view = true;
+                    return this.stock_get_data_by_code(data);
+                }
             }
         }.bind(this));
 
@@ -401,6 +382,54 @@ const script_methods = {
         let head = this.params.list.slice(0, index);
         let tail = this.params.list.slice(index + 1);
         this.params.list = head.concat(tail);
+    },
+
+    /* ======================================== script setting ====================================================== */
+    script_setting: function(type) {
+
+        if (type === "script") {
+            this.script_setting_opts = {
+                type : type,
+                title : "脚本设置",
+                tree_src_value : null,
+                tree_des_value : null,
+                tree_src_desc : "选择脚本",
+                tree_des_desc : "选择分组",
+                tree_src_value_consists_of : "LEAF_PRIORITY",
+                tree_src : this.script_group.tree,
+                tree_des : this.script_group_only.tree
+            };
+        } else {
+            this.script_setting_opts = {
+                type : type,
+                title : "脚本分组设置",
+                tree_src_value : null,
+                tree_des_value : null,
+                tree_src_desc : "选择来源分组",
+                tree_des_desc : "选择目标分组",
+                tree_src_value_consists_of : "",
+                tree_src : this.script_group_only.tree,
+                tree_des : this.script_group_only.tree
+            };
+        }
+
+        $('#div_script_setting').modal('toggle');
+    },
+
+    script_group_tree_src_select : function(node, id) {
+        this.script_setting_opts.tree_src_node = node;
+    },
+
+    script_group_tree_des_select : function(node, id) {
+        this.script_setting_opts.tree_des_node = node;
+    },
+
+    script_group_move : function() {
+
+    },
+
+    script_group_copy : function() {
+
     }
 
 };

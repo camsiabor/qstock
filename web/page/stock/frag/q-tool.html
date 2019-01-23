@@ -30,12 +30,12 @@
 
             <div>
                 <treeselect
-                            ref="treeselect_script"
+                            ref="tree_script"
                             v-model="script.name"
                             :multiple="false"
                             :options="script_group.tree"
                             :open-on-focus="true"
-                            value-consists-of="LEAF_PRIORITY"
+                            select-consists-of="LEAF"
                             @select="script_select"
                             style="width:99%"/>
             </div>

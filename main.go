@@ -36,7 +36,6 @@ func main() {
 	var version = "0.0.1"
 
 	defer qerr.SimpleRecover(0)
-	defer signalHandle()
 
 	var g = global.GetInstance()
 	flag.StringVar(&g.LogPath, "log", "log", "log file path")
@@ -55,6 +54,8 @@ func main() {
 	g.SetData("u", wrap.U)
 	g.SetData("cachem", scache.GetManager())
 	g.Run()
+
+	signalHandle(g)
 
 	var doHelp = flag.Bool("help", false, "help")
 	var doVersion = flag.Bool("version", false, "version")

@@ -963,7 +963,7 @@
                                 return !1
                             }), (function () {
                                 return 'Unloaded branch node detected. "loadOptions" prop is required to load its children.'
-                            }))
+                            }));
                         }
                         if (g.ancestors.forEach((function (e) {
                             return e.count[X]++
@@ -977,15 +977,18 @@
                         // TODO insert begin
                         g.removeChild = function(target_id) {
                             if (g.children) {
-                                var children_new = [];
+                                // var children_new = [];
+                                var children_raw_new = [];
                                 for (var i = 0, n = g.children.length; i < n; i++) {
                                     var one = g.children[i];
                                     if (one && one.id == target_id) {
                                         // g.children[i] = null;
-                                        children_new.push(one.raw);
+                                        // children_new.push(one);
+                                        children_raw_new.push(one.raw);
                                     }
                                 }
-                                g.raw.children = children_new;
+                                // g.children = children_new;
+                                g.raw.children = children_raw_new;
                             }
                         };
                         // TODO insert end

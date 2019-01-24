@@ -64,7 +64,7 @@ const script_methods = {
                         all.children.push({id: name, label: name});
                     }
                 }
-
+                this.script_group.tree = tree;
             }
 
         }.bind(this)).catch(util.handle_error.bind(this));
@@ -166,6 +166,7 @@ const script_methods = {
         if (!name) {
             return;
         }
+
         let parent;
         let selected = this.script_setting_opts.node;
         if (selected) {
@@ -233,7 +234,6 @@ const script_methods = {
         } else {
 
         }
-
     },
 
 
@@ -433,44 +433,75 @@ const script_methods = {
         this.script_setting_opts.tree_des_node = node;
     },
 
-    script_move : function(opts) {
+    script_move : function(opts, mode) {
+
         let tree_script_src = this.$refs.tree_script_src;
         let tree_script_des = this.$refs.tree_script_des;
 
         let nodes_src = tree_script_src.selectedNodes;
         let nodes_des = tree_script_des.selectedNodes;
 
-        if (nodes_src.length === 0 || nodes_des.length === 0) {
-            alert("需要选择來源及目标");
+        if (nodes_src.length === 0) {
+            alert("需要选择來源");
             return;
         }
-
+        if (nodes_des.length === 0) {
+            if (mode === "copy" || mode === "move") {
+                alert("需要选择目标");
+                return;
+            }
+        }
+        let des_node_map;
         let des = nodes_des[0];
-        let nodemap = QUtil.tree_leaf_map(des, {
-            depth_limit : 0
-        });
+        if (mode === "move" || mode === "copy") {
+            des_node_map = QUtil.tree_leaf_map(des, {
+                depth_limit : 0
+            });
+        }
+
         let count = 0;
         for (let i = 0; i < nodes_src.length; i++) {
             let one_src = nodes_src[i];
             let one_src_raw = one_src.raw;
             let id = one_src.id;
-            if (id && !nodemap[id] && typeof one_src_raw.children === 'undefined') {
-                des.raw.children.push(one_src_raw);
-                one_src.parentNode.removeChild(id);
-                count++;
+            if (!id) {
+                continue;
             }
+            if (opts.type === "script" && typeof one_src_raw.children !== "undefined") {
+                continue;
+            }
+            if (des_node_map && des_node_map[id]) {
+                continue;
+            }
+            if (mode === "move" || mode === "copy") {
+                des.raw.children.push(one_src_raw);
+            }
+            if (mode === "move" || mode === "unadd") {
+                one_src.parentNode.removeChild(id);
+            }
+            count++;
         }
 
         if (count > 0) {
             this.script_save({type: "group"}).then(function () {
                 if (opts) {
-                    opts.msg = "移动了 " + count + " 个节点到 " + des.label;
+                    switch(mode) {
+                        case "move":
+                            opts.msg = "移动了 " + count + " 个节点到 " + des.label;
+                            break;
+                        case "copy":
+                            opts.msg = "复制了 " + count + " 个节点到 " + des.label;
+                            break;
+                        case "unadd":
+                            opts.msg = "移除了 " + count + " 个节点";
+                            break;
+                    }
                 }
                 tree_script_src.clear();
                 tree_script_des.clear();
             });
         } else {
-            opts.msg = "没有移动任何节点";
+            opts.msg = "没有改变任何节点位置";
         }
 
     },

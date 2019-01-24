@@ -17,15 +17,15 @@
                 </button>
 
                 <button class="btn btn-sm btn-danger">
-                    <i class="fa fa-minus-circle" v-on:click="script_delete(script_setting_opts)"></i>
+                    <i class="fa fa-minus-circle" v-on:click="script_move(script_setting_opts, 'unadd' )"></i>
                 </button>
 
                 <button class="btn btn-sm btn-outline-primary" v-if="script_setting_opts.type === 'script'">
-                    <i class="fa fa-copy" v-on:click="script_delete(script_setting_opts)"></i>
+                    <i class="fa fa-copy" v-on:click="script_move(script_setting_opts, 'copy' )"></i>
                 </button>
 
                 <button class="btn btn-sm btn-outline-primary">
-                    <i class="fa fa-angle-right" v-on:click="script_move(script_setting_opts)"></i>
+                    <i class="fa fa-angle-right" v-on:click="script_move(script_setting_opts, 'move' )"></i>
                 </button>
 
                 <div>
@@ -37,6 +37,7 @@
                                 :options="script_setting_opts.tree_src"
                                 :placeholder="script_setting_opts.tree_src_desc"
                                 :value-consists-of="script_setting_opts.tree_src_value_consists_of"
+                                :select-consists-of="script_setting_opts.tree_src_select_consists_of"
                                 :display-consists-of="script_setting_opts.tree_src_display_consists_of"
                                 @select="script_group_tree_src_select"
                                 style="width:99%; margin-top: 6px;" />

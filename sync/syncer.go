@@ -20,6 +20,8 @@ import (
 
 const SHOWAPI_FETCH_META_TOKEN = "meta."
 
+type SyncerMapperFunc func(data interface{})
+
 type Syncer struct {
 	Name               string
 	appid              int
@@ -45,6 +47,7 @@ type ProfileWork struct {
 	Context     *Syncer
 	GCmd        *global.Cmd
 	Args        map[string]interface{}
+	Mapper      SyncerMapperFunc
 }
 
 func (o *ProfileWork) GetDao() (dao qdao.D, err error) {
@@ -441,6 +444,8 @@ func (o *Syncer) PersistAndCache(
 	var has_group_key = len(group_key) > 0
 	var has_key_prefix = len(key_prefix) > 0
 	var has_group_prefix = len(group_prefix) > 0
+
+	var mapperfunc = work.Mapper
 	for i, one := range data {
 		var m = one.(map[string]interface{})
 		m["_u"] = work.Id
@@ -450,6 +455,11 @@ func (o *Syncer) PersistAndCache(
 				return nil, nil, err
 			}
 		}
+
+		if mapperfunc != nil {
+			mapperfunc(one)
+		}
+
 		var groupid string
 		var id = util.GetStr(m, "", key)
 		if has_key_prefix {

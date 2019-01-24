@@ -203,6 +203,39 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		targets = codes
 	}
 
+	var cache_vcir = make(map[string]float64)
+	var cache_snapshot = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
+	work.Mapper = func(one interface{}) {
+		var m = one.(map[string]interface{})
+		var code = m["code"].(string)
+		var vcir, ok = cache_vcir[code]
+		if !ok {
+			var snapshot, _ = cache_snapshot.Get(true, "ch"+code)
+			if snapshot != nil {
+				var snapshotm, cok = snapshot.(map[string]string)
+				if cok {
+					vcir = util.AsFloat64(snapshotm["vcir"], 0)
+				} else {
+					var snapshotm = snapshot.(map[string]interface{})
+					vcir = util.AsFloat64(snapshotm["vcir"], 0)
+				}
+				cache_vcir[code] = vcir
+			}
+		}
+
+		if vcir > 0 {
+			var amount = util.AsFloat64(m["amount"], 0)
+			var turnover = amount * 10 / vcir
+			if turnover >= 40 {
+				turnover = turnover / 1000
+			}
+			m["turnover"] = turnover
+		} else {
+			m["turnover"] = 0
+		}
+
+	}
+
 	var data []interface{}
 	var data_part []interface{}
 	var rargs = make(map[string]interface{})

@@ -117,7 +117,7 @@ vue_options.methods = {
                 setting: this.setting
             };
             let jstr = JSON.stringify(o, null, 0);
-            localStorage.setItem("q.html", jstr);
+            localStorage.setItem("r.html", jstr);
         }.bind(this), 1000);
 
     },

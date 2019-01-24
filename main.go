@@ -17,10 +17,13 @@ import (
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/scache"
+	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qcom/wrap"
 	"github.com/camsiabor/qstock/dict"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -103,6 +106,8 @@ func main() {
 		daemon(g)
 	}
 
+	go heartbeat(g)
+
 	// [cmd] --------------------------------------------------------------------------------------------
 	if g.CycleHandler == nil {
 		handleCmd()
@@ -115,7 +120,46 @@ func main() {
 
 }
 
-func signalHandle() {
+func signalHandle(g *global.G) {
+	var signalChannel = make(chan os.Signal, 16)
+	signal.Notify(signalChannel,
+		syscall.SIGSEGV,
+		syscall.SIGTERM, syscall.SIGBUS, syscall.SIGABRT)
+
+	go func() {
+
+		for sig := range signalChannel {
+
+			qlog.Log(qlog.INFO, "signal receive :", sig.String())
+
+			switch sig {
+			case syscall.SIGTERM:
+				g.Continue = false
+				go func() {
+					time.Sleep(time.Second * 60)
+					os.Exit(0)
+				}()
+				continue
+			case syscall.SIGSEGV, syscall.SIGABRT, syscall.SIGBUS:
+				qlog.Log(qlog.FATAL, sig.String())
+				g.Continue = false
+				continue
+			}
+
+		}
+	}()
+}
+
+func heartbeat(g *global.G) {
+
+	var heartbeat_interval = util.GetInt(g.Config, 180, g.Mode, "heartbeat")
+	var ticker = time.NewTicker(time.Second * time.Duration(heartbeat_interval))
+	for range ticker.C {
+		if !g.Continue {
+			break
+		}
+		qlog.Log(qlog.INFO, "@")
+	}
 
 }
 

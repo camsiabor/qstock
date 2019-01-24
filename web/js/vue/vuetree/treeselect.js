@@ -716,7 +716,7 @@
                 }, createFallbackNode: function (e) {
                     var t = this.extractNodeFromValue(e), n = {
                         id: e,
-                        label: this.enhancedNormalizer(t).label || "".concat(e, " (unknown)"),
+                        label: this.enhancedNormalizer(t).label, /* TODO insert begin || "".concat(e, " (unknown)") */
                         ancestors: [],
                         parentNode: q,
                         isFallbackNode: !0,
@@ -973,6 +973,23 @@
                             var b = _[o];
                             g.isMatched = b.isMatched, g.showAllChildrenOnSearch = b.showAllChildrenOnSearch, g.isHighlighted = b.isHighlighted, b.isBranch && g.isBranch && (g.isExpanded = b.isExpanded, g.isExpandedOnSearch = b.isExpandedOnSearch, b.childrenStates.isLoaded && !g.childrenStates.isLoaded ? g.isExpanded = !1 : g.childrenStates = w()({}, b.childrenStates))
                         }
+
+                        // TODO insert begin
+                        g.removeChild = function(target_id) {
+                            if (g.children) {
+                                var children_new = [];
+                                for (var i = 0, n = g.children.length; i < n; i++) {
+                                    var one = g.children[i];
+                                    if (one && one.id == target_id) {
+                                        // g.children[i] = null;
+                                        children_new.push(one.raw);
+                                    }
+                                }
+                                g.raw.children = children_new;
+                            }
+                        };
+                        // TODO insert end
+
                         return g
                     }));
                     if (this.branchNodesFirst) {

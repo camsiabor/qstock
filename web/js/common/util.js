@@ -492,6 +492,47 @@ QUtil.tree_clone = function(tree, opts) {
     return opts.current;
 };
 
+QUtil.tree_leaf_map = function(tree, opts) {
+    let nodemap = {};
+    let field_id = opts.field_children || "id";
+    let field_children = opts.field_children || "children";
+    opts.callback = function(node) {
+        if (typeof node[field_children] === "undefined") {
+            let id = node[field_id];
+            if (id) {
+                nodemap[id] = node
+            }
+        }
+    }
+    QUtil.tree_iterate(tree, opts);
+    return nodemap;
+};
+
+QUtil.tree_iterate = function(tree, opts) {
+    let len = tree.length;
+    let field_children = opts.field_children || "children";
+    opts.depth = opts.depth || 0;
+    if (typeof opts.depth_limit === "undefined") {
+        opts.depth_limit = 16;
+    }
+    opts.pathes = opts.pathes || [];
+    for (let i = 0; i < len; i++) {
+        let one = tree[i];
+        opts.callback(one, opts.pathes, opts);
+        if (opts.depth + 1 > opts.depth_limit ) {
+            continue;
+        }
+        let subtree = one[field_children];
+        if (subtree && subtree.length > 0) {
+            opts.pathes[opts.depth] = one;
+            opts.depth = opts.depth + 1;
+            QUtil.tree_iterate(subtree, opts);
+            opts.pathes[opts.depth] = null;
+            opts.depth = opts.depth - 1;
+        }
+    }
+};
+
 QUtil.tree_locate = function(tree, node, opts) {
     opts = opts || {};
     let len = tree.length;

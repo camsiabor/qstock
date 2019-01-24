@@ -33,13 +33,6 @@ const script_methods = {
                 script_group.id = script_group.id || "system";
                 script_group.name = script_group.name || this.script_group.id;
                 this.script_group = script_group;
-                this.script_group_only.tree = QUtil.tree_clone(this.script_group.tree, {
-                    cloner : function (tree, node, opts) {
-                        if (node.children) {
-                            return QUtil.map_clone(node);
-                        }
-                    }
-                });
             }
 
             if (type.indexOf("script") >= 0) {
@@ -62,10 +55,16 @@ const script_methods = {
                     all = {id: "all", label: "all", children: []};
                     tree.push(all);
                 }
+
+                let nodemap = QUtil.tree_leaf_map(tree, { });
                 for (let i = 0, n = this.script_names.length; i < n; i++) {
                     let name = this.script_names[i];
-                    all.children.push({id: name, label: name});
+                    let node = nodemap[name];
+                    if (!node) {
+                        all.children.push({id: name, label: name});
+                    }
                 }
+
             }
 
         }.bind(this)).catch(util.handle_error.bind(this));
@@ -153,7 +152,7 @@ const script_methods = {
             }).then(function (resp) {
                 util.handle_response(resp, this.console, "");
                 this.script_setting_opts.msg = "保存群组成功";
-                this.script_list(opts.type);
+                this.script_list( "script,group" );
             }.bind(this));
         }
     },
@@ -206,9 +205,17 @@ const script_methods = {
         }
         parent.push(node);
         if (opts.type === "script") {
-            this.script_save( { type : "script", name : name } );
+            this.script_save( { type : "script", name : name } ).then(function() {
+                if (opts && opts.type === "script" ) {
+                    opts.msg = "新增脚本 " + name;
+                }
+            });
         }
-        this.script_save( { type : "group" } );
+        this.script_save( { type : "group" } ).then(function() {
+            if (opts && opts.type === "group" ) {
+                opts.msg = "新增分组 " + name;
+            }
+        });
     },
 
     script_delete: function (opts) {
@@ -426,7 +433,7 @@ const script_methods = {
         this.script_setting_opts.tree_des_node = node;
     },
 
-    script_group_move : function() {
+    script_move : function(opts) {
         let tree_script_src = this.$refs.tree_script_src;
         let tree_script_des = this.$refs.tree_script_des;
 
@@ -438,6 +445,33 @@ const script_methods = {
             return;
         }
 
+        let des = nodes_des[0];
+        let nodemap = QUtil.tree_leaf_map(des, {
+            depth_limit : 0
+        });
+        let count = 0;
+        for (let i = 0; i < nodes_src.length; i++) {
+            let one_src = nodes_src[i];
+            let one_src_raw = one_src.raw;
+            let id = one_src.id;
+            if (id && !nodemap[id] && typeof one_src_raw.children === 'undefined') {
+                des.raw.children.push(one_src_raw);
+                one_src.parentNode.removeChild(id);
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            this.script_save({type: "group"}).then(function () {
+                if (opts) {
+                    opts.msg = "移动了 " + count + " 个节点到 " + des.label;
+                }
+                tree_script_src.clear();
+                tree_script_des.clear();
+            });
+        } else {
+            opts.msg = "没有移动任何节点";
+        }
 
     },
 

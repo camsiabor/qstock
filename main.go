@@ -124,7 +124,7 @@ func main() {
 func signalHandle(g *global.G) {
 	var signalChannel = make(chan os.Signal, 16)
 	signal.Notify(signalChannel,
-		syscall.SIGSEGV,
+		syscall.SIGSEGV, syscall.SIGQUIT,
 		syscall.SIGTERM, syscall.SIGBUS, syscall.SIGABRT)
 
 	go func() {
@@ -134,16 +134,31 @@ func signalHandle(g *global.G) {
 			qlog.Log(qlog.INFO, "signal receive :", sig.String())
 
 			switch sig {
-			case syscall.SIGTERM:
-				g.Continue = false
+			case syscall.SIGTERM, syscall.SIGQUIT:
+
+				go func() {
+					g.Terminate()
+				}()
+
 				go func() {
 					time.Sleep(time.Second * 60)
 					os.Exit(0)
 				}()
+
 				continue
 			case syscall.SIGSEGV, syscall.SIGABRT, syscall.SIGBUS:
 				qlog.Log(qlog.FATAL, sig.String())
-				g.Continue = false
+
+				go func() {
+					g.Terminate()
+					qos.Fork()
+				}()
+
+				go func() {
+					time.Sleep(time.Second * 10)
+					qos.Fork()
+					os.Exit(-1)
+				}()
 				continue
 			}
 

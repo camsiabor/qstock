@@ -15,7 +15,7 @@ var cacheScriptByName *scache.SCache
 var cacheScriptByHash *scache.SCache
 
 func (o *HttpServer) routeScript() {
-	var group = o.Engine.Group("/script")
+	var group = o.engine.Group("/script")
 	cacheScriptByName = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_NAME)
 	cacheScriptByHash = scache.GetManager().Get(dict.CACHE_SCRIPT_BY_HASH)
 

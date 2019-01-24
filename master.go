@@ -30,47 +30,57 @@ func master(g *global.G) {
 	var jsonstr, _ = json.Marshal(g.Config)
 	qlog.Log(qlog.INFO, "config", string(jsonstr[:]))
 
-	var master_listen = util.GetStr(g.Config, "127.0.0.1:65000", "master", "listen")
-	if !strings.Contains(master_listen, ":") {
-		master_listen = ":" + master_listen
+	var master_listen_endpoing = util.GetStr(g.Config, "127.0.0.1:65000", "master", "listen")
+	if !strings.Contains(master_listen_endpoing, ":") {
+		master_listen_endpoing = ":" + master_listen_endpoing
 	}
 	var lerr error
-	g.Listener, lerr = net.Listen("tcp", master_listen)
+	g.Listener, lerr = net.Listen("tcp", master_listen_endpoing)
 	if lerr != nil {
-		qlog.Log(qlog.INFO, "establish master listen fail ", master_listen, lerr)
+		qlog.Log(qlog.INFO, "establish master listen fail ", master_listen_endpoing, lerr)
 		panic(lerr)
 	}
-	qlog.Log(qlog.INFO, "master", "listener establish", master_listen)
+	qlog.Log(qlog.INFO, "master", "listener establish", master_listen_endpoing)
 
 	var timezone = util.GetStr(g.Config, "Asia/Shanghai", "global", "timezone")
 	time.LoadLocation(timezone)
 
-	// [mapper] ------------------------------------------------------------------------------------------------
-	var mapperConfig = util.GetMap(g.Config, true, "mapping")
-	qref.GetMapperManager().Init(mapperConfig)
-	g.SetData("mapperm", qref.GetMapperManager())
+	initMapper(g)
 
-	// [dao] ------------------------------------------------------------------------------------------------
 	initDao(g)
 
-	// [script] ------------------------------------------------------------------------------------------------
-	rscript.InitScript(g)
+	initScript(g)
 
-	// [gin] ------------------------------------------------------------------------------------------------
-	httpv.GetInstance().Run()
+	initHttp(g)
 
-	// [agenda] ------------------------------------------------------------------------------------------------
-	var agendaConfig = util.GetMap(g.Config, true, "agenda")
-	agenda.GetAgendaManager().Init(agendaConfig)
+	initAgenda(g)
 
-	maincache.InitMainCache(g)
+	initCache(g)
 
 	initSyncer(g)
 
-	// [other] ------------------------------------------------------------------------------------------------
-
 	g.SetData("http", qnet.GetSimpleHttp())
 
+}
+func initAgenda(g *global.G) {
+	var agendaConfig = util.GetMap(g.Config, true, "agenda")
+	agenda.GetAgendaManager().Init(agendaConfig)
+}
+func initCache(g *global.G) {
+	maincache.InitMainCache(g)
+}
+func initHttp(g *global.G) {
+	var httpserv = httpv.GetInstance()
+	httpserv.Run()
+	g.RegisterModule("httpv", httpserv)
+}
+func initMapper(g *global.G) {
+	var mapperConfig = util.GetMap(g.Config, true, "mapping")
+	qref.GetMapperManager().Init(mapperConfig)
+	g.SetData("mapperm", qref.GetMapperManager())
+}
+func initScript(g *global.G) {
+	rscript.InitScript(g)
 }
 
 func initPerfAnalysis(g *global.G) {
@@ -89,6 +99,7 @@ func initPerfAnalysis(g *global.G) {
 func initDao(g *global.G) {
 	var schemaOpts = util.GetMap(g.Config, true, "dbschema")
 	var databaseOpts = util.GetMap(g.Config, true, "database")
+	var daoManager = qdao.GetManager()
 	qdao.GetManager().Init(func(manager *qdao.DaoManager, name string, opts map[string]interface{}) (qdao.D, error) {
 		var daotype = util.GetStr(opts, "", "type")
 		if len(daotype) == 0 {
@@ -107,6 +118,7 @@ func initDao(g *global.G) {
 		}
 		return nil, nil
 	}, schemaOpts, databaseOpts)
+	g.RegisterModule("dao_manager", daoManager)
 	g.SetData("daom", qdao.GetManager())
 }
 
@@ -120,5 +132,6 @@ func initSyncer(g *global.G) {
 		var syncer = new(sync.Syncer)
 		g.CmdHandlerRegister(dict.SERVICE_SYNC, syncer)
 		syncer.Run(apiname)
+		g.RegisterModule("syncer."+apiname, syncer)
 	}
 }

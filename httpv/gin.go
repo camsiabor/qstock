@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qerr"
@@ -18,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +33,8 @@ import (
 type HttpServer struct {
 	Root    string
 	Rootabs string
-	Engine  *gin.Engine
+	server  *http.Server
+	engine  *gin.Engine
 	lock    sync.RWMutex
 	data    map[string]interface{}
 }
@@ -215,7 +218,7 @@ func (o *HttpServer) handleTimeCmd(cmd string, m map[string]interface{}, c *gin.
 }
 
 func (o *HttpServer) routeCmd() {
-	var group = o.Engine.Group("/cmd")
+	var group = o.engine.Group("/cmd")
 	group.GET("/ping", func(c *gin.Context) {
 		o.RespJson(0, "pong", c)
 	})
@@ -266,7 +269,7 @@ func (o *HttpServer) routeStatic() {
 
 	//_router.LoadHTMLGlob(_rootabs + "/page/*")
 
-	var router = o.Engine
+	var router = o.engine
 	var rootabs = o.Rootabs
 
 	router.Static("/js", rootabs+"/js")
@@ -285,7 +288,14 @@ func (o *HttpServer) routeStatic() {
 	})
 }
 
-func (o *HttpServer) Run() {
+func (o *HttpServer) Run() error {
+
+	o.lock.Lock()
+	defer o.lock.Unlock()
+
+	if o.server != nil {
+		return errors.New("server already running")
+	}
 
 	o.data = make(map[string]interface{})
 
@@ -294,7 +304,7 @@ func (o *HttpServer) Run() {
 	var active = util.GetBool(config_http, true, "active")
 	if !active {
 		qlog.Log(qlog.INFO, "http", "not active")
-		return
+		return nil
 	}
 
 	var err error
@@ -304,7 +314,7 @@ func (o *HttpServer) Run() {
 	o.Rootabs, err = filepath.Abs(o.Root)
 	if err != nil {
 		qlog.Log(qlog.ERROR, "http", "root", err)
-		return
+		return err
 	}
 	qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root)
 
@@ -325,8 +335,8 @@ func (o *HttpServer) Run() {
 	qlog.Log(qlog.INFO, "http", "mode", mode)
 
 	var cache_timestamp = scache.GetManager().Get(dict.CACHE_TIMESTAMP)
-	o.Engine = gin.Default()
-	o.Engine.Use(func(c *gin.Context) {
+	o.engine = gin.Default()
+	o.engine.Use(func(c *gin.Context) {
 		if c.Request.Method == "GET" {
 			var path = c.Request.URL.Path
 			if path[len(path)-1] == 'l' { // html, last char is l
@@ -335,7 +345,7 @@ func (o *HttpServer) Run() {
 			}
 		}
 	})
-	o.Engine.Use(Recovery(func(c *gin.Context, err interface{}) {
+	o.engine.Use(Recovery(func(c *gin.Context, err interface{}) {
 		var info = qref.StackInfo(2)
 		info["err"] = err
 		o.RespJson(500, info, c)
@@ -347,16 +357,32 @@ func (o *HttpServer) Run() {
 	o.routeStock()
 	o.routeScript()
 
-	//var refresh_interval = util.GetInt(config_http, 300, "refresh_interval");
-	//go GinRefreshPage(refresh_interval);
+	o.server = &http.Server{
+		Addr:    ":" + port,
+		Handler: o.engine,
+	}
+
 	go func() {
 		defer qerr.SimpleRecover(0)
 		qlog.Log(qlog.INFO, "http", "ready to run")
-		var err = o.Engine.Run(":" + port) // listen and serve on 0.0.0.0:8080
+		err = o.server.ListenAndServe()
 		if err != nil {
 			qlog.Log(qlog.ERROR, "http", "run", err)
 		}
 	}()
+
+	return nil
+}
+
+func (o *HttpServer) Terminate(g *global.G) error {
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	var err error
+	if o.server != nil {
+		err = o.server.Close()
+		o.server = nil
+	}
+	return err
 }
 
 // TODO logger

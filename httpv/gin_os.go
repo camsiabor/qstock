@@ -10,7 +10,7 @@ import (
 
 func (o *HttpServer) routeOS() {
 
-	var os_file = o.Engine.Group("/os/file")
+	var os_file = o.engine.Group("/os/file")
 	os_file.POST("/list", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")

@@ -14,7 +14,7 @@ import (
 )
 
 func (o *HttpServer) routeStock() {
-	var group = o.Engine.Group("/stock")
+	var group = o.engine.Group("/stock")
 
 	group.POST("/sync", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)

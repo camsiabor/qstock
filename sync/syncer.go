@@ -109,16 +109,6 @@ func (o *Syncer) Run(name string) {
 	go o.heartbeat()
 }
 
-func (o *Syncer) stop() {
-	o.doContinue = false
-	if o.channelFetchCmd != nil {
-		close(o.channelFetchCmd)
-	}
-	if o.channelWorkProfile != nil {
-		close(o.channelWorkProfile)
-	}
-}
-
 func (o *Syncer) HandleCmd(cmd *global.Cmd) (*global.Cmd, bool, error) {
 	var profileName = cmd.Function
 	if len(profileName) == 0 {
@@ -492,4 +482,17 @@ func (o *Syncer) PersistAndCache(
 	_, err = work.Dao.UpdateBatch(db, groups, ids, data, true, -1, nil)
 
 	return data, ids, err
+}
+
+func (o *Syncer) Terminate(g *global.G) error {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.doContinue = false
+	if o.channelFetchCmd != nil {
+		close(o.channelFetchCmd)
+	}
+	if o.channelWorkProfile != nil {
+		close(o.channelWorkProfile)
+	}
+	return nil
 }

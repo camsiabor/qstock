@@ -250,8 +250,16 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 			qlog.Log(qlog.ERROR, profilename, "persist", "failcount", failcount, "retry", retry)
 		} else {
 			if len(metatoken) > 0 {
+
 				dao.Update(db, metatoken, "fetch_last_date", date_to_str, true, 0, nil)
-				dao.Update(db, metatoken, "fetch_last_date_from", date_from_str, true, 0, nil)
+
+				var fetch_last_date_from, _ = util.AsStrErr(dao.Get(db, metatoken, "fetch_last_date_from", 0, nil))
+				var fetch_last_date_from_num = util.AsInt(fetch_last_date_from, 0)
+				var date_from_num = util.AsInt(date_from_str, 0)
+				if date_from_num < fetch_last_date_from_num {
+					dao.Update(db, metatoken, "fetch_last_date_from", date_from_str, true, 0, nil)
+				}
+
 			}
 			break
 		}

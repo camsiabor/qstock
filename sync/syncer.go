@@ -257,6 +257,7 @@ func (o *Syncer) DoProfileRecover(work *ProfileWork) {
 	if pan == nil {
 		return
 	}
+	qlog.Log(qlog.ERROR, pan)
 	if work != nil && work.GCmd != nil {
 		var err = util.AsError(pan)
 		work.GCmd.ReplySelf(nil, err)

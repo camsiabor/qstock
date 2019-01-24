@@ -9,6 +9,9 @@ import (
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"runtime/pprof"
@@ -119,6 +122,51 @@ func testCycle() {
 }
 
 func TestLuaBenchmark(t *testing.T) {
+
+	//Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+	//Accept-Encoding: gzip, deflate, br
+	//Accept-Language: zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6
+	//Cache-Control: max-age=0
+	//Connection: keep-alive
+	//Cookie: lastSeen=0
+	//Host: www.booking.com
+	//Upgrade-Insecure-Requests: 1
+	//User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36
+
+	var checkin = "2019-01-25"
+	var checkout = "2019-01-26"
+	var url = "https://www.booking.com/hotel/mo/galaxy-macau.en-gb.html?aid=397617;label=gog235jc-1FCAEoggI46AdIM1gDaJcBiAEBmAEJuAEXyAEM2AEB6AEB-AEMiAIBqAID;sid=2e5b23a4ac97dfeaa5a1087e5d1e15f3;all_sr_blocks=30141306_89159273_2_2_0;checkin=" + checkin + ";checkout=" + checkout + ";dest_id=-1204094;dest_type=city;dist=0;hapos=1;highlighted_blocks=30141306_89159273_2_2_0;hp_group_set=0;hpos=1;room1=A%2CA;sb_price_type=total;sr_order=popularity;srepoch=1547982423;srpvid=89754e2b105d0188;type=total;ucfs=1&"
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6")
+	req.Header.Set("Cookie", "lastSeen=0")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	req.Header.Set("Host", "www.booking.com")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36")
+	// req.Header.Set("Cookie", "cors_js=1; _ga=GA1.2.1212520393.1532961488; zz_cook_tms_seg1=1; zz_cook_tms_ed=1; cto_lwid=90e954dd-e522-4417-8504-a8b682fca7ec; zz_cook_tms_ep=1; zz_cook_tms_em=1; zz_cook_tms_eg=1; esadm=02UmFuZG9tSVYkc2RlIyh9YbxZGyl9Y5%2BPCQ%2Be6L1iyuiQmlDq6ydyWKALPUDlLlmpVsAwmz%2FLoOU%3D; he=02UmFuZG9tSVYkc2RlIyh9YbxZGyl9Y5%2BPCQ%2Be6L1iyuiIqKIjP5uh%2F%2BUGiDKk0Q8iPbTZpbGgypc%3D; _gcl_au=1.1.895656110.1545647297; zz_cook_tms_seg3=7; _gid=GA1.2.2019762290.1547982083; header_joinapp_prompt_retargeting=1; vpmss=1; BJS=-; has_preloaded=1; 11_srd=%7B%22features%22%3A%5B%7B%22id%22%3A16%7D%5D%2C%22score%22%3A3%2C%22detected%22%3Afalse%7D; zz_cook_tms_hlist=301413; utag_main=v_id:0164eba007f40062ae11f441708003072004806a00978$_sn:32$_ss:0$_st:1547984362921$4split:3$4split2:1$ses_id:1547982084055%3Bexp-session$_pn:11%3Bexp-session; lastSeen=1547984659586; bkng=11UmFuZG9tSVYkc2RlIyh9YSvtNSM2ADX0BnR0tqAEmjsc8vSgxGCDYesZRvY29jItmxhxeLNutqxXn9%2F%2B4iCE4c2sZ9zdrG0w0o2O6bSqDap%2F0hyVpKPzwJ2o0Ttz5PeL2tRFJ6JpXYcG4AGSTr1HDsQY63sh8LuHO7Yl44l5xkNlb8whIeNaZh7TuxLw7l5booev1kS%2BN3HyFILFosNfoQ%3D%3D");
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var html = string(body)
+	// strings.Index()
+
+	log.Println(html)
+
+}
+
+func TestLuaBenchmark4(t *testing.T) {
 	var g = global.GetInstance()
 
 	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {

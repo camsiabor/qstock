@@ -15,7 +15,7 @@ const def_setting = {
         path : "lua",
         filter : "lua"
     },
-    mode: "query",
+    mode: "raw",
     exclude: "buy,sell",
     script: {
         last: "",
@@ -369,7 +369,13 @@ vue_options.mounted = function () {
     this.editor_init();
     this.table_init();
 
-    this.script_list(this.setting.locate);
+    this.script_list(this.setting.locate).then(function(){
+        if (this.setting.script.last) {
+            this.script_select({
+                id : this.setting.script.last
+            });
+        }
+    }.bind(this));
 
 };
 

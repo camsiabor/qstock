@@ -34,7 +34,6 @@ const script_methods = {
             return;
         }
 
-
         this.setting.script.last = this.script.name = node.id;
         return axios.post("/os/file/text", {
             path: node.id
@@ -65,9 +64,9 @@ const script_methods = {
             return;
         }
 
-        this.setting.script.last = this.script.name = name;
+        this.setting.script.last = this.script.name;
         this.script.script = this.editor.getValue().trim();
-        return axios.post("/os/file/text", {
+        return axios.post("/os/file/write", {
             path : current.id,
             text : this.script.script
         }).then(function (resp) {

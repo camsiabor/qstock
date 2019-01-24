@@ -7,6 +7,7 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qnet"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qdaobundle/qredis"
@@ -65,6 +66,10 @@ func master(g *global.G) {
 	maincache.InitMainCache(g)
 
 	initSyncer(g)
+
+	// [other] ------------------------------------------------------------------------------------------------
+
+	g.SetData("http", qnet.GetSimpleHttp())
 
 }
 

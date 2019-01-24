@@ -8,6 +8,15 @@ import (
 	"net/url"
 )
 
+type SimpleHttp struct {
+}
+
+var simpleHttpInstance = &SimpleHttp{}
+
+func GetSimpleHttp() {
+
+}
+
 func hotelcrawler() {
 
 	var checkin = "2019-01-25"

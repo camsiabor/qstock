@@ -484,7 +484,7 @@ func (o *Syncer) PersistAndCache(
 	return data, ids, err
 }
 
-func (o *Syncer) Terminate(g *global.G) error {
+func (o *Syncer) Terminate() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.doContinue = false

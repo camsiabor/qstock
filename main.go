@@ -87,7 +87,6 @@ func main() {
 		os.Exit(1)
 	}
 	pidfilelock.WriteString(os.Getpid())
-	defer pidfilelock.UnLock()
 
 	// [Config] ------------------------------------------------------------------------------------------------
 	if len(g.ConfigPath) == 0 {
@@ -109,14 +108,62 @@ func main() {
 
 	go heartbeat(g)
 
-	// [cmd] --------------------------------------------------------------------------------------------
-	if g.CycleHandler == nil {
-		handleCmd()
-	} else {
-		g.CycleHandler("suspend", g, nil)
+	cmdHandle(g, pidfilelock)
+
+}
+
+func cmdHandle(g *global.G, pidfilelock *qos.FileLock) {
+
+	if g.CycleHandler != nil {
+		g.CycleHandler("", g, nil)
 	}
 
-	// [release] --------------------------------------------------------------------------------------------
+	var ok bool
+	var direct string
+	for {
+		direct, ok = g.WaitDirect()
+		if !ok {
+			direct = "exit"
+			break
+		}
+		qlog.Log(qlog.INFO, "global direct: ", direct)
+		switch direct {
+		case "exit", "quit", "restart":
+			break
+		case "config_reload":
+			// TODO
+		}
+	}
+	pidfilelock.UnLock()
+
+	var callback func()
+	switch direct {
+	case "restart":
+		callback = func() {
+			qlog.Log(qlog.INFO, "fork")
+			qos.Fork()
+		}
+	case "exit", "quit":
+		callback = func() {
+			qlog.Log(qlog.INFO, "exit")
+			os.Exit(0)
+		}
+	}
+	if callback != nil {
+		go func() {
+			time.Sleep(time.Second * time.Duration(10))
+			callback()
+		}()
+	}
+	var err = g.Terminate()
+	if err != nil {
+		qlog.Log(qlog.ERROR, "global terminate error", err)
+	}
+
+	if callback != nil {
+		callback()
+	}
+
 	qlog.Log(qlog.INFO, g.Mode, "fin")
 
 }
@@ -130,36 +177,13 @@ func signalHandle(g *global.G) {
 	go func() {
 
 		for sig := range signalChannel {
-
 			qlog.Log(qlog.INFO, "signal receive :", sig.String())
-
 			switch sig {
 			case syscall.SIGTERM, syscall.SIGQUIT:
-
-				go func() {
-					g.Terminate()
-				}()
-
-				go func() {
-					time.Sleep(time.Second * 60)
-					os.Exit(0)
-				}()
-
-				continue
+				g.SendDirect("exit")
 			case syscall.SIGSEGV, syscall.SIGABRT, syscall.SIGBUS:
 				qlog.Log(qlog.FATAL, sig.String())
-
-				go func() {
-					g.Terminate()
-					qos.Fork()
-				}()
-
-				go func() {
-					time.Sleep(time.Second * 10)
-					qos.Fork()
-					os.Exit(-1)
-				}()
-				continue
+				g.SendDirect("restart")
 			}
 
 		}
@@ -177,25 +201,4 @@ func heartbeat(g *global.G) {
 		qlog.Log(qlog.INFO, "@")
 	}
 
-}
-
-func handleCmd() {
-	var chCmd = make(chan string, 256)
-	var g = global.GetInstance()
-	for {
-		var cmd, ok = <-chCmd
-		if !ok || cmd == "exit" {
-			qlog.Log(qlog.INFO, "main", "exit")
-			break
-		}
-		qlog.Log(qlog.INFO, "main", "receive cmd", cmd)
-		if cmd == "config reload" {
-			var config, err = qconfig.ConfigLoad(g.ConfigPath, "includes")
-			if err != nil {
-				qlog.Log(qlog.FATAL, "config", "load failure", err)
-			} else {
-				g.Config = config
-			}
-		}
-	}
 }

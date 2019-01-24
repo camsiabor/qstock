@@ -374,7 +374,7 @@ func (o *HttpServer) Run() error {
 	return nil
 }
 
-func (o *HttpServer) Terminate(g *global.G) error {
+func (o *HttpServer) Terminate() error {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 	var err error

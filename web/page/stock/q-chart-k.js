@@ -103,6 +103,7 @@ Vue.component('vuetable-chart', {
                 if (!date) {
                     date = todaystr;
                 }
+                one.date = date = date + "";
                 if (one.now) {
                     one.close = one.now;
                 }

@@ -64,9 +64,12 @@ func (o *StockCal) load() error {
 	var count = len(o.dates)
 	o.datesn = make([]int, count)
 	for i := 0; i < count; i++ {
-		o.datesn[i], err = strconv.Atoi(o.dates[i])
-		if err != nil {
-			qlog.Log(qlog.ERROR, "date cannot convert to int", o.dates[i], err)
+		var date = o.dates[i]
+		if len(date) > 0 {
+			o.datesn[i], err = strconv.Atoi(o.dates[i])
+			if err != nil {
+				qlog.Log(qlog.ERROR, "date cannot convert to int", o.dates[i], err)
+			}
 		}
 	}
 	return err

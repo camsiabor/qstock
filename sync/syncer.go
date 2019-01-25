@@ -20,7 +20,7 @@ import (
 
 const SHOWAPI_FETCH_META_TOKEN = "meta."
 
-type SyncerMapperFunc func(data interface{})
+type SyncerMapperFunc func(data interface{}) interface{}
 
 type Syncer struct {
 	Name               string
@@ -458,7 +458,10 @@ func (o *Syncer) PersistAndCache(
 		}
 
 		if mapperfunc != nil {
-			mapperfunc(one)
+			var ret = mapperfunc(one)
+			if ret != nil {
+				one = ret
+			}
 		}
 
 		var groupid string

@@ -246,26 +246,20 @@ Vue.component('vuetable-chart', {
                 if (val === '下跌') {
                     return QUtil.COLOR_DOWN;
                 }
-            }).shape('candle').tooltip('date2*open*close*high*low*change_rate*vol', function(date2, open, close, high, low, change_rate, vol) {
+            }).shape('candle').tooltip('date2*open*close*high*low*change_rate*turnover*vol', function(date2, open, close, high, low, change_rate, turnover, vol) {
                 let html = [];
                 let color = QUtil.stock_color(change_rate);
-                html.push('<br><span style="padding-left: 1px">open ');
-                html.push(open);
+                html.push('<br><span style="padding-left: 1px">O&C: ');
+                html.push(open + " > " + close);
                 html.push('</span><br/>');
-                html.push('<span style="padding-left: 1px">close ');
-                html.push(close);
+                html.push('<span style="padding-left: 1px">L&H: ');
+                html.push(low + " ~ " + high);
                 html.push('</span><br/>');
-                html.push('<span style="padding-left: 1px">high ');
-                html.push(high);
+                html.push('<span style="padding-left: 1px;color:' + color + '">rate: ');
+                html.push((change_rate + "").substring(0, 5) + "%" );
                 html.push('</span><br/>');
-                html.push('<span style="padding-left: 1px">low ');
-                html.push(low);
-                html.push('</span><br/>');
-                html.push('<span style="padding-left: 1px;color:' + color + '">rate ');
-                html.push((change_rate+"").substring(0, 5) + "%");
-                html.push('</span><br/>');
-                html.push('<span style="padding-left: 1px;color:' + color + '">vol ');
-                html.push(vol + "");
+                html.push('<span style="padding-left: 1px;color:' + color + '">turnover: ');
+                html.push(turnover + "%");
                 html.push('</span>');
                 return {
                     name: date2.substring(5),

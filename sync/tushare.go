@@ -205,7 +205,7 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 
 	var cache_vcir = make(map[string]float64)
 	var cache_snapshot = scache.GetManager().Get(dict.CACHE_STOCK_SNAPSHOT)
-	work.Mapper = func(one interface{}) {
+	work.Mapper = func(one interface{}) interface{} {
 		var m = one.(map[string]interface{})
 		var code = m["code"].(string)
 		var vcir, ok = cache_vcir[code]
@@ -233,7 +233,8 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 		} else {
 			m["turnover"] = 0
 		}
-
+		var r = util.MapStringToFloat64(m)
+		return r
 	}
 
 	var data []interface{}

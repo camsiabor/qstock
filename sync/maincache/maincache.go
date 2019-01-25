@@ -119,7 +119,11 @@ func InitMainCache(g *global.G) {
 			return nil, err
 		}
 		var code = keys[0]
-		return conn.Get(scache.Db, "", code, 1, nil)
+		data, err := conn.Get(scache.Db, "", code, 1, nil)
+		if data != nil {
+			data = util.MapStringToFloat64(data)
+		}
+		return data, err
 	}
 
 	var cache_khistory_loader_generator = func(prefix string, profilesuffix string) scache.Loader {
@@ -141,12 +145,16 @@ func InitMainCache(g *global.G) {
 			}
 			var datestr = keys[1]
 			data, err := conn.Get(scache.Db, code, datestr, 1, nil)
+
 			if data != nil {
+				data = util.MapStringToFloat64(data)
 				return data, err
 			}
+
 			if factor <= 0 {
 				return data, err
 			}
+
 			var g = global.GetInstance()
 			var cmd = &global.Cmd{
 				Service:  dict.SERVICE_SYNC,

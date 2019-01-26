@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qroutine"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
@@ -13,11 +14,20 @@ import (
 	"time"
 )
 
+type StockCalInterval int
+
+const (
+	Day StockCalInterval = iota
+	Week
+	Month
+)
+
 type StockCal struct {
 	lock sync.RWMutex
 
 	openhm int
 
+	today          time.Time
 	todayDay       int
 	todayStr       string
 	todayNum       int
@@ -35,11 +45,17 @@ type StockCal struct {
 
 	lastTradeDayStr   string
 	lastTradeDayIndex int
-	datesn            []int
-	dates             []string
-	weeks             []string
-	months            []string
-	cache             *scache.SCache
+
+	dates  []string
+	datesn []int
+
+	weeks  []string
+	weeksn []string
+
+	months  []string
+	monthsn []int
+
+	cache *scache.SCache
 }
 
 var _stock = &StockCal{
@@ -56,6 +72,10 @@ func GetStockCalendar() *StockCal {
 func (o *StockCal) Is(date string) bool {
 	var one, _ = o.cache.Get(true, date)
 	return one != nil && util.AsInt(one, 0) > 0
+}
+
+func (o *StockCal) IsByInt(date int) bool {
+	return o.Is(strconv.Itoa(date))
 }
 
 func (o *StockCal) load() error {
@@ -89,13 +109,15 @@ func (o *StockCal) load() error {
 	return err
 }
 
-func (o *StockCal) calInternal(hm int, now time.Time) {
+func (o *StockCal) calDay(hm int, now time.Time) {
+
 	if hm >= o.openhm {
 		o.todayNeedReset = false
 	} else {
 		o.todayNeedReset = true
 		now = now.AddDate(0, 0, -1)
 	}
+	o.today = now
 	o.todayDay = now.Day()
 	o.todayStr = now.Format("20060102")
 	o.todayNum, _ = strconv.Atoi(o.todayStr)
@@ -125,8 +147,93 @@ func (o *StockCal) calInternal(hm int, now time.Time) {
 	}
 }
 
-func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
+func (o *StockCal) calWeek() {
+	var datecount = len(o.dates)
+	var date_end string
+	var date_start string
+	var time_end time.Time
+	var time_start time.Time
+	for i := datecount - 1; i >= 0; i-- {
+		date_end = o.dates[i]
+		if date_end != "" {
+			var err error
+			time_end, err = time.Parse("20060102", date_end)
+			if err == nil {
+				if time_end.Weekday() == time.Friday {
+					break
+				}
+			} else {
+				qlog.Log(qlog.ERROR, "parse time error", date_end, err)
+			}
 
+		}
+	}
+	for i := 0; i < datecount; i++ {
+		if o.dates[i] != "" {
+			var err error
+			date_start = o.dates[i]
+			time_start, err = time.Parse("20060102", date_start)
+			if err == nil {
+				break
+			} else {
+				qlog.Log(qlog.ERROR, "parse time error", date_start, err)
+			}
+
+		}
+	}
+
+	for time_end.After(time_start) {
+		time_start.Weekday()
+	}
+
+}
+
+func (o *StockCal) calMonth() {
+	var datecount = len(o.datesn)
+	var capacity = datecount / 10
+	var months = make([]string, capacity)
+	var monthsn = make([]int, capacity)
+	var count = 0
+	var i = datecount - 1
+	var prevmonth = 0
+
+	var thisyear = o.today.Year()
+	var thismonth = int(o.today.Month())
+
+	o.thisMonthIndex = -1
+
+	for i >= 0 {
+		var daten = o.datesn[i]
+		var day = daten % 100
+		if day >= 28 {
+			var month = (daten % 10000) / 100
+			if month != prevmonth {
+
+				var date = o.dates[i]
+				prevmonth = month
+				count = count + 1
+				months[capacity-count] = date
+				monthsn[capacity-count] = daten
+
+				if o.thisMonthIndex < 0 {
+					var year = daten / 10000
+					if month == thismonth && year == thisyear {
+						o.thisMonthNum = daten
+						o.thisMonthStr = date
+						o.thisMonthIndex = count
+					}
+				}
+			}
+		}
+		i--
+	}
+
+	o.months = months[capacity-count:]
+	o.monthsn = monthsn[capacity-count:]
+	o.thisMonthIndex = len(o.months) - o.thisMonthIndex
+}
+
+func (o *StockCal) check() {
 	var now = time.Now()
 	var hour = now.Hour()
 	var minute = now.Minute()
@@ -151,37 +258,77 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 			defer o.lock.Unlock()
 			if o.todayDay != now.Day() {
 				o.load()
-				o.calInternal(hm, now)
+				o.calDay(hm, now)
+				qroutine.Exec(
+					0,
+					qroutine.NewBox(func(arg interface{}) interface{} {
+						o.calWeek()
+						return nil
+					}, nil),
+					qroutine.NewBox(func(arg interface{}) interface{} {
+						o.calMonth()
+						return nil
+					}, nil),
+				)
 			}
 		}()
 	}
+}
+
+func (o *StockCal) ListEx(interval StockCalInterval, iprev int, pin int, inext int, reverse bool) []string {
+
+	o.check()
 
 	var resultn = 0
-	var offset = o.lastTradeDayIndex + pin
+
+	var offset int
+	var domain []string
+	switch interval {
+	case Day:
+		domain = o.dates
+		offset = o.lastTradeDayIndex + pin
+	case Week:
+		domain = o.weeks
+		offset = o.thisWeekIndex + pin
+	case Month:
+		domain = o.months
+		offset = o.thisMonthIndex + pin
+	}
 	var lower = offset - iprev
 	var upper = offset + inext
 	if lower < 0 {
 		lower = 0
 	}
-	if upper >= len(o.dates) {
-		upper = len(o.dates) - 1
+	if upper >= len(domain) {
+		upper = len(domain) - 1
 	}
 
 	var result = make([]string, upper-lower+1)
 	if reverse {
 		for i := upper; i >= lower; i-- {
-			result[resultn] = o.dates[i]
+			result[resultn] = domain[i]
 			resultn = resultn + 1
 		}
 	} else {
 		for i := lower; i <= upper; i++ {
-			result[resultn] = o.dates[i]
+			result[resultn] = domain[i]
 			resultn = resultn + 1
 		}
 	}
 
 	return result[:resultn]
+}
 
+func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
+	return o.ListEx(Day, iprev, pin, inext, reverse)
+}
+
+func (o *StockCal) ListWeek(iprev int, pin int, inext int, reverse bool) []string {
+	return o.ListEx(Week, iprev, pin, inext, reverse)
+}
+
+func (o *StockCal) ListMonth(iprev int, pin int, inext int, reverse bool) []string {
+	return o.ListEx(Month, iprev, pin, inext, reverse)
 }
 
 func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, error) {
@@ -237,12 +384,4 @@ func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, e
 		}
 	}
 	return result, nil
-}
-
-func (o *StockCal) ListWeek(iprev int, pin int, inext int, reverse bool) []string {
-	panic("implement")
-}
-
-func (o *StockCal) ListMonth(iprev int, pin int, inext int, reverse bool) []string {
-	panic("implement")
 }

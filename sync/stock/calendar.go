@@ -14,13 +14,25 @@ import (
 )
 
 type StockCal struct {
-	lock              sync.RWMutex
-	todayDay          int
-	todayNum          int
-	todayIndex        int
-	todayTrade        bool
-	todayStr          string
-	todayNeedReset    bool
+	lock sync.RWMutex
+
+	openhm int
+
+	todayDay       int
+	todayStr       string
+	todayNum       int
+	todayIndex     int
+	todayTrade     bool
+	todayNeedReset bool
+
+	thisWeekStr   string
+	thisWeekNum   int
+	thisWeekIndex int
+
+	thisMonthStr   string
+	thisMonthNum   int
+	thisMonthIndex int
+
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 	datesn            []int
@@ -30,7 +42,9 @@ type StockCal struct {
 	cache             *scache.SCache
 }
 
-var _stock = &StockCal{}
+var _stock = &StockCal{
+	openhm: 925,
+}
 
 func GetStockCalendar() *StockCal {
 	if _stock.cache == nil {
@@ -75,6 +89,42 @@ func (o *StockCal) load() error {
 	return err
 }
 
+func (o *StockCal) calInternal(hm int, now time.Time) {
+	if hm >= o.openhm {
+		o.todayNeedReset = false
+	} else {
+		o.todayNeedReset = true
+		now = now.AddDate(0, 0, -1)
+	}
+	o.todayDay = now.Day()
+	o.todayStr = now.Format("20060102")
+	o.todayNum, _ = strconv.Atoi(o.todayStr)
+	for i := 0; i < 30; i++ {
+		var lastTradeDay = now.AddDate(0, 0, -i)
+		o.lastTradeDayStr = lastTradeDay.Format("20060102")
+		if o.Is(o.lastTradeDayStr) {
+			break
+		}
+	}
+
+	o.todayTrade = (o.todayStr == o.lastTradeDayStr)
+
+	var count = len(o.dates)
+	for i := 0; i < count; i++ {
+		if o.dates[i] == o.lastTradeDayStr {
+			o.lastTradeDayIndex = i
+			break
+		}
+	}
+
+	for i := 0; i < count; i++ {
+		if o.dates[i] == o.todayStr {
+			o.todayIndex = i
+			break
+		}
+	}
+}
+
 func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 
 	var now = time.Now()
@@ -90,7 +140,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 
 	var needReset bool
 	if o.todayNeedReset {
-		needReset = hm >= 925
+		needReset = hm >= o.openhm
 	} else {
 		needReset = o.todayDay != now.Day()
 	}
@@ -101,40 +151,7 @@ func (o *StockCal) List(iprev int, pin int, inext int, reverse bool) []string {
 			defer o.lock.Unlock()
 			if o.todayDay != now.Day() {
 				o.load()
-				if hm >= 925 {
-					o.todayNeedReset = false
-				} else {
-					o.todayNeedReset = true
-					now = now.AddDate(0, 0, -1)
-				}
-				o.todayDay = now.Day()
-				o.todayStr = now.Format("20060102")
-				o.todayNum, _ = strconv.Atoi(o.todayStr)
-				for i := 0; i < 30; i++ {
-					var lastTradeDay = now.AddDate(0, 0, -i)
-					o.lastTradeDayStr = lastTradeDay.Format("20060102")
-					if o.Is(o.lastTradeDayStr) {
-						break
-					}
-				}
-
-				o.todayTrade = (o.todayStr == o.lastTradeDayStr)
-
-				var count = len(o.dates)
-				for i := 0; i < count; i++ {
-					if o.dates[i] == o.lastTradeDayStr {
-						o.lastTradeDayIndex = i
-						break
-					}
-				}
-
-				for i := 0; i < count; i++ {
-					if o.dates[i] == o.todayStr {
-						o.todayIndex = i
-						break
-					}
-				}
-
+				o.calInternal(hm, now)
 			}
 		}()
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qroutine"
+	"github.com/camsiabor/qcom/qtime"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
@@ -35,14 +36,15 @@ type StockCal struct {
 	todayTrade     bool
 	todayNeedReset bool
 
-	thisWeekStr   string
-	thisWeekNum   int
-	thisWeekIndex int
+	weekStr   string
+	weekNum   int
+	weekIndex int
 
-	thisMonthStr   string
-	thisMonthNum   int
-	thisMonthIndex int
+	monthStr   string
+	monthNum   int
+	monthIndex int
 
+	lastTradeDay      time.Time
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 
@@ -50,7 +52,7 @@ type StockCal struct {
 	datesn []int
 
 	weeks  []string
-	weeksn []string
+	weeksn []int
 
 	months  []string
 	monthsn []int
@@ -122,9 +124,11 @@ func (o *StockCal) calDay(hm int, now time.Time) {
 	o.todayStr = now.Format("20060102")
 	o.todayNum, _ = strconv.Atoi(o.todayStr)
 	for i := 0; i < 30; i++ {
-		var lastTradeDay = now.AddDate(0, 0, -i)
-		o.lastTradeDayStr = lastTradeDay.Format("20060102")
+		o.lastTradeDay = now.AddDate(0, 0, -i)
+		o.lastTradeDayStr = o.lastTradeDay.Format("20060102")
 		if o.Is(o.lastTradeDayStr) {
+			qtime.TruncateHMS(&o.lastTradeDay)
+			qlog.Log(qlog.INFO, "last trade day", o.lastTradeDay.Format("2006-01-02 15:04:05"))
 			break
 		}
 	}
@@ -182,10 +186,44 @@ func (o *StockCal) calWeek() {
 		}
 	}
 
-	for time_end.After(time_start) {
-		time_start.Weekday()
+	var last_trade_unix = o.lastTradeDay.Unix()
+	var time_end_unix = time_end.Unix()
+	var time_start_unix = time_start.Unix()
+
+	var count = 0
+	var thisweekindex = -1
+	var capacity = datecount / 3
+	var weeks = make([]string, capacity)
+	var weeksn = make([]int, capacity)
+	for time_end_unix >= time_start_unix {
+		var delta = -1
+		var found = false
+		var weekday = time_end.Weekday()
+		if weekday >= time.Monday && weekday <= time.Friday {
+			var date = time_end.Format("20060102")
+			if o.Is(date) {
+				var daten, _ = strconv.Atoi(date)
+				found = true
+				count = count + 1
+				weeks[capacity-count] = date
+				weeksn[capacity-count] = daten
+				delta = -int(weekday) - 2
+			}
+		}
+
+		var before = time_end_unix
+		time_end = time_end.AddDate(0, 0, delta)
+		time_end_unix = time_end.Unix()
+		if thisweekindex < 0 && found {
+			if last_trade_unix >= time_end_unix && last_trade_unix <= before {
+				thisweekindex = count
+			}
+		}
 	}
 
+	o.weeks = weeks[capacity-count:]
+	o.weeksn = weeksn[capacity-count:]
+	o.weekIndex = len(o.weeks) - thisweekindex
 }
 
 func (o *StockCal) calMonth() {
@@ -197,10 +235,9 @@ func (o *StockCal) calMonth() {
 	var i = datecount - 1
 	var prevmonth = 0
 
-	var thisyear = o.today.Year()
-	var thismonth = int(o.today.Month())
-
-	o.thisMonthIndex = -1
+	var thisyear = o.lastTradeDay.Year()
+	var thismonth = int(o.lastTradeDay.Month())
+	var thismonthindex = -1
 
 	for i >= 0 {
 		var daten = o.datesn[i]
@@ -215,12 +252,12 @@ func (o *StockCal) calMonth() {
 				months[capacity-count] = date
 				monthsn[capacity-count] = daten
 
-				if o.thisMonthIndex < 0 {
+				if thismonthindex < 0 {
 					var year = daten / 10000
 					if month == thismonth && year == thisyear {
-						o.thisMonthNum = daten
-						o.thisMonthStr = date
-						o.thisMonthIndex = count
+						o.monthNum = daten
+						o.monthStr = date
+						thismonthindex = count
 					}
 				}
 			}
@@ -230,7 +267,7 @@ func (o *StockCal) calMonth() {
 
 	o.months = months[capacity-count:]
 	o.monthsn = monthsn[capacity-count:]
-	o.thisMonthIndex = len(o.months) - o.thisMonthIndex
+	o.monthIndex = len(o.months) - thismonthindex
 }
 
 func (o *StockCal) check() {
@@ -289,10 +326,10 @@ func (o *StockCal) ListEx(interval StockCalInterval, iprev int, pin int, inext i
 		offset = o.lastTradeDayIndex + pin
 	case Week:
 		domain = o.weeks
-		offset = o.thisWeekIndex + pin
+		offset = o.weekIndex + pin
 	case Month:
 		domain = o.months
-		offset = o.thisMonthIndex + pin
+		offset = o.monthIndex + pin
 	}
 	var lower = offset - iprev
 	var upper = offset + inext

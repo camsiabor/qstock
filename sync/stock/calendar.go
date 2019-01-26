@@ -108,6 +108,7 @@ func (o *StockCal) load() error {
 			}
 		}
 	}
+	qlog.Log(qlog.INFO, "loaded", len(o.dates))
 	return err
 }
 
@@ -191,6 +192,7 @@ func (o *StockCal) calWeek() {
 	var time_start_unix = time_start.Unix()
 
 	var count = 0
+	var date string
 	var thisweekindex = -1
 	var capacity = datecount / 3
 	var weeks = make([]string, capacity)
@@ -198,9 +200,10 @@ func (o *StockCal) calWeek() {
 	for time_end_unix >= time_start_unix {
 		var delta = -1
 		var found = false
+
 		var weekday = time_end.Weekday()
 		if weekday >= time.Monday && weekday <= time.Friday {
-			var date = time_end.Format("20060102")
+			date = time_end.Format("20060102")
 			if o.Is(date) {
 				var daten, _ = strconv.Atoi(date)
 				found = true
@@ -216,6 +219,8 @@ func (o *StockCal) calWeek() {
 		time_end_unix = time_end.Unix()
 		if thisweekindex < 0 && found {
 			if last_trade_unix >= time_end_unix && last_trade_unix <= before {
+				o.weekStr = date
+				o.weekNum, _ = strconv.Atoi(date)
 				thisweekindex = count
 			}
 		}
@@ -224,6 +229,8 @@ func (o *StockCal) calWeek() {
 	o.weeks = weeks[capacity-count:]
 	o.weeksn = weeksn[capacity-count:]
 	o.weekIndex = len(o.weeks) - thisweekindex
+
+	qlog.Log(qlog.INFO, o.weekStr, "week index", o.weekIndex)
 }
 
 func (o *StockCal) calMonth() {
@@ -264,10 +271,11 @@ func (o *StockCal) calMonth() {
 		}
 		i--
 	}
-
 	o.months = months[capacity-count:]
 	o.monthsn = monthsn[capacity-count:]
 	o.monthIndex = len(o.months) - thismonthindex
+
+	qlog.Log(qlog.INFO, o.monthStr, "month index", o.monthIndex)
 }
 
 func (o *StockCal) check() {

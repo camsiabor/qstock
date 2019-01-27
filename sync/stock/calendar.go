@@ -45,6 +45,7 @@ type StockCal struct {
 	monthIndex int
 
 	lastTradeDay      time.Time
+	lastTradeDayNum   int
 	lastTradeDayStr   string
 	lastTradeDayIndex int
 
@@ -87,12 +88,13 @@ func (o *StockCal) load() error {
 		Function: "trade.calendar",
 		SFlag:    "force",
 	}
-	g.SendCmd(cmd, time.Second*15)
+	g.SendCmd(cmd, time.Second*5)
 
 	if cmd.RetErr != nil {
 		return cmd.RetErr
 	}
 
+	o.cache.Init(true)
 	dates, err := o.cache.Keys(true)
 	o.dates = util.AsStringSlice(dates, len(dates))
 	sort.Strings(o.dates)
@@ -128,6 +130,7 @@ func (o *StockCal) calDay(hm int, now time.Time) {
 		o.lastTradeDay = now.AddDate(0, 0, -i)
 		o.lastTradeDayStr = o.lastTradeDay.Format("20060102")
 		if o.Is(o.lastTradeDayStr) {
+			o.lastTradeDayNum, _ = strconv.Atoi(o.lastTradeDayStr)
 			qtime.TruncateHMS(&o.lastTradeDay)
 			qlog.Log(qlog.INFO, "last trade day", o.lastTradeDay.Format("2006-01-02 15:04:05"))
 			break
@@ -376,7 +379,9 @@ func (o *StockCal) ListMonth(iprev int, pin int, inext int, reverse bool) []stri
 	return o.ListEx(Month, iprev, pin, inext, reverse)
 }
 
-func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, error) {
+func (o *StockCal) ListByDateEx(interval StockCalInterval, from string, to string, reverse bool) ([]string, error) {
+
+	o.check()
 
 	to_num, err := strconv.Atoi(to)
 	if err != nil {
@@ -391,18 +396,34 @@ func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, e
 		return nil, fmt.Errorf("from > to :  %d > %d", from_num, to_num)
 	}
 
+	var current int
+	var targets []string
+	var targetsn []int
+	switch interval {
+	case Day:
+		targets = o.dates
+		targetsn = o.datesn
+		current = o.lastTradeDayIndex
+	case Week:
+		targets = o.weeks
+		targetsn = o.weeksn
+		current = o.weekIndex
+	case Month:
+		targets = o.months
+		targetsn = o.monthsn
+		current = o.monthIndex
+	}
+
 	var to_i int = -1
 	var from_i int = -1
-	for i := o.todayNum; i >= 0; i-- {
-		var daten = o.datesn[i]
+	for i := current; i >= 0; i-- {
+		var daten = targetsn[i]
 		if to_num == daten {
 			to_i = i
 		}
-
 		if to_num == -1 && to_num > daten {
 			to_i = i + 1
 		}
-
 		if from_num == daten {
 			from_i = i
 			break
@@ -412,21 +433,38 @@ func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, e
 			break
 		}
 	}
-	if from_i < 0 || to_i < 0 {
-		return nil, fmt.Errorf("date not found: from %d to %d", from_num, to_num)
+
+	if from_i < 0 {
+		from_i = 0
+	}
+
+	if to_i < 0 {
+		to_i = current
 	}
 	var count = 0
-	var result = make([]string, from_i-to_i+1)
+	var result = make([]string, to_i-from_i+1)
 	if reverse {
 		for i := to_i; i >= from_i; i-- {
-			result[count] = o.dates[i]
+			result[count] = targets[i]
 			count++
 		}
 	} else {
 		for i := from_i; i <= to_i; i++ {
-			result[count] = o.dates[i]
+			result[count] = targets[i]
 			count++
 		}
 	}
 	return result, nil
+}
+
+func (o *StockCal) ListByDate(from string, to string, reverse bool) ([]string, error) {
+	return o.ListByDateEx(Day, from, to, reverse)
+}
+
+func (o *StockCal) ListWeekByDate(from string, to string, reverse bool) ([]string, error) {
+	return o.ListByDateEx(Week, from, to, reverse)
+}
+
+func (o *StockCal) ListMonthByDate(from string, to string, reverse bool) ([]string, error) {
+	return o.ListByDateEx(Month, from, to, reverse)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/stock"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,16 +23,32 @@ func InitMainCache(g *global.G) {
 	var cache_trade_calendar = cache_manager.Get(dict.CACHE_CALENDAR)
 	cache_trade_calendar.Dao = dict.DAO_MAIN
 	cache_trade_calendar.Db = dict.DB_CALENDAR
-	cache_trade_calendar.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
-		var dao, _ = qdao.GetManager().Get(scache.Dao)
+	cache_trade_calendar.Loader = func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
+		var dao, _ = qdao.GetManager().Get(cache.Dao)
 		var date = keys[0]
-		var r, err = dao.Get(scache.Db, scache.Group, date, 1, nil)
+		var r, err = dao.Get(cache.Db, cache.Group, date, 1, nil)
 		var is_open = util.Get(r, 0, "is_open")
 		return is_open, err
 	}
+	cache_trade_calendar.Initer = func(cache *scache.SCache, lock bool) (interface{}, error) {
+		dao, _ := qdao.GetManager().Get(cache.Dao)
+		dates, err := dao.Keys(cache.Db, cache.Group, "*", nil)
+		if err == nil && dates != nil {
+			var count = len(dates)
+			for i := 0; i < count; i++ {
+				var date = dates[i]
+				var _, perr = strconv.Atoi(date)
+				if perr == nil {
+					cache.SetEx(1, dates[i], lock)
+				}
+			}
+		}
+		return dates, err
+	}
+	//cache_trade_calendar.Initer(cache_trade_calendar, true)
 
 	var cache_timestamp = cache_manager.Get(dict.CACHE_TIMESTAMP)
-	cache_timestamp.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (v interface{}, err error) {
+	cache_timestamp.Loader = func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (v interface{}, err error) {
 		var key = keys[0]
 		var skey = util.AsStr(key, "")
 		if strings.Contains(skey, "@") {
@@ -44,18 +61,18 @@ func InitMainCache(g *global.G) {
 	scache_code.ArrayLimitInit = 1000000
 	scache_code.Dao = dict.DAO_MAIN
 	scache_code.Db = dict.DB_DEFAULT
-	scache_code.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
-		var dao, err = qdao.GetManager().Get(scache.Dao)
+	scache_code.Loader = func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
+		var dao, err = qdao.GetManager().Get(cache.Dao)
 		if err != nil {
 			qlog.Error(0, err)
 			go func() {
 				defer qerr.SimpleRecover(1)
 				time.Sleep(time.Duration(10) * time.Second)
-				scache.Loader(scache, factor, timeout, lock, keys...)
+				cache.Loader(cache, factor, timeout, lock, keys...)
 			}()
 			return nil, err
 		}
-		var codes, _ = dao.Keys(scache.Db, "", "*", nil)
+		var codes, _ = dao.Keys(cache.Db, "", "*", nil)
 		var sz, szn = make([]string, 5000), 0
 		var sh, shn = make([]string, 5000), 0
 		var su, sun = make([]string, 5000), 0
@@ -95,14 +112,14 @@ func InitMainCache(g *global.G) {
 		sz_sh = append(sz_sh, sz[:szn]...)
 		sz_sh = append(sz_sh, sh[:shn]...)
 
-		scache.SetEx(ch[:chn], dict.CHINA, lock)
-		scache.SetEx(sz[:szn], dict.SHENZHEN, lock)
-		scache.SetEx(sh[:shn], dict.SHANGHAI, lock)
-		scache.SetEx(su[:sun], dict.STARTUP, lock)
-		scache.SetEx(sz_sh, dict.SHENZHEN+"."+dict.SHANGHAI, lock)
-		scache.SetEx(hk[:hkn], dict.HONGKONG, lock)
+		cache.SetEx(ch[:chn], dict.CHINA, lock)
+		cache.SetEx(sz[:szn], dict.SHENZHEN, lock)
+		cache.SetEx(sh[:shn], dict.SHANGHAI, lock)
+		cache.SetEx(su[:sun], dict.STARTUP, lock)
+		cache.SetEx(sz_sh, dict.SHENZHEN+"."+dict.SHANGHAI, lock)
+		cache.SetEx(hk[:hkn], dict.HONGKONG, lock)
 		qlog.Log(qlog.INFO, "cache", "code", "shenzhen", szn, "shanghai", shn, "startup", sun, "china", chn, "hongkong", hkn)
-		return scache, nil
+		return cache, nil
 	}
 	var apim = util.GetMap(g.Config, false, "api")
 	if apim != nil || len(apim) > 0 {
@@ -113,13 +130,13 @@ func InitMainCache(g *global.G) {
 	scache_snapshot.ArrayLimitInit = 1000000
 	scache_snapshot.Dao = dict.DAO_MAIN
 	scache_snapshot.Db = dict.DB_DEFAULT
-	scache_snapshot.Loader = func(scache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
-		conn, err := qdao.GetManager().Get(scache.Dao)
+	scache_snapshot.Loader = func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
+		conn, err := qdao.GetManager().Get(cache.Dao)
 		if err != nil {
 			return nil, err
 		}
 		var code = keys[0]
-		data, err := conn.Get(scache.Db, "", code, 1, nil)
+		data, err := conn.Get(cache.Db, "", code, 1, nil)
 		if data != nil {
 			data = util.MapStringToFloat64(data)
 		}
@@ -127,11 +144,11 @@ func InitMainCache(g *global.G) {
 	}
 
 	var cache_khistory_loader_generator = func(prefix string, profilesuffix string) scache.Loader {
-		return func(scache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
+		return func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
 			if len(keys) < 1 {
-				return nil, fmt.Errorf("keys len invalid for this cache Loader %s", scache.Name)
+				return nil, fmt.Errorf("keys len invalid for this cache Loader %s", cache.Name)
 			}
-			conn, err := qdao.GetManager().Get(scache.Dao)
+			conn, err := qdao.GetManager().Get(cache.Dao)
 			if err != nil {
 				return nil, err
 			}
@@ -144,7 +161,7 @@ func InitMainCache(g *global.G) {
 				code = prefix + skey
 			}
 			var datestr = keys[1]
-			data, err := conn.Get(scache.Db, code, datestr, 1, nil)
+			data, err := conn.Get(cache.Db, code, datestr, 1, nil)
 
 			if data != nil {
 				data = util.MapStringToFloat64(data)

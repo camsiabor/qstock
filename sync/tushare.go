@@ -9,6 +9,7 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
+	"github.com/camsiabor/qstock/sync/stock"
 	"github.com/pkg/errors"
 	"strings"
 	"time"
@@ -111,6 +112,7 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 			}
 			cacher.Sets(true, is_opens, dates)
 			break
+		} else {
 		}
 	}
 	return err
@@ -186,14 +188,17 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 	var targets []string
 	var fetch_by_date bool = (codes == nil || len(codes) == 0)
 	if fetch_by_date {
+		var calendar = stock.GetStockCalendar()
 		var date_to, _ = time.Parse("20060102", date_to_str)
 		var date_from, _ = time.Parse("20060102", date_from_str)
 		if api == "weekly" {
-			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
-				false, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Sunday, time.Saturday)
+			//targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
+			//	false, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Sunday, time.Saturday)
+			targets, err = calendar.ListWeekByDate(date_from_str, date_to_str, true)
 		} else if api == "monthly" {
-			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
-				true)
+			//targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
+			//	true)
+			targets, err = calendar.ListMonthByDate(date_from_str, date_to_str, true)
 		} else {
 			targets, err = qtime.GetTimeFormatIntervalArray(&date_from, &date_to, "20060102",
 				false, time.Sunday, time.Saturday)

@@ -307,7 +307,9 @@ func (o *Syncer) DoProfile(work *ProfileWork) (data []interface{}, err error) {
 	if work.GCmd != nil {
 		work.GCmd.ReplySelf(data, err)
 	}
-
+	if err != nil {
+		qlog.Log(qlog.ERROR, "profile error:", work.ProfileName, err)
+	}
 	return data, err
 }
 

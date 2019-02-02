@@ -32,6 +32,7 @@ const script_methods = {
                 }
                 script_group.id = script_group.id || "system";
                 script_group.name = script_group.name || this.script_group.id;
+
                 this.script_group = script_group;
             }
 
@@ -131,19 +132,21 @@ const script_methods = {
             return axios.post("/script/update", this.script).then(function (resp) {
                 util.handle_response(resp, this.console, "script saved @ " + this.script.name);
                 util.popover("#button_script_save", "保存成功", "bottom");
-                this.script_list(opts.type);
+                // this.script_list(opts.type);
                 return resp
             }.bind(this)).catch(util.handle_error.bind(this));
         } else {
+
+
+            let script_group_obj = QUtil.clone_by_stringify(this.script_group);
             if (name) {
                 name = name.trim();
-                this.script_group.tree.push({
+                script_group_obj.tree.push({
                     id : "g" + new Date().getTime() + (Math.random() + "").substring(0, 8),
                     label : name,
                     children : []
                 });
             }
-            let script_group_obj = QUtil.map_clone(this.script_group);
             script_group_obj.tree = JSON.stringify(this.script_group.tree);
             return axios.post("/cmd/go", {
                 "type": "db",

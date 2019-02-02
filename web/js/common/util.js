@@ -568,3 +568,8 @@ QUtil.tree_locate = function(tree, node, opts) {
     }
     return null;
 };
+
+QUtil.clone_by_stringify = function(obj) {
+    let str = JSON.stringify(obj);
+    return JSON.parse(str);
+};

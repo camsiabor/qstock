@@ -1333,9 +1333,16 @@
             inject: ["instance"],
             methods: {
                 renderSingleValueLabel: function () {
+                    // TODO insert begin ============================ //
                     var e = this.instance, t = e.selectedNodes[0], n = e.$scopedSlots["value-label"];
-                    return n ? n({node: t}) : t.label
-                }
+                    var label = n ? n({node: t}) : t.label;
+                    console.log("renderSingleValueLabel", e, t, n, label);
+                    if (!label) {
+                        throw e;
+                    }
+                    return label
+                    // TODO insert end ============================ //
+                }  
             },
             render: function () {
                 var e = arguments[0], t = this.instance;

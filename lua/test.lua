@@ -16,6 +16,5 @@ print(LUA_PATH)
 print(package.path)
 print(package.cpath)
 
--- local x = add(10,20)
-x = 1
-return x
+local x = add(10,20)
+return x, x, x

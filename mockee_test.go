@@ -2,25 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
-	"github.com/camsiabor/qcom/qconfig"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/camsiabor/qstock/run/rlua"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
-	"runtime"
 	"runtime/pprof"
-	"strings"
 	"testing"
 	"time"
 )
@@ -127,117 +123,24 @@ func testCycle() {
 	}
 }
 
-func luaErrorHandler(L *lua.State, pan interface{}) {
-	if pan == nil {
-		return
-	}
-	var ok bool
-	L.Notice, ok = pan.(*lua.Interrupt)
-	if !ok {
-		var errStackInfo = qref.StackInfo(5)
-		var stackstr = util.AsStr(errStackInfo["stack"], "")
-		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
-		errStackInfo["stack"] = strings.Split(stackstr, "\n")
-		L.SetData("err_stack", errStackInfo)
-	}
-}
-
 func TestLuaBenchmark(t *testing.T) {
 
-	var g = global.GetInstance()
-	g.Config, _ = qconfig.ConfigLoad("config.json", "includes")
-
-	// ?.lua;?/init.lua;?
-	// D:\workspace\go\bin\q\lua\?.lua;D:\workspace\go\bin\q\lua\?\init.lua;D:\workspace\go\bin\q\?.lua;D:\workspace\go\bin\q\?\init.lua;D:\workspace\go\bin\q\..\share\lua\5.3\?.lua;D:\workspace\go\bin\q\..\share\lua\5.3\?\init.lua;.\?.lua;.\?\init.lua
-
-	// D:\workspace\go\bin\q\?.dll;D:\workspace\go\bin\q\..\lib\lua\5.3\?.dll;D:\workspace\go\bin\q\loadall.dll;.\?.dll;D:\workspace\go\bin\q\?53.dll;.\?53.dll
-	// ?.dll;
-	var err error
-	var lua_version = lua.GetVersionNumber()
-	var lua_version_without_dot = lua.GetVersionNumberWithoutDot()
-	var lua_path = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/", "lua", "lua_path")
-	var lua_cpath = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/clib", "lua", "lua_cpath")
-
-	if lua_path, err = filepath.Abs(lua_path); err != nil {
-		panic(err)
+	var L, err = rlua.InitState()
+	if L != nil {
+		defer L.Close()
 	}
-	if lua_cpath, err = filepath.Abs(lua_cpath); err != nil {
+	if err != nil {
 		panic(err)
 	}
 
-	var lua_lib_suffix = "so"
-	if runtime.GOOS == "windows" {
-		lua_path = strings.Replace(lua_path, "\\", "/", -1)
-		lua_cpath = strings.Replace(lua_cpath, "\\", "/", -1)
-		lua_lib_suffix = "dll"
+	var rets, rerr = rlua.RunFile(L, "test.lua", nil)
+	if rerr == nil {
+		fmt.Println(rets)
+	} else {
+		panic(rerr)
 	}
 
-	if lua_path[:len(lua_path)-1] != "/" {
-		lua_path = lua_path + "/"
-	}
-
-	if lua_cpath[:len(lua_cpath)-1] != "/" {
-		lua_cpath = lua_cpath + "/"
-	}
-
-	var lua_path_full = fmt.Sprintf(
-		"%s?.lua;%s?init.lua;%s?", lua_path, lua_path, lua_path)
-	var lua_cpath_full = fmt.Sprintf(
-		"%s?.%s;%s?%s.%s;%s?%s.%s;%sloadall.%s;%s?",
-		lua_cpath, lua_lib_suffix,
-		lua_cpath, lua_version, lua_lib_suffix,
-		lua_cpath, lua_version_without_dot, lua_lib_suffix,
-		lua_cpath, lua_lib_suffix,
-		lua_cpath,
-	)
-
-	qlog.Log(qlog.INFO, "lua", "LUA_PATH", lua_path)
-	qlog.Log(qlog.INFO, "lua", "LUA_CAPTH", lua_cpath)
-	qlog.Log(qlog.INFO, "lua", "LUA_PATH full", lua_path_full)
-	qlog.Log(qlog.INFO, "lua", "LUA_CAPTH full", lua_cpath_full)
-
-	var L = luar.Init()
-	defer L.Close()
-
-	L.PushString(lua_path_full)
-	L.SetGlobal("LUA_PATH")
-
-	L.PushString(lua_cpath_full)
-	L.SetGlobal("LUA_CPATH")
-
-	L.OpenBase()
-	L.OpenLibs()
-	L.OpenTable()
-	L.OpenString()
-	L.OpenPackage()
-	L.OpenOS()
-	L.OpenMath()
-	L.OpenDebug()
-	L.OpenBit32()
-	L.OpenDebug()
-
-	L.GetGlobal("package")
-	if !L.IsTable(-1) {
-		panic("package is not a table?")
-	}
-
-	L.PushString(lua_path_full)
-	L.SetField(-2, "path")
-
-	L.PushString(lua_cpath_full)
-	L.SetField(-2, "cpath")
-
-	L.Pop(-1)
-
-	if err = L.LoadFileEx(lua_path + "test.lua"); err != nil {
-		panic(err)
-	}
-
-	if err = L.CallHandle(0, lua.LUA_MULTRET, luaErrorHandler); err != nil {
-		panic(err)
-	}
-
-	var stackinfo = L.GetData("stack_info")
+	var stackinfo = L.GetData("err_stack")
 	if stackinfo != nil {
 		fmt.Println(stackinfo)
 	}

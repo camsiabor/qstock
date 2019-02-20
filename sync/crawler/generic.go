@@ -1,0 +1,3 @@
+package crawler
+
+// generic crawler

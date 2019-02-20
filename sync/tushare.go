@@ -83,9 +83,9 @@ func (o Syncer) TuShare_request(
 	return maps, err
 }
 
-func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error {
+func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) (interface{}, error) {
 	if phrase != "work" {
-		return nil
+		return nil, nil
 	}
 
 	var err error
@@ -115,7 +115,7 @@ func (o *Syncer) TuShare_trade_calendar(phrase string, work *ProfileWork) error 
 		} else {
 		}
 	}
-	return err
+	return nil, err
 }
 
 func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}, error) {
@@ -307,6 +307,32 @@ func (o *Syncer) TuShare_khistory(phrase string, work *ProfileWork) (interface{}
 	return data, err
 }
 
-func (o *Syncer) TuShare_trade_concept(phrase string, work *ProfileWork) (interface{}, error) {
-	return nil, nil
+func (o *Syncer) TuShare_stock_group(phrase string, work *ProfileWork) (interface{}, error) {
+
+	if phrase != "work" {
+		return nil, nil
+	}
+
+	var err error
+	var rargs = make(map[string]interface{})
+	rargs["src"] = "ts"
+
+	retry := util.GetInt(work.Profile, 3, "retry")
+	var cacher = scache.GetManager().Get(dict.CACHE_CALENDAR)
+	for i := 1; i <= retry; i++ {
+		var calendar, err = o.TuShare_request(work, nil, rargs)
+		if err == nil {
+			var list = util.AsSlice(calendar, 0)
+			var dates = make([]interface{}, len(list))
+			var is_opens = make([]interface{}, len(list))
+			for i, one := range list {
+				dates[i] = util.GetStr(one, "", "date") // after mapping cal_date -> date
+				is_opens[i] = util.GetInt(one, 0, "is_open")
+			}
+			cacher.Sets(true, is_opens, dates)
+			break
+		} else {
+		}
+	}
+	return nil, err
 }

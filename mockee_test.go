@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
+	"github.com/camsiabor/qcom/qconfig"
 	"github.com/camsiabor/qcom/qdao"
+	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
@@ -13,8 +16,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"runtime/pprof"
+	"strings"
 	"testing"
 	"time"
 )
@@ -121,7 +127,162 @@ func testCycle() {
 	}
 }
 
+func luaErrorHandler(L *lua.State, pan interface{}) {
+	if pan == nil {
+		return
+	}
+	var ok bool
+	L.Notice, ok = pan.(*lua.Interrupt)
+	if !ok {
+		var errStackInfo = qref.StackInfo(5)
+		var stackstr = util.AsStr(errStackInfo["stack"], "")
+		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
+		errStackInfo["stack"] = strings.Split(stackstr, "\n")
+		L.SetData("err_stack", errStackInfo)
+	}
+}
+
 func TestLuaBenchmark(t *testing.T) {
+
+	var g = global.GetInstance()
+	g.Config, _ = qconfig.ConfigLoad("config.json", "includes")
+
+	// ?.lua;?/init.lua;?
+	// D:\workspace\go\bin\q\lua\?.lua;D:\workspace\go\bin\q\lua\?\init.lua;D:\workspace\go\bin\q\?.lua;D:\workspace\go\bin\q\?\init.lua;D:\workspace\go\bin\q\..\share\lua\5.3\?.lua;D:\workspace\go\bin\q\..\share\lua\5.3\?\init.lua;.\?.lua;.\?\init.lua
+
+	// D:\workspace\go\bin\q\?.dll;D:\workspace\go\bin\q\..\lib\lua\5.3\?.dll;D:\workspace\go\bin\q\loadall.dll;.\?.dll;D:\workspace\go\bin\q\?53.dll;.\?53.dll
+	// ?.dll;
+	var err error
+	var lua_version = lua.GetVersionNumber()
+	var lua_version_without_dot = lua.GetVersionNumberWithoutDot()
+	var lua_path = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/", "lua", "lua_path")
+	var lua_cpath = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/clib", "lua", "lua_cpath")
+
+	if lua_path, err = filepath.Abs(lua_path); err != nil {
+		panic(err)
+	}
+	if lua_cpath, err = filepath.Abs(lua_cpath); err != nil {
+		panic(err)
+	}
+
+	var lua_lib_suffix = "so"
+	if runtime.GOOS == "windows" {
+		lua_path = strings.Replace(lua_path, "\\", "/", -1)
+		lua_cpath = strings.Replace(lua_cpath, "\\", "/", -1)
+		lua_lib_suffix = "dll"
+	}
+
+	if lua_path[:len(lua_path)-1] != "/" {
+		lua_path = lua_path + "/"
+	}
+
+	if lua_cpath[:len(lua_cpath)-1] != "/" {
+		lua_cpath = lua_cpath + "/"
+	}
+
+	var lua_path_full = fmt.Sprintf(
+		"%s?.lua;%s?init.lua;%s?", lua_path, lua_path, lua_path)
+	var lua_cpath_full = fmt.Sprintf(
+		"%s?.%s;%s?%s.%s;%s?%s.%s;%sloadall.%s;%s?",
+		lua_cpath, lua_lib_suffix,
+		lua_cpath, lua_version, lua_lib_suffix,
+		lua_cpath, lua_version_without_dot, lua_lib_suffix,
+		lua_cpath, lua_lib_suffix,
+		lua_cpath,
+	)
+
+	qlog.Log(qlog.INFO, "lua", "LUA_PATH", lua_path)
+	qlog.Log(qlog.INFO, "lua", "LUA_CAPTH", lua_cpath)
+	qlog.Log(qlog.INFO, "lua", "LUA_PATH full", lua_path_full)
+	qlog.Log(qlog.INFO, "lua", "LUA_CAPTH full", lua_cpath_full)
+
+	var L = luar.Init()
+	defer L.Close()
+
+	L.PushString(lua_path_full)
+	L.SetGlobal("LUA_PATH")
+
+	L.PushString(lua_cpath_full)
+	L.SetGlobal("LUA_CPATH")
+
+	L.OpenBase()
+	L.OpenLibs()
+	L.OpenTable()
+	L.OpenString()
+	L.OpenPackage()
+	L.OpenOS()
+	L.OpenMath()
+	L.OpenDebug()
+	L.OpenBit32()
+	L.OpenDebug()
+
+	L.GetGlobal("package")
+	if !L.IsTable(-1) {
+		panic("package is not a table?")
+	}
+
+	L.PushString(lua_path_full)
+	L.SetField(-2, "path")
+
+	L.PushString(lua_cpath_full)
+	L.SetField(-2, "cpath")
+
+	L.Pop(-1)
+
+	if err = L.LoadFileEx(lua_path + "test.lua"); err != nil {
+		panic(err)
+	}
+
+	if err = L.CallHandle(0, lua.LUA_MULTRET, luaErrorHandler); err != nil {
+		panic(err)
+	}
+
+	var stackinfo = L.GetData("stack_info")
+	if stackinfo != nil {
+		fmt.Println(stackinfo)
+	}
+
+	fmt.Println("done")
+	os.Exit(0)
+}
+
+func TestLuaBenchmark10(t *testing.T) {
+	var g = global.GetInstance()
+	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
+
+		var lua_path = util.GetStr(g.Config, "./lua/?.lua", "lua", "lua_path")
+		var lua_cpath = util.GetStr(g.Config, "lua/clib/?", "lua", "lua_cpath")
+
+		var L = luar.Init()
+		defer L.Close()
+		L.OpenBase()
+		L.OpenLibs()
+		L.OpenTable()
+		L.OpenString()
+
+		if len(lua_path) > 0 {
+			L.PushString(lua_path)
+			L.SetGlobal("LUA_PATH")
+		}
+
+		if len(lua_cpath) > 0 {
+			L.PushString(lua_cpath)
+			L.SetGlobal("LUA_CPATH")
+		}
+
+		var err = L.LoadFileEx("test.lua")
+		if err == nil {
+			fmt.Println("done")
+		} else {
+			qlog.Log(qlog.ERROR, err)
+		}
+
+		os.Exit(0)
+	}
+	main()
+}
+
+func TestLuaBenchmark4(t *testing.T) {
 
 	//Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
 	//Accept-Encoding: gzip, deflate, br
@@ -164,19 +325,6 @@ func TestLuaBenchmark(t *testing.T) {
 
 	log.Println(html)
 
-}
-
-func TestLuaBenchmark4(t *testing.T) {
-	var g = global.GetInstance()
-
-	g.CycleHandler = func(cycle string, g *global.G, x interface{}) {
-		var dao, _ = qdao.GetManager().Get(dict.DAO_MAIN)
-		var data, err = qdao.ListAll(dao, dict.DB_COMMON, "script", 0, 1, 1, nil)
-		//var data, cursor, err = dao.List(dict.DB_COMMON, "script", 0, 1000, 1, nil)
-		fmt.Println(len(data), err)
-	}
-	main()
-	time.Sleep(time.Hour)
 }
 
 // go tool pprof http://localhost:8080/debug/pprof/profile

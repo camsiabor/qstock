@@ -10,6 +10,9 @@
 2. serial big swing
 3. low swing yet high volume
 4. market message facet
+5. 跌破底部支撐
+6. 震蕩
+7. 連續十字，量高於一定
 
 [performance]
 1. zlib utf8
@@ -18,3 +21,13 @@
 [article]
 1. search 一旦股票出现以下这些K线形态
 2. http://www.sohu.com/a/216003116_567367
+
+
+[not include]
+1. 年報后 ST
+2. 年報后每股淨資產小于 1.5
+3. 最近半年被證監會調查
+
+
+
+萬盛股份 603010

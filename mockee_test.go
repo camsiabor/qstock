@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
@@ -137,8 +138,18 @@ func TestLuaBenchmark(t *testing.T) {
 	if rerr == nil {
 		fmt.Println(rets)
 	} else {
-		fmt.Println(rerr.Error())
-		panic(rerr)
+		var luaerr, ok = rerr.(*lua.LuaError)
+		if ok {
+			fmt.Println(luaerr.Code())
+			fmt.Println(luaerr.Error())
+			var errmap = rlua.FormatStackToMap(luaerr.StackTrace())
+			for k, v := range errmap {
+				fmt.Println(k)
+				fmt.Println(v)
+			}
+		} else {
+			panic(rerr)
+		}
 	}
 
 	var stackinfo = L.GetData("err_stack")

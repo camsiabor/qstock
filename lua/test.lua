@@ -1,35 +1,25 @@
 
+local mobdebug = require("mobdebug")
+mobdebug.start()
 
---local p = "../../src/github.com/camsiabor/qstock/lua/?.lua"
---local m_package_path = package.path
---package.path = string.format("%s;%s?.lua;%s?/init.lua", m_package_path, p, p)
-
---require("common.util")
-
-print("[lua] i am test")
-
-require("helloworld")
-require("lib.common.util")
-
---local http = require("lib.luasocket.socket")
-
-local socket = require("socket.core")
-
-for k, v in pairs(socket) do
-    print(k, v)
-end
-
-print(LUA_PATH)
-print(package.path)
-print(package.cpath)
-
-
+--[[
 local http = require("socket.http")
 local b, c, h = http.request("http://www.baidu.com")
 
 print(b)
 print(c)
-print(h)
+prin1t(h)
+]]--
+
 
 --local x = add(10,20)
-return c, c + 1, c + 2, #b
+
+function add(a, b, c)
+    return a + b + c
+end
+
+local a = 10
+local b = 12
+local c = add(a, b, 102)
+
+return c, c + 1, c + 2

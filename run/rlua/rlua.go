@@ -123,7 +123,7 @@ func GetLuaPath() string {
 		var lua_version = lua.GetVersionNumber()
 		var lua_version_without_dot = lua.GetVersionNumberWithoutDot()
 		var lua_path = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/", "lua", "lua_path")
-		var lua_cpath = util.GetStr(g.Config, "../../src/github.com/camsiabor/qstock/lua/clib", "lua", "lua_cpath")
+		var lua_cpath = util.GetStr(g.Config, lua_path, "lua", "lua_cpath")
 
 		if lua_path, err = filepath.Abs(lua_path); err != nil {
 			panic(err)
@@ -147,17 +147,18 @@ func GetLuaPath() string {
 			lua_cpath = lua_cpath + "/"
 		}
 
-		var lua_path_full = fmt.Sprintf(
-			"%s?.lua;%s?init.lua;%s?", lua_path, lua_path, lua_path)
+		var lua_path_full = lua_path + "?.lua;" +
+			lua_path + "?init.lua;" +
+			lua_path + "?;" +
+			lua_path + "lib/?.lua;" +
+			lua_path + "lib/?init.lua;" +
+			lua_path + "lib/?;"
 
-		var lua_cpath_full = fmt.Sprintf(
-			"%s?.%s;%s?%s.%s;%s?%s.%s;%sloadall.%s;%s?",
-			lua_cpath, lua_lib_suffix,
-			lua_cpath, lua_version, lua_lib_suffix,
-			lua_cpath, lua_version_without_dot, lua_lib_suffix,
-			lua_cpath, lua_lib_suffix,
-			lua_cpath,
-		)
+		var lua_cpath_full = lua_cpath + "lib/?." + lua_lib_suffix + ";" +
+			lua_cpath + "lib/?" + lua_version + "." + lua_lib_suffix + ";" +
+			lua_cpath + "lib/?" + lua_version_without_dot + "." + lua_lib_suffix + ";" +
+			lua_cpath + "lib/load.all." + lua_lib_suffix + ";" +
+			lua_cpath + "lib/?;"
 
 		_LUA_PATH = lua_path
 		_LUA_PATH_FULL = lua_path_full

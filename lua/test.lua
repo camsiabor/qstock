@@ -9,12 +9,27 @@
 print("[lua] i am test")
 
 require("helloworld")
-require("common.util")
+require("lib.common.util")
 
+--local http = require("lib.luasocket.socket")
+
+local socket = require("socket.core")
+
+for k, v in pairs(socket) do
+    print(k, v)
+end
 
 print(LUA_PATH)
 print(package.path)
 print(package.cpath)
 
-local x = add(10,20)
-return x, x, x
+
+local http = require("socket.http")
+local b, c, h = http.request("http://www.baidu.com")
+
+print(b)
+print(c)
+print(h)
+
+--local x = add(10,20)
+return c, c + 1, c + 2, #b

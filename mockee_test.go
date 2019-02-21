@@ -137,6 +137,7 @@ func TestLuaBenchmark(t *testing.T) {
 	if rerr == nil {
 		fmt.Println(rets)
 	} else {
+		fmt.Println(rerr.Error())
 		panic(rerr)
 	}
 

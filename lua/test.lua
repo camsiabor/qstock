@@ -1,6 +1,6 @@
 
 local mobdebug = require("mobdebug")
-mobdebug.start()
+-- mobdebug.start()
 
 --[[
 local http = require("socket.http")
@@ -22,4 +22,6 @@ local a = 10
 local b = 12
 local c = add(a, b, 102)
 
+local x = "power"
+x = x + 1
 return c, c + 1, c + 2

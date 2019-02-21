@@ -66,6 +66,27 @@ func FormatStack(stacks []lua.LuaStackEntry) []lua.LuaStackEntry {
 	return clones
 }
 
+func FormatStackToString(stacks []lua.LuaStackEntry, prefix string, suffix string) string {
+	var str = ""
+	var count = len(stacks)
+
+	for i := 0; i < count; i++ {
+		var stack = stacks[i]
+		var source = stack.ShortSource
+		var funcname = stack.Name
+		var linenum = stack.CurrentLine
+		if linenum >= 0 {
+			var lines = strings.Split(stack.Source, "\n")
+			if linenum < len(lines) {
+				source = lines[linenum-1]
+			}
+		}
+		var one = fmt.Sprintf("%s%s %s %d\n%s", prefix, source, funcname, linenum, suffix)
+		str = str + one
+	}
+	return str
+}
+
 func FormatStackToMap(stacks []lua.LuaStackEntry) []map[string]interface{} {
 	var count = len(stacks)
 	var clones = make([]map[string]interface{}, count)

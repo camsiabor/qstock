@@ -142,19 +142,11 @@ func TestLuaBenchmark(t *testing.T) {
 		if ok {
 			fmt.Println(luaerr.Code())
 			fmt.Println(luaerr.Error())
-			var errmap = rlua.FormatStackToMap(luaerr.StackTrace())
-			for k, v := range errmap {
-				fmt.Println(k)
-				fmt.Println(v)
-			}
+			var s = rlua.FormatStackToString(luaerr.StackTrace(), "\t", "")
+			fmt.Println(s)
 		} else {
 			panic(rerr)
 		}
-	}
-
-	var stackinfo = L.GetData("err_stack")
-	if stackinfo != nil {
-		fmt.Println(stackinfo)
 	}
 
 	fmt.Println("done")

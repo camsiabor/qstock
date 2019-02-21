@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/camsiabor/golua/luar"
+	"fmt"
+	"github.com/camsiabor/golua/lua"
+	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qstock/run/rlua"
 	"github.com/camsiabor/qstock/sync/showSdk/httplib"
 	"time"
 )
@@ -78,9 +81,37 @@ func (o *Syncer) Lua_handler(phrase string, work *ProfileWork) (interface{}, err
 		return nil, nil
 	}
 
-	var L = luar.Init()
+	var scriptname = util.GetStr(work.Profile, "", "script")
+	if len(scriptname) == 0 {
+		return nil, fmt.Errorf("no script name in profile %v", work.Profile)
+	}
+	var L, err = rlua.InitState()
+	if L != nil {
+		defer L.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
 
-	L.Close()
-	// TODO
-	return nil, nil
+	var rets, rerr = rlua.RunFile(L, scriptname, nil)
+	if rerr == nil {
+		fmt.Println(rets)
+	} else {
+		var luaerr, ok = rerr.(*lua.LuaError)
+		if ok {
+			var stacktrace = rlua.FormatStackToString(luaerr.StackTrace(), "\t", "")
+			fmt.Println(luaerr.Code())
+			fmt.Println(luaerr.Error())
+			qlog.Log(qlog.ERROR, luaerr.Error())
+			qlog.Log(qlog.ERROR, stacktrace)
+		} else {
+			qlog.Log(qlog.ERROR, rerr)
+		}
+	}
+
+	var data interface{} = nil
+	if rets != nil {
+		data = rets[0]
+	}
+	return data, rerr
 }

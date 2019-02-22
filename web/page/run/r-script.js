@@ -2,6 +2,7 @@ const script_methods = {
 
     script_list: function (opts) {
         let path = opts.path || ".";
+        opts.category = opts.category || "lua";
         return axios.post("/os/file/list", opts).then(function (json) {
             let data = util.handle_response(json, this.console, "");
             for (let i = 0; i < data.length; i++) {
@@ -36,7 +37,8 @@ const script_methods = {
 
         this.setting.script.last = this.script.name = node.id;
         return axios.post("/os/file/text", {
-            path: node.id
+            path: node.id,
+            category: this.setting.locate.category
         }).then(function (resp) {
             let text = util.handle_response(resp);
             this.script.script = text;
@@ -68,6 +70,7 @@ const script_methods = {
         this.script.script = this.editor.getValue().trim();
         return axios.post("/os/file/write", {
             path : current.id,
+            category: this.setting.locate.category,
             text : this.script.script
         }).then(function (resp) {
             util.handle_response(resp, this.console, "saved @ " + current.id);
@@ -145,7 +148,8 @@ const script_methods = {
             return;
         }
         axios.post("/os/file/delete", {
-            name: this.script.name
+            path: this.script.name,
+            category: this.setting.locate.category
         }).then(function (resp) {
             util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
             this.script.name = null;
@@ -202,6 +206,38 @@ const script_methods = {
         }.bind(this));
 
 
+    },
+
+
+
+    script_file_query: function (mode, carrayscript) {
+
+        this.console.text = "";
+        return axios.post("/cmd/go", {
+            type : 'luafile',
+            cmd : 'run',
+            params : this.params,
+            path : this.script.name,
+        }, {
+            timeout: this.setting.script.timeout || 300000
+        }).then(function (resp) {
+            if (resp.data.code === 404) {
+                return this.script_query(mode, true);
+            }
+            let data = util.handle_response(resp);
+            if (mode === "raw") {
+                if (typeof data === 'object') {
+                    data = JSON.stringify(data, null, 2);
+                }
+                this.console.text = data;
+                return data;
+            } else {
+                if (data) {
+                    data.refresh_view = true;
+                    return this.stock_get_data_by_code(data);
+                }
+            }
+        }.bind(this));
     },
 
 

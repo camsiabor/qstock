@@ -9,6 +9,8 @@
                 <i class="fa fa-search-dollar"></i>
             </button>
 
+
+
             <div>
                 <treeselect
                             ref="tree_script"
@@ -23,6 +25,10 @@
 
             <button type="button" value="测试" class="btn btn-sm btn-outline-info"  v-on:click="script_query('raw')" style="margin-left: 3px;">
                 <i class="fa fa-running"></i>
+            </button>
+
+            <button type="button" value="文件" class="btn btn-sm btn-outline-info " v-on:click="script_file_query('hit'); ">
+                <i class="fa fa-random"></i>
             </button>
 
             <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_select()" >

@@ -2,18 +2,41 @@ package httpv
 
 import (
 	"github.com/camsiabor/qcom/util"
+	"github.com/camsiabor/qstock/run/rlua"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
+
+func (o *HttpServer) ResolvePath(path string, category string) (string, error) {
+	var err error
+	category = strings.ToLower(category)
+	if category == "lua" {
+		path = rlua.GetLuaPath() + path
+	}
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return path, err
+	}
+	return path, err
+}
 
 func (o *HttpServer) routeOS() {
 
 	var os_file = o.engine.Group("/os/file")
 	os_file.POST("/list", func(c *gin.Context) {
+
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")
+		var category = util.GetStr(m, "lua", "category")
+
+		path, perr := o.ResolvePath(path, category)
+		if perr != nil {
+			o.RespJsonEx(nil, perr, c)
+			return
+		}
 
 		var filterlen int
 		var filters []string
@@ -55,6 +78,13 @@ func (o *HttpServer) routeOS() {
 		var data interface{}
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")
+		var category = util.GetStr(m, "", "category")
+		path, perr := o.ResolvePath(path, category)
+		if perr != nil {
+			o.RespJsonEx(nil, perr, c)
+			return
+		}
+
 		var bytes, err = ioutil.ReadFile(path)
 		if err == nil {
 			data = string(bytes[:])
@@ -65,7 +95,13 @@ func (o *HttpServer) routeOS() {
 	os_file.POST("/write", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")
+		var category = util.GetStr(m, "", "category")
 		var text = util.GetStr(m, "", "text")
+		path, perr := o.ResolvePath(path, category)
+		if perr != nil {
+			o.RespJsonEx(nil, perr, c)
+			return
+		}
 		var stat, err = os.Stat(path)
 		if err == nil {
 			err = ioutil.WriteFile(path, []byte(text), stat.Mode())
@@ -76,6 +112,12 @@ func (o *HttpServer) routeOS() {
 	os_file.POST("/delete", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var path = util.GetStr(m, "", "path")
+		var category = util.GetStr(m, "", "category")
+		path, perr := o.ResolvePath(path, category)
+		if perr != nil {
+			o.RespJsonEx(nil, perr, c)
+			return
+		}
 		var err = os.Remove(path)
 		o.RespJsonEx("deleted", err, c)
 	})

@@ -237,6 +237,8 @@ func (o *HttpServer) routeCmd() {
 			o.handleDBCmd(cmd, m, c)
 		case "lua":
 			o.handleLuaCmd(cmd, m, c)
+		case "luafile":
+			o.handleLuaFileCmd(cmd, m, c)
 		case "os":
 			o.handleOSCmd(cmd, m, c)
 		case "time":

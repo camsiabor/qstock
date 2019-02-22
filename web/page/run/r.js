@@ -12,8 +12,9 @@ const def_setting = {
         fields : _columns_default
     },
     locate : {
-        path : "lua",
-        filter : "lua"
+        path : "",
+        filter : "",
+        category : "lua"
     },
     mode: "raw",
     exclude: "buy,sell",
@@ -122,7 +123,7 @@ vue_options.methods = {
 
     },
     config_load: function () {
-        let jstr = localStorage.getItem("q.html");
+        let jstr = localStorage.getItem("r.html");
         if (jstr) {
             let o = JSON.parse(jstr);
             this.columns = o.columns;

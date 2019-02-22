@@ -1,20 +1,17 @@
 package httpv
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
+	"github.com/camsiabor/qcom/qio"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/run/rlua"
 	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"io"
-	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 )
@@ -266,23 +263,17 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		return
 	}
 
-	var stdout io.Writer
-	var stdoutfile *os.File
+	var stdout *qio.Buffer
 	if stdout_redirect {
 		var stdout_type = util.GetStr(m, "memory", "stdout_type")
+		var bufferType qio.BufferType
 		if stdout_type == "memory" {
-			stdout = &bytes.Buffer{}
+			bufferType = qio.BufferMemory
 		} else {
-			stdoutfile, err = ioutil.TempFile("temp", "lua_stdout")
-			if err != nil {
-				os.Mkdir("temp", 0664)
-				stdout, err = ioutil.TempFile("temp", "lua_stdout")
-			}
-			if err == nil {
-				defer os.Remove(stdoutfile.Name())
-				stdout = stdoutfile
-			}
+			bufferType = qio.BufferTempFile
 		}
+		stdout = qio.NewBuffer(bufferType)
+		defer stdout.Close()
 	}
 
 	if stdout != nil {
@@ -323,22 +314,8 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 
 	var stdoutstr string
 	if stdout != nil {
-		if stdoutfile == nil {
-			var buffer = stdout.(*bytes.Buffer)
-			var bytes = buffer.Bytes()
-			stdoutstr = string(bytes[:])
-		} else {
-			stdoutfile.Sync()
-			var n, err = stdoutfile.Seek(0, 2)
-			if err == nil {
-				var bytes = make([]byte, n)
-				stdoutfile.Seek(0, 0)
-				_, err = stdoutfile.Read(bytes)
-				if err == nil {
-					stdoutstr = string(bytes[:])
-				}
-			}
-		}
+		bytes, _ := stdout.Bytes()
+		stdoutstr = string(bytes[:])
 	}
 
 	var wrap = make(map[string]interface{})

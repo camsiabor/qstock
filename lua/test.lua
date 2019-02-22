@@ -8,7 +8,7 @@
 --print("###### hello world")
 
 for i = 1, 10 do 
-    print("power")
+    print("powe1r")
 end
 print("over whelming")
 

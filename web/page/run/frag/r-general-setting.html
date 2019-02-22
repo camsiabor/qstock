@@ -6,6 +6,18 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
 
+                <div style="margin: 5px">
+                    <div class="input-group sm-3" style="width: 90%">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">mode</span>
+                        </div>
+                        <input style="width: 75%"
+                               class="form-control mr-sm-2"
+                               type="search" placeholder="mode"
+                               aria-label="path" v-model="setting.mode">
+                    </div>
+                </div>
+
 
                 <div style="margin: 5px">
                     <div class="input-group sm-3" style="width: 90%">
@@ -68,6 +80,30 @@
                                aria-label="editor font size" v-model="setting.editor.font_size">
                     </div>
                 </div>
+
+            <div style="margin: 5px">
+                <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">save.before.run</span>
+                    </div>
+                    <input style="width: 75%"
+                           class="form-control mr-sm-2"
+                           type="checkbox" placeholder="save.before.run"
+                           aria-label="editor font size" v-model="setting.editor.save_before_run">
+                </div>
+            </div>
+
+            <div style="margin: 5px">
+                <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">save.with.confirm</span>
+                    </div>
+                    <input style="width: 10%"
+                           class="form-control mr-sm-2"
+                           type="checkbox" placeholder="save.with.confirm"
+                           aria-label="editor font size" v-model="setting.editor.save_with_confirm">
+                </div>
+            </div>
 
             </div>
             <div class="modal-footer">

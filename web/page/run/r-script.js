@@ -1,6 +1,7 @@
 const script_methods = {
 
     script_list: function (opts) {
+        opts = opts || this.setting.locate;
         let path = opts.path || ".";
         opts.category = opts.category || "lua";
         return axios.post("/os/file/list", opts).then(function (json) {
@@ -19,6 +20,47 @@ const script_methods = {
                 this.script_group.tree = data;
             }
         }.bind(this)).catch(util.handle_error.bind(this));
+    },
+
+    script_sublist : function(act) {
+
+        if (act.action !== "LOAD_CHILDREN_OPTIONS") {
+            return;
+        }
+        if (act.parentNode.children && act.parentNode.children.length > 0) {
+            return;
+        }
+        let vroot = this.$root;
+        let opts = {};
+        opts.path = act.parentNode.id;
+        opts.category = vroot.setting.locate.category;
+        return axios.post("/os/file/list", opts).then(function (json) {
+            let data = util.handle_response(json, vroot.console, "");
+            act.parentNode.children = [];
+            for (let i = 0; i < data.length; i++) {
+                let one = data[i];
+                one.id = act.parentNode.id + "/" + one.name;
+                one.label = one.name;
+                if (one.isdir) {
+                    one.children = null;
+                }
+                act.parentNode.children.push(one);
+            }
+            act.callback();
+        }.bind(this)).catch(function (e) {
+            vroot.console.text = e;
+            console.error("[load script tree node fail]", e);
+            act.callback(e);
+        });
+
+
+
+
+
+
+
+
+
     },
 
     script_select: function (noderaw, id, node) {
@@ -44,7 +86,7 @@ const script_methods = {
             this.script.script = text;
             this.editor.setValue(this.script.script);
             this.editor.clearSelection();
-            this.script_query();
+            this.script_file_query(null, null, true);
             this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
@@ -58,8 +100,10 @@ const script_methods = {
 
         let current = this.script_current();
         if (current) {
-            if (!confirm("do save " + current.id  + " ?")) {
-                return;
+            if (this.setting.editor.save_with_confirm) {
+                if (!confirm("do save " + current.id  + " ?")) {
+                    return;
+                }
             }
         } else {
             alert("need to select one first");
@@ -158,7 +202,14 @@ const script_methods = {
 
     },
 
-    script_query: function (mode, carrayscript) {
+    script_query: function (mode, carrayscript, do_not_save) {
+
+        if (!do_not_save && this.setting.editor.save_before_run) {
+            return this.script_save().then(function () {
+                return this.script_query(mode, carrayscript, true);
+            }.bind(this));
+        }
+
         let script = this.editor.getValue().trim();
         if (script.length === 0) {
             this.console.text = "script content is empty";
@@ -176,6 +227,7 @@ const script_methods = {
         }
         this.console.text = "";
 
+
         return axios.post("/cmd/go", {
             type : 'lua',
             cmd : 'run',
@@ -188,7 +240,7 @@ const script_methods = {
             timeout: this.setting.script.timeout || 300000
         }).then(function (resp) {
             if (resp.data.code === 404) {
-                return this.script_query(mode, true);
+                return this.script_query(mode, true, true);
             }
             let data = util.handle_response(resp);
             if (mode === "raw") {
@@ -208,22 +260,31 @@ const script_methods = {
 
     },
 
+    script_file_query: function (mode, carrayscript, do_not_save) {
 
+        if (!do_not_save && this.setting.editor.save_before_run) {
+            let script_save_promise = this.script_save();
+            if (script_save_promise) {
+                return script_save_promise.then(function () {
+                    return this.script_file_query(mode, carrayscript, true);
+                }.bind(this));
+            }
+            return
+        }
 
-    script_file_query: function (mode, carrayscript) {
+        mode = mode  || this.setting.mode;
 
         this.console.text = "";
+        let current = this.script_current();
         return axios.post("/cmd/go", {
             type : 'luafile',
             cmd : 'run',
-            params : this.params,
-            path : this.script.name,
+            mode : mode,
+            path : current.id,
+            params : this.params
         }, {
             timeout: this.setting.script.timeout || 300000
         }).then(function (resp) {
-            if (resp.data.code === 404) {
-                return this.script_query(mode, true);
-            }
             let data = util.handle_response(resp);
             if (mode === "raw") {
                 if (typeof data === 'object') {
@@ -295,8 +356,6 @@ const script_methods = {
             alert("需要选择來源及目标");
             return;
         }
-
-
     },
 
     script_group_copy : function() {

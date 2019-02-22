@@ -26,7 +26,9 @@ const def_setting = {
         font_size : 1,
         height_mode : "min",
         height_min : 120,
-        height_max : 360
+        height_max : 360,
+        save_before_run : false,
+        save_with_confirm : true
     },
     display: {
         editor: true,
@@ -167,7 +169,7 @@ vue_options.methods = {
             switch (target) {
                 case "hit":
                 case "raw":
-                    this.script_query(target);
+                    this.script_file_query(target, null, true);
                     break;
             }
         }

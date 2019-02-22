@@ -17,19 +17,22 @@
                             v-model="script.name"
                             :multiple="false"
                             :options="script_group.tree"
+                            :load-options="script_sublist"
                             :open-on-focus="true"
                             select-consists-of="LEAF"
                             @select="script_select"
                             style="width:99%"/>
             </div>
 
-            <button type="button" value="测试" class="btn btn-sm btn-outline-info"  v-on:click="script_query('raw')" style="margin-left: 3px;">
+            <button type="button" value="运行" class="btn btn-sm btn-outline-info"  v-on:click="script_file_query('raw')" style="margin-left: 3px;">
                 <i class="fa fa-running"></i>
             </button>
 
+            <!--
             <button type="button" value="文件" class="btn btn-sm btn-outline-info " v-on:click="script_file_query('hit'); ">
                 <i class="fa fa-random"></i>
             </button>
+            -->
 
             <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_select()" >
                 <i class="fa fa-circle-notch"></i>
@@ -38,6 +41,11 @@
             <button type="button" value="保存" id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
                 <i class="fa fa-save"></i>
             </button>
+
+            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_list()" >
+                <i class="fa fa-truck-loading"></i>
+            </button>
+
             <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete()">
                 <i class="fa fa-trash"></i>
             </button>

@@ -1,6 +1,7 @@
 package httpv
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
@@ -11,6 +12,7 @@ import (
 	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -254,7 +256,7 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		return
 	}
 
-	var tempstdout = util.GetBool(m, true, "tempstdout")
+	var stdout_redirect = util.GetBool(m, true, "stdout_redirect")
 	var L, err = rlua.InitState()
 	if L != nil {
 		defer L.Close()
@@ -264,18 +266,28 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		return
 	}
 
-	var stdout *os.File
-	if tempstdout {
-		stdout, err = ioutil.TempFile("temp", "lua_stdout")
-		if err != nil {
-			os.Mkdir("temp", 0664)
-			stdout, err = ioutil.TempFile("temp", "lua_stdout")
+	var stdout io.Writer
+	var stdoutfile *os.File
+	if stdout_redirect {
+		var stdout_type = util.GetStr(m, "memory", "stdout_type")
+		if stdout_type == "memory" {
+			stdout = &bytes.Buffer{}
+		} else {
+			stdoutfile, err = ioutil.TempFile("temp", "lua_stdout")
+			if err != nil {
+				os.Mkdir("temp", 0664)
+				stdout, err = ioutil.TempFile("temp", "lua_stdout")
+			}
+			if err == nil {
+				defer os.Remove(stdoutfile.Name())
+				stdout = stdoutfile
+			}
 		}
-		if err == nil {
-			defer os.Remove(stdout.Name())
-			L.SetStdout(stdout)
-			L.SetDoCloseStdout(false)
-		}
+	}
+
+	if stdout != nil {
+		L.SetStdout(stdout)
+		L.SetDoCloseStdout(false)
 	}
 
 	var Q = global.GetInstance().Data()
@@ -311,17 +323,24 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 
 	var stdoutstr string
 	if stdout != nil {
-		stdout.Sync()
-		var n, err = stdout.Seek(0, 2)
-		if err == nil {
-			var bytes = make([]byte, n)
-			stdout.Seek(0, 0)
-			_, err = stdout.Read(bytes)
+		if stdoutfile == nil {
+			var buffer = stdout.(*bytes.Buffer)
+			var bytes = buffer.Bytes()
+			stdoutstr = string(bytes[:])
+		} else {
+			stdoutfile.Sync()
+			var n, err = stdoutfile.Seek(0, 2)
 			if err == nil {
-				stdoutstr = string(bytes[:])
+				var bytes = make([]byte, n)
+				stdoutfile.Seek(0, 0)
+				_, err = stdoutfile.Read(bytes)
+				if err == nil {
+					stdoutstr = string(bytes[:])
+				}
 			}
 		}
 	}
+
 	var wrap = make(map[string]interface{})
 	wrap["iamwrap"] = true
 	wrap["data"] = data

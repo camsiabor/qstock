@@ -2,11 +2,15 @@
 -- mobdebug.start()
 
 
-local http = require("socket.http")
-local b, c, h = http.request("http://127.0.0.1/h/run/r.html")
+-- local http = require("socket.http")
+-- local b, c, h = http.request("http://127.0.0.1/h/run/r.html")
 
 --print("###### hello world")
-print("power")
+
+for i = 1, 10 do 
+    print("power")
+end
+print("over whelming")
 
 
 --local x = add(10,20)
@@ -20,4 +24,4 @@ local b = 12
 local c = add(a, b, 102)
 ]]--
 
-return #b
+return a

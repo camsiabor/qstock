@@ -12,8 +12,6 @@
                     <i class="fa fa-running"></i>
                 </button>
 
-                <input type="checkbox" v-model="sync.profiles.doconfirm" />
-
                 <div>
                     <treeselect
                                 ref="tree_sync_profiles"
@@ -25,6 +23,10 @@
                                 style="width:99%; margin-top: 6px;" />
 
                 </div>
+
+                <br/>
+                confirm before run
+                <input type="checkbox" v-model="sync.doconfirm"  />
 
                 <pre style="font-size: 1em; color: rgb(0, 172, 224); margin-top: 5px;">{{sync.msg}}</pre>
 

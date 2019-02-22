@@ -60,7 +60,8 @@ const stock_methods = {
                 profile: profile
             }).then(function (resp) {
                 let data = util.handle_response(resp);
-                this.sync.msg = this.sync.msg + "\n" + profile + ": " + data;
+                let timestamp = QUtil.time_format(new Date());
+                this.sync.msg = this.sync.msg + "\n" + "[" + timestamp + "] [" + profile + "]: " + data;
             }.bind(this));
         }
     },

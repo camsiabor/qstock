@@ -25,7 +25,7 @@ func (o *HttpServer) routeStock() {
 			Function: profileName,
 			SFlag:    cmd,
 		}, 0)
-		o.RespJsonEx("cmd sent", err, c)
+		o.RespJsonEx("sync "+profileName+" cmd sent", err, c)
 	})
 
 	group.POST("/sync/profile/list", func(c *gin.Context) {

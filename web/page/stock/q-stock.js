@@ -28,14 +28,40 @@ const stock_methods = {
     },
 
     stock_sync : function() {
+
+        this.sync.msg = "running";
         let profiles = arguments;
+        if (profiles.length === 0) {
+            profiles = [];
+            let tree_sync_profiles = this.$refs.tree_sync_profiles;
+            let nodes = tree_sync_profiles.selectedNodes;;
+            if (nodes.length === 0) {
+                this.sync.msg = "需要选择來源";
+                return;
+            }
+            for (let i = 0; i < nodes.length; i++) {
+                let node = nodes[i];
+                if (node.isLeaf) {
+                    let profile_id = node.raw.profile;
+                    profiles.push(profile_id);
+                }
+            }
+        }
+
+        this.sync.msg = "";
         for(let i = 0; i < profiles.length; i++) {
             let profile = profiles[i];
-            if (confirm("going to sync? " + profile)) {
-                return axios.post("/stock/sync", {
-                    profile: profile
-                }).then(util.handle_response);
+            if (this.sync.doconfirm) {
+                if (!confirm("going to sync? " + profile)) {
+                    continue
+                }
             }
+            axios.post("/stock/sync", {
+                profile: profile
+            }).then(function (resp) {
+                let data = util.handle_response(resp);
+                this.sync.msg = this.sync.msg + "\n" + profile + ": " + data;
+            }.bind(this));
         }
     },
 
@@ -55,8 +81,9 @@ const stock_methods = {
                     let profiles = syncer.profiles;
                     for (let profile_name in profiles) {
                         let child = {
-                            id : syncer_name + "." + profile_name + (Math.random()),
-                            label : profile_name
+                            id : syncer_name + "." + profile_name,
+                            label : profile_name,
+                            profile : profile_name
                         }
                         profile.children.push(child);
                         console.log(child);
@@ -64,7 +91,7 @@ const stock_methods = {
                     tree.push(profile);
                     console.log(profile);
                 }
-                this.sync.profiles.tree = tree;
+                this.sync.profiles.tree = tree
             }.bind(this));
         }
         $('#div_sync_setting').modal('toggle');

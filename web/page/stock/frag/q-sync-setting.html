@@ -12,20 +12,21 @@
                     <i class="fa fa-running"></i>
                 </button>
 
-                <div>
+                <input type="checkbox" v-model="sync.profiles.doconfirm" />
 
+                <div>
                     <treeselect
                                 ref="tree_sync_profiles"
-                                v-model="sync.profiles.tree"
+                                v-model="sync.profiles.selected"
+                                :options="sync.profiles.tree"
                                 :multiple="true"
                                 :open-on-focus="true"
+                                value-consists-of="LEAF_PRIORITY"
                                 style="width:99%; margin-top: 6px;" />
 
                 </div>
 
-                <div style="font-size: 1em; color: rgb(0, 172, 224); margin-top: 5px;">
-                    {{sync.msg}}
-                </div>
+                <pre style="font-size: 1em; color: rgb(0, 172, 224); margin-top: 5px;">{{sync.msg}}</pre>
 
             </div>
             <div class="modal-footer">

@@ -125,6 +125,7 @@ vue_options.data = {
     },
     sync : {
         msg : "",
+        doconfirm : true,
         profiles : {
             tree : [],
             data : {},

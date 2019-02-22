@@ -31,7 +31,8 @@ func (o *HttpServer) routeStock() {
 	group.POST("/sync/profile/list", func(c *gin.Context) {
 		var g = global.GetInstance()
 		var apis = util.GetMap(g.Config, true, "api")
-		o.RespJsonEx(apis, nil, c)
+		var syncers = util.MapClone(apis, 3)
+		o.RespJsonEx(syncers, nil, c)
 	})
 
 	group.POST("/clear", func(c *gin.Context) {

@@ -32,7 +32,7 @@ const stock_methods = {
         for(let i = 0; i < profiles.length; i++) {
             let profile = profiles[i];
             if (confirm("going to sync? " + profile)) {
-                axios.post("/stock/sync", {
+                return axios.post("/stock/sync", {
                     profile: profile
                 }).then(util.handle_response);
             }
@@ -40,6 +40,33 @@ const stock_methods = {
     },
 
     stock_sync_setting : function() {
+        if (!this.sync.profiles.tree || !this.sync.profiles.tree.length) {
+            axios.post("/stock/sync/profile/list", {
+            }).then(function (resp) {
+                let tree = [];
+                this.sync.profiles.data = util.handle_response(resp);
+                for (let syncer_name in this.sync.profiles.data) {
+                    let profile = {
+                        id : syncer_name,
+                        label : syncer_name,
+                        children : []
+                    };
+                    let syncer = this.sync.profiles.data[syncer_name];
+                    let profiles = syncer.profiles;
+                    for (let profile_name in profiles) {
+                        let child = {
+                            id : syncer_name + "." + profile_name + (Math.random()),
+                            label : profile_name
+                        }
+                        profile.children.push(child);
+                        console.log(child);
+                    }
+                    tree.push(profile);
+                    console.log(profile);
+                }
+                this.sync.profiles.tree = tree;
+            }.bind(this));
+        }
         $('#div_sync_setting').modal('toggle');
     },
 

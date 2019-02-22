@@ -287,10 +287,39 @@ const script_methods = {
         }).then(function (resp) {
             let data = util.handle_response(resp);
             if (mode === "raw") {
-                if (typeof data === 'object') {
-                    data = JSON.stringify(data, null, 2);
+                let layout = [];
+                if (data.error) {
+                    layout.push("[error]");
+                    if (typeof data.error === 'object') {
+                        let error_stringify = JSON.stringify(data.error, null, 2);
+                        layout.push(error_stringify);
+                    } else {
+                        layout.push(data.error);
+                    }
+                    layout.push("\n");
                 }
-                this.console.text = data;
+                layout.push("[data]");
+                if (typeof data.data === 'object') {
+                    let data_stringify = JSON.stringify(data.data, null, 2);
+                    layout.push(data_stringify);
+                } else {
+                    layout.push(data.data);
+                }
+                layout.push("\n");
+
+                if (data.stdout) {
+                    layout.push("[stdout]");
+                    layout.push(data.stdout);
+                    layout.push("\n");
+                }
+
+                if (data.consume) {
+                    layout.push("[consume]");
+                    layout.push(data.consume);
+                    layout.push("\n");
+                }
+
+                this.console.text = layout.join("\n");
                 return data;
             } else {
                 if (data) {

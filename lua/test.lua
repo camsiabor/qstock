@@ -3,8 +3,10 @@
 
 
 local http = require("socket.http")
--- local b, c, h = http.request("http://127.0.0.1/h/run/r.html")
+local b, c, h = http.request("http://127.0.0.1/h/run/r.html")
 
+--print("###### hello world")
+print("power")
 
 
 --local x = add(10,20)
@@ -18,4 +20,4 @@ local b = 12
 local c = add(a, b, 102)
 ]]--
 
-return "power"
+return #b

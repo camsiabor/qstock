@@ -11,6 +11,8 @@ import (
 	"github.com/camsiabor/qstock/run/rscript"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 )
@@ -251,6 +253,8 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		o.RespJsonEx(nil, err, c)
 		return
 	}
+
+	var tempstdout = util.GetBool(m, true, "tempstdout")
 	var L, err = rlua.InitState()
 	if L != nil {
 		defer L.Close()
@@ -260,10 +264,25 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		return
 	}
 
+	var stdout *os.File
+	if tempstdout {
+		stdout, err = ioutil.TempFile("temp", "lua_stdout")
+		if err != nil {
+			os.Mkdir("temp", 0664)
+			stdout, err = ioutil.TempFile("temp", "lua_stdout")
+		}
+		if err == nil {
+			defer os.Remove(stdout.Name())
+			L.SetStdout(stdout)
+			L.SetDoCloseStdout(false)
+		}
+	}
+
 	var Q = global.GetInstance().Data()
 	luar.Register(L, "Q", Q)
-
+	var start = time.Now().UnixNano()
 	var rets, rerr = rlua.RunFile(L, scriptname, nil)
+	var end = time.Now().UnixNano()
 
 	if rerr != nil {
 		var luaerr, ok = rerr.(*lua.LuaError)
@@ -286,9 +305,33 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 			data = rets[0]
 		}
 		if len(rets) >= 2 && rets[1] != nil {
-			err = fmt.Errorf("%v", rets[1])
+			rerr = fmt.Errorf("%v", rets[1])
 		}
 	}
 
-	o.RespJsonEx(data, err, c)
+	var stdoutstr string
+	if stdout != nil {
+		stdout.Sync()
+		var n, err = stdout.Seek(0, 2)
+		if err == nil {
+			var bytes = make([]byte, n)
+			stdout.Seek(0, 0)
+			_, err = stdout.Read(bytes)
+			if err == nil {
+				stdoutstr = string(bytes[:])
+			}
+		}
+	}
+	var wrap = make(map[string]interface{})
+	wrap["iamwrap"] = true
+	wrap["data"] = data
+	if rerr != nil {
+		wrap["error"] = rerr.Error()
+	}
+	if len(stdoutstr) > 0 {
+		wrap["stdout"] = stdoutstr
+	}
+	var consume = float64((end - start)) / float64(time.Millisecond)
+	wrap["consume"] = consume
+	o.RespJsonEx(wrap, nil, c)
 }

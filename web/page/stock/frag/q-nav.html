@@ -57,6 +57,7 @@
                     动作
                 </a>
                 <div class="dropdown-menu" aria-labelledby="" >
+                    <a class="dropdown-item" href="#" v-on:click="stock_sync_setting()">同步设置</a>
                     <a class="dropdown-item" href="#" v-on:click="stock_sync('a.snapshot', 'i.snapshot')">同步映照</a>
                     <a class="dropdown-item" href="#" v-on:click="stock_sync('k.history', 'k.i.history', 'k.history.week', 'k.history.month')">同步历史</a>
                     <a class="dropdown-item" href="#" v-on:click="stock_sync('trade.calendar')">同步日历</a>
@@ -68,7 +69,7 @@
                     <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'def', '')">刪除映照</a>
                     <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'history', '')">刪除历史</a>
                     <a class="dropdown-item" href="#" v-on:click="stock_clear('main', 'calendar', '')">刪除日历</a>
-                </div>s
+                </div>
             </li>
         </ul>
     </div>

@@ -39,6 +39,10 @@ const stock_methods = {
         }
     },
 
+    stock_sync_setting : function() {
+        $('#div_sync_setting').modal('toggle');
+    },
+
     stock_clear : function(dao, db, group) {
         if (confirm("everything in the database will be clear. sure? " + dao + "." + db + "." + group)) {
             axios.post("/stock/clear", {

@@ -28,6 +28,12 @@ func (o *HttpServer) routeStock() {
 		o.RespJsonEx("cmd sent", err, c)
 	})
 
+	group.POST("/sync/profile/list", func(c *gin.Context) {
+		var g = global.GetInstance()
+		var apis = util.GetMap(g.Config, true, "api")
+		o.RespJsonEx(apis, nil, c)
+	})
+
 	group.POST("/clear", func(c *gin.Context) {
 		var m, _ = o.ReqParse(c)
 		var db = util.GetStr(m, "", "db")

@@ -73,6 +73,7 @@ func initHttp(g *global.G) {
 	var httpserv = httpv.GetInstance()
 	httpserv.Run()
 	g.RegisterModule("httpv", httpserv)
+	g.SetData("http", qnet.GetSimpleHttp())
 }
 func initMapper(g *global.G) {
 	var mapperConfig = util.GetMap(g.Config, true, "mapping")

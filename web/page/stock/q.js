@@ -123,6 +123,14 @@ vue_options.data = {
     portfolio: {
         name: ""
     },
+    sync : {
+        msg : "",
+        profiles : {
+            tree : [],
+            data : {},
+            selected : null
+        }
+    },
     console: {
         text: "",
         msg_error: "error",

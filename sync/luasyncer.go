@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/camsiabor/golua/lua"
+	"github.com/camsiabor/golua/luar"
+	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/run/rlua"
@@ -93,6 +95,13 @@ func (o *Syncer) Lua_handler(phrase string, work *ProfileWork) (interface{}, err
 		return nil, err
 	}
 
+	var Q = global.GetInstance().Data()
+	Q["work"] = work
+	Q["syncer"] = o
+	Q["phrase"] = phrase
+
+	luar.Register(L, "Q", Q)
+
 	var rets, rerr = rlua.RunFile(L, scriptname, nil)
 	if rerr == nil {
 		fmt.Println(rets)
@@ -111,7 +120,12 @@ func (o *Syncer) Lua_handler(phrase string, work *ProfileWork) (interface{}, err
 
 	var data interface{} = nil
 	if rets != nil {
-		data = rets[0]
+		if len(rets) >= 1 {
+			data = rets[0]
+		}
+		if len(rets) >= 2 && rets[1] != nil {
+			rerr = fmt.Errorf("%v", rets[1])
+		}
 	}
 	return data, rerr
 }

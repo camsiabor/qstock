@@ -1,0 +1,37 @@
+<div class="modal fade" id="div_sync_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+    <div class="modal-dialog" style="min-width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">同步设置</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <button type="button" class="btn btn-sm btn-info" v-on:click="stock_sync();">
+                    <i class="fa fa-running"></i>
+                </button>
+
+                <div>
+
+                    <treeselect
+                                ref="tree_sync_profiles"
+                                v-model="sync.profiles.tree"
+                                :multiple="true"
+                                :open-on-focus="true"
+                                @select="sync.profiles.selected"
+                                style="width:99%; margin-top: 6px;" />
+
+                </div>
+
+                <div style="font-size: 1em; color: rgb(0, 172, 224); margin-top: 5px;">
+                    {{sync.msg}}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>

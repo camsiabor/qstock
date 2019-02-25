@@ -18,7 +18,7 @@ const def_setting = {
     },
     mode: "raw",
     exclude: "buy,sell",
-    script: {
+    script_file : {
         last: "",
         timeout : 300000
     },
@@ -51,11 +51,11 @@ vue_options.data = {
         type : "",
         act : "",
     },
-    script: {
+    script_file : {
         name: null,
         script: "--[[lua]]--"
     },
-    script_group : {
+    script_file_group : {
         id : "system",
         name : "system",
         tree : []
@@ -357,7 +357,7 @@ vue_options.methods = {
     }
 }; /* methods end */
 
-QUtil.map_merge(vue_options.methods, script_methods);
+QUtil.map_merge(vue_options.methods, script_file_methods);
 
 /* ====================  init ===================== */
 
@@ -372,10 +372,10 @@ vue_options.mounted = function () {
     this.editor_init();
     this.table_init();
 
-    this.script_list(this.setting.locate).then(function(){
-        if (this.setting.script.last) {
-            this.script_select({
-                id : this.setting.script.last
+    this.script_file_list(this.setting.locate).then(function(){
+        if (this.setting.script_file.last) {
+            this.script_file_select({
+                id : this.setting.script_file.last
             });
         }
     }.bind(this));

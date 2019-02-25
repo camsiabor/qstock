@@ -1,6 +1,6 @@
-const script_methods = {
+const script_file_methods = {
 
-    script_list: function (opts) {
+    script_file_list: function (opts) {
         opts = opts || this.setting.locate;
         let path = opts.path || ".";
         opts.category = opts.category || "lua";
@@ -17,12 +17,12 @@ const script_methods = {
             if (opts.node) {
 
             } else {
-                this.script_group.tree = data;
+                this.script_file_group.tree = data;
             }
         }.bind(this)).catch(util.handle_error.bind(this));
     },
 
-    script_sublist : function(act) {
+    script_file_sublist : function(act) {
 
         if (act.action !== "LOAD_CHILDREN_OPTIONS") {
             return;
@@ -53,52 +53,44 @@ const script_methods = {
             act.callback(e);
         });
 
-
-
-
-
-
-
-
-
     },
 
-    script_select: function (noderaw, id, node) {
+    script_file_select: function (noderaw, id, node) {
 
         if (!node) { /* active select */
             if (noderaw) {
-                node = this.$refs.tree_script.getNode(noderaw.id);
+                node = this.$refs.tree_script_file.getNode(noderaw.id);
             } else {
-                node = this.$refs.tree_script.selectedNodes[0];
+                node = this.$refs.tree_script_file.selectedNodes[0];
             }
             if (node) {
-                this.$refs.tree_script.select(node);
+                this.$refs.tree_script_file.select(node);
             }
             return;
         }
 
-        this.setting.script.last = this.script.name = node.id;
+        this.setting.script_file.last = this.script_file.name = node.id;
         return axios.post("/os/file/text", {
             path: node.id,
             category: this.setting.locate.category
         }).then(function (resp) {
             let text = util.handle_response(resp);
-            this.script.script = text;
-            this.editor.setValue(this.script.script);
+            this.script_file.script = text;
+            this.editor.setValue(this.script_file.script);
             this.editor.clearSelection();
             this.script_file_query(null, null, true);
             this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
 
-    script_current : function() {
-        return this.$refs.tree_script.selectedNodes[0];
+    script_file_current : function() {
+        return this.$refs.tree_script_file.selectedNodes[0];
     },
 
 
-    script_save: function () {
+    script_file_save: function () {
 
-        let current = this.script_current();
+        let current = this.script_file_current();
         if (current) {
             if (this.setting.editor.save_with_confirm) {
                 if (!confirm("do save " + current.id  + " ?")) {
@@ -110,22 +102,22 @@ const script_methods = {
             return;
         }
 
-        this.setting.script.last = this.script.name;
-        this.script.script = this.editor.getValue().trim();
+        this.setting.script_file.last = this.script_file.name;
+        this.script_file.script = this.editor.getValue().trim();
         return axios.post("/os/file/write", {
             path : current.id,
             category: this.setting.locate.category,
-            text : this.script.script
+            text : this.script_file.script
         }).then(function (resp) {
             util.handle_response(resp, this.console, "saved @ " + current.id);
-            util.popover("#button_script_save", "save success", "bottom");
+            util.popover("#button_script_file_save", "save success", "bottom");
             return resp
         }.bind(this)).catch(util.handle_error.bind(this));
 
     },
 
 
-    script_add: function(opts) {
+    script_file_add: function(opts) {
         let name = prompt("请输入名字");
         if (name) {
             name = name.trim();
@@ -139,13 +131,13 @@ const script_methods = {
             parent = selected.children;
         } else {
             if (opts.type === "script") {
-                let result = QUtil.tree_locate(this.script_group.tree, { id : "all" },  {
+                let result = QUtil.tree_locate(this.script_file_group.tree, { id : "all" },  {
                     depth_limit : 0
                 });
                 parent = result.target;
                 parent = parent.children;
             } else {
-                parent = this.script_group.tree;
+                parent = this.script_file_group.tree;
             }
         }
         let node = { label : name };
@@ -161,7 +153,7 @@ const script_methods = {
         }
         let existing;
         if (opts.type === "script") {
-            existing = QUtil.tree_locate(this.script_group.tree, { field_id : "id", id : node.id }, {});
+            existing = QUtil.tree_locate(this.script_file_group.tree, { field_id : "id", id : node.id }, {});
         } else {
             existing = QUtil.tree_locate(parent, { field_id : "label", id : node.name }, {});
         }
@@ -172,13 +164,13 @@ const script_methods = {
         }
         parent.push(node);
         if (opts.type === "script") {
-            this.script_save( { type : "script", name : name } );
+            this.script_file_save( { type : "script", name : name } );
         }
-        this.script_save( { type : "group" } );
+        this.script_file_save( { type : "group" } );
     },
 
-    script_delete: function (opts) {
-        let current = this.script_current();
+    script_file_delete: function (opts) {
+        let current = this.script_file_current();
         if (current) {
             if (!confirm("sure to delete " + current.id + " ?")) {
                 return;
@@ -188,30 +180,30 @@ const script_methods = {
             return;
         }
 
-        if (!confirm("sure to delete? " + this.script.name)) {
+        if (!confirm("sure to delete? " + this.script_file.name)) {
             return;
         }
         axios.post("/os/file/delete", {
-            path: this.script.name,
+            path: this.script_file.name,
             category: this.setting.locate.category
         }).then(function (resp) {
-            util.handle_response(resp, this.console, "script deleted @ " + this.script.name)
-            this.script.name = null;
-            this.script_list( { type : "script,group" } );
+            util.handle_response(resp, this.console, "script deleted @ " + this.script_file.name)
+            this.script_file.name = null;
+            this.script_file_list( { type : "script,group" } );
         }.bind(this)).catch(util.handle_error.bind(this));
 
     },
 
-    script_query: function (mode, carrayscript, do_not_save) {
+    script_file_query_prev: function (mode, carrayscript, do_not_save) {
 
         if (!do_not_save && this.setting.editor.save_before_run) {
-            return this.script_save().then(function () {
-                return this.script_query(mode, carrayscript, true);
+            return this.script_file_save().then(function () {
+                return this.script_file_query_prev(mode, carrayscript, true);
             }.bind(this));
         }
 
         let script = this.editor.getValue().trim();
-        if (script.length === 0) {
+        if (script_file.length === 0) {
             this.console.text = "script content is empty";
             return;
         }
@@ -235,12 +227,12 @@ const script_methods = {
             mode : mode,
             script : script,
             params : this.params,
-            name : this.script.name,
+            name : this.script_file.name,
         }, {
-            timeout: this.setting.script.timeout || 300000
+            timeout: this.setting.script_file.timeout || 300000
         }).then(function (resp) {
             if (resp.data.code === 404) {
-                return this.script_query(mode, true, true);
+                return this.script_file_query(mode, true, true);
             }
             let data = util.handle_response(resp);
             if (mode === "raw") {
@@ -263,9 +255,9 @@ const script_methods = {
     script_file_query: function (mode, carrayscript, do_not_save) {
 
         if (!do_not_save && this.setting.editor.save_before_run) {
-            let script_save_promise = this.script_save();
-            if (script_save_promise) {
-                return script_save_promise.then(function () {
+            let script_file_save_promise = this.script_file_save();
+            if (script_file_save_promise) {
+                return script_file_save_promise.then(function () {
                     return this.script_file_query(mode, carrayscript, true);
                 }.bind(this));
             }
@@ -275,7 +267,7 @@ const script_methods = {
         mode = mode  || this.setting.mode;
 
         this.console.text = "";
-        let current = this.script_current();
+        let current = this.script_file_current();
         return axios.post("/cmd/go", {
             type : 'luafile',
             cmd : 'run',
@@ -283,7 +275,7 @@ const script_methods = {
             path : current.id,
             params : this.params
         }, {
-            timeout: this.setting.script.timeout || 300000
+            timeout: this.setting.script_file.timeout || 300000
         }).then(function (resp) {
             let data = util.handle_response(resp);
             if (mode === "raw") {
@@ -346,8 +338,8 @@ const script_methods = {
                 tree_src_value_consists_of : "LEAF_PRIORITY",
                 tree_src_select_consists_of : "LEAF",
                 tree_src_display_consists_of : "ALL",
-                tree_src : this.script_group.tree,
-                tree_des : this.script_group.tree
+                tree_src : this.script_file_group.tree,
+                tree_des : this.script_file_group.tree
             };
         } else {
             this.script_setting_opts = {
@@ -358,23 +350,23 @@ const script_methods = {
                 tree_src_desc : "选择来源分组",
                 tree_des_desc : "选择目标分组",
                 tree_src_display_consists_of : "BRANCH",
-                tree_src : this.script_group.tree,
-                tree_des : this.script_group.tree
+                tree_src : this.script_file_group.tree,
+                tree_des : this.script_file_group.tree
             };
         }
 
         $('#div_script_setting').modal('toggle');
     },
 
-    script_group_tree_src_select : function(node, id) {
+    script_file_group_tree_src_select : function(node, id) {
         this.script_setting_opts.tree_src_node = node;
     },
 
-    script_group_tree_des_select : function(node, id) {
+    script_file_group_tree_des_select : function(node, id) {
         this.script_setting_opts.tree_des_node = node;
     },
 
-    script_group_move : function() {
+    script_file_group_move : function() {
         let tree_script_src = this.$refs.tree_script_src;
         let tree_script_des = this.$refs.tree_script_des;
 
@@ -387,7 +379,7 @@ const script_methods = {
         }
     },
 
-    script_group_copy : function() {
+    script_file_group_copy : function() {
 
     }
 

@@ -1,27 +1,18 @@
 --local mobdebug = require("mobdebug")
 -- mobdebug.start()
 
-
 -- local http = require("socket.http")
 -- local b, c, h = http.request("http://127.0.0.1/h/run/r.html")
 
---print("###### hello world")
 
-for i = 1, 10 do 
-    print("powe1r")
-end
-print("over whelming")
+print(Q.http ~= nil)
 
+local api = Q.global.Config["api"]
+local tushare = api["tushare"]["profiles"]
+local khistory = tushare["k.history"]
+local d = khistory["nice"]
 
---local x = add(10,20)
---[[
-function add(a, b, c)
-    return a + b + c
-end
-
-local a = 10
-local b = 12
-local c = add(a, b, 102)
-]]--
+print(d)
+print(type(d))
 
 return a

@@ -132,6 +132,25 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 
 	L.Register("Qembed", embedLuaScript)
 
+	var stdout *qio.Buffer
+	var stdout_redirect = util.GetBool(m, true, "stdout_redirect")
+	if stdout_redirect {
+		var stdout_type = util.GetStr(m, "memory", "stdout_type")
+		var bufferType qio.BufferType
+		if stdout_type == "memory" {
+			bufferType = qio.BufferMemory
+		} else {
+			bufferType = qio.BufferTempFile
+		}
+		stdout = qio.NewBuffer(bufferType)
+		defer stdout.Close()
+	}
+
+	if stdout != nil {
+		L.SetStdout(stdout)
+		L.SetDoCloseStdout(false)
+	}
+
 	var start, end int64
 	var consume float64
 
@@ -187,6 +206,12 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		}
 	}
 
+	var stdoutstr string
+	if stdout != nil {
+		bytes, _ := stdout.Bytes()
+		stdoutstr = string(bytes[:])
+	}
+
 	if err == nil {
 
 		//if data != nil {
@@ -208,8 +233,10 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 			wrap["data"] = data
 			wrap["consume"] = consume
 			wrap["params"] = params
+			wrap["stdout"] = stdoutstr
 			data = wrap
 		}
+
 	} else {
 		code = 500
 		var luaStacks = L.StackTrace()
@@ -229,6 +256,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		r["stack"] = luaStackInfo
 		r["err"] = err.Error()
 		r["type"] = "lua"
+		r["stdout"] = stdoutstr
 
 		if debug {
 			r["cosume"] = consume

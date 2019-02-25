@@ -8,24 +8,24 @@
 
             <div class="modal-body">
 
-                <button type="button" class="btn btn-sm btn-info" v-on:click="script_save(script_setting_opts);">
+                <button type="button" class="btn btn-sm btn-info" v-on:click="script_file_save(script_setting_opts);">
                     <i class="fa fa-save"></i>
                 </button>
 
                 <button class="btn btn-sm btn-primary">
-                    <i class="fa fa-plus-circle" v-on:click="script_add(script_setting_opts)"></i>
+                    <i class="fa fa-plus-circle" v-on:click="script_file_add(script_setting_opts)"></i>
                 </button>
 
                 <button class="btn btn-sm btn-danger">
-                    <i class="fa fa-minus-circle" v-on:click="script_delete(script_setting_opts)"></i>
+                    <i class="fa fa-minus-circle" v-on:click="script_file_delete(script_setting_opts)"></i>
                 </button>
 
                 <button class="btn btn-sm btn-outline-primary" v-if="script_setting_opts.type === 'script'">
-                    <i class="fa fa-copy" v-on:click="script_delete(script_setting_opts)"></i>
+                    <i class="fa fa-copy" v-on:click="script_file_delete(script_setting_opts)"></i>
                 </button>
 
                 <button class="btn btn-sm btn-outline-primary">
-                    <i class="fa fa-angle-right" v-on:click="script_delete(script_setting_opts)"></i>
+                    <i class="fa fa-angle-right" v-on:click="script_file_delete(script_setting_opts)"></i>
                 </button>
 
                 <div>

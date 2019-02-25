@@ -5,7 +5,7 @@
     <div aria-details="脚本" v-bind:class="{'col-md-4' :true, gone: !setting.display.script}" style="margin-top: 3px;">
         <div class="input-group-prepend">
 
-            <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_query('hit'); ">
+            <button type="button" value="查询" class="btn btn-sm btn-info " v-on:click="script_file_query('hit'); ">
                 <i class="fa fa-search-dollar"></i>
             </button>
 
@@ -13,14 +13,14 @@
 
             <div>
                 <treeselect
-                            ref="tree_script"
-                            v-model="script.name"
+                            ref="tree_script_file"
+                            v-model="script_file.name"
                             :multiple="false"
-                            :options="script_group.tree"
-                            :load-options="script_sublist"
+                            :options="script_file_group.tree"
+                            :load-options="script_file_sublist"
                             :open-on-focus="true"
                             select-consists-of="LEAF"
-                            @select="script_select"
+                            @select="script_file_select"
                             style="width:99%"/>
             </div>
 
@@ -34,19 +34,19 @@
             </button>
             -->
 
-            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_select()" >
+            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_file_select()" >
                 <i class="fa fa-circle-notch"></i>
             </button>
 
-            <button type="button" value="保存" id="button_script_save" class="btn btn-sm btn-outline-info"  v-on:click="script_save()" >
+            <button type="button" value="保存" id="button_script_file_save" class="btn btn-sm btn-outline-info"  v-on:click="script_file_save()" >
                 <i class="fa fa-save"></i>
             </button>
 
-            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_list()" >
+            <button type="button" value="刷新" class="btn btn-sm btn-outline-info"  v-on:click="script_file_list()" >
                 <i class="fa fa-truck-loading"></i>
             </button>
 
-            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_delete()">
+            <button type="button" value="删除" class="btn btn-sm btn-outline-info" v-on:click="script_file_delete()">
                 <i class="fa fa-trash"></i>
             </button>
         </div>

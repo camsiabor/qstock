@@ -1,7 +1,7 @@
 const script_file_methods = {
 
     script_file_list: function (opts) {
-        opts = opts || this.setting.locate;
+        opts = opts || this.setting.script_file;
         let path = opts.path || ".";
         opts.category = opts.category || "lua";
         return axios.post("/os/file/list", opts).then(function (json) {
@@ -33,7 +33,7 @@ const script_file_methods = {
         let vroot = this.$root;
         let opts = {};
         opts.path = act.parentNode.id;
-        opts.category = vroot.setting.locate.category;
+        opts.category = vroot.setting.script_file.category;
         return axios.post("/os/file/list", opts).then(function (json) {
             let data = util.handle_response(json, vroot.console, "");
             act.parentNode.children = [];
@@ -72,13 +72,15 @@ const script_file_methods = {
         this.setting.script_file.last = this.script_file.name = node.id;
         return axios.post("/os/file/text", {
             path: node.id,
-            category: this.setting.locate.category
+            category: this.setting.script_file.category
         }).then(function (resp) {
             let text = util.handle_response(resp);
             this.script_file.script = text;
             this.editor.setValue(this.script_file.script);
             this.editor.clearSelection();
-            this.script_file_query(null, null, true);
+            if (this.setting.script_file.select_then_run) {
+                this.script_file_query(null, null, true);
+            }
             this.config_persist();
         }.bind(this)).catch(util.handle_error.bind(this))
     },
@@ -92,7 +94,7 @@ const script_file_methods = {
 
         let current = this.script_file_current();
         if (current) {
-            if (this.setting.editor.save_with_confirm) {
+            if (this.setting.script_file.save_with_confirm) {
                 if (!confirm("do save " + current.id  + " ?")) {
                     return;
                 }
@@ -106,7 +108,7 @@ const script_file_methods = {
         this.script_file.script = this.editor.getValue().trim();
         return axios.post("/os/file/write", {
             path : current.id,
-            category: this.setting.locate.category,
+            category: this.setting.script_file.category,
             text : this.script_file.script
         }).then(function (resp) {
             util.handle_response(resp, this.console, "saved @ " + current.id);
@@ -185,7 +187,7 @@ const script_file_methods = {
         }
         axios.post("/os/file/delete", {
             path: this.script_file.name,
-            category: this.setting.locate.category
+            category: this.setting.script_file.category
         }).then(function (resp) {
             util.handle_response(resp, this.console, "script deleted @ " + this.script_file.name)
             this.script_file.name = null;
@@ -196,7 +198,7 @@ const script_file_methods = {
 
     script_file_query_prev: function (mode, carrayscript, do_not_save) {
 
-        if (!do_not_save && this.setting.editor.save_before_run) {
+        if (!do_not_save && this.setting.script_file.save_before_run) {
             return this.script_file_save().then(function () {
                 return this.script_file_query_prev(mode, carrayscript, true);
             }.bind(this));
@@ -207,7 +209,7 @@ const script_file_methods = {
             this.console.text = "script content is empty";
             return;
         }
-        mode = mode  || this.setting.mode;
+        mode = mode  || this.setting.script_file.mode;
 
         let nohash = window.location.href.indexOf('nohash') > 0
         let hash = md5(script);
@@ -254,7 +256,7 @@ const script_file_methods = {
 
     script_file_query: function (mode, carrayscript, do_not_save) {
 
-        if (!do_not_save && this.setting.editor.save_before_run) {
+        if (!do_not_save && this.setting.script_file.save_before_run) {
             let script_file_save_promise = this.script_file_save();
             if (script_file_save_promise) {
                 return script_file_save_promise.then(function () {
@@ -325,6 +327,12 @@ const script_file_methods = {
 
 
     /* ======================================== script setting ====================================================== */
+
+    script_file_setting_show: function () {
+        $('#div_script_file_setting').modal('toggle');
+    },
+
+
     script_setting: function(type) {
 
         if (type === "script") {
@@ -355,7 +363,7 @@ const script_file_methods = {
             };
         }
 
-        $('#div_script_setting').modal('toggle');
+        $('#div_script_file_setting').modal('toggle');
     },
 
     script_file_group_tree_src_select : function(node, id) {

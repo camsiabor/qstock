@@ -1,0 +1,54 @@
+<div class="modal fade" id="div_script_file_setting" tabindex="-1" role="dialog" aria-labelledby="setting" aria-hidden="true">
+    <div class="modal-dialog" style="min-width: 600px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">script file setting</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+            <div style="margin: 5px">
+                <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">query.mode</span>
+                    </div>
+                    <input style="width: 75%"
+                           class="form-control mr-sm-2"
+                           type="search" placeholder="mode"
+                           aria-label="path" v-model="setting.mode">
+                </div>
+            </div>
+
+
+            <div style="margin: 5px">
+                <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">root.path</span>
+                    </div>
+                    <input style="width: 75%"
+                           class="form-control mr-sm-2"
+                           type="search" placeholder="path"
+                           aria-label="path" v-model="setting.script_file.path">
+                </div>
+            </div>
+
+            <div style="margin: 5px">
+                <div class="input-group sm-3" style="width: 90%">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">file.filter</span>
+                    </div>
+                    <input style="width: 75%"
+                           class="form-control mr-sm-2"
+                           type="search" placeholder="filter"
+                           aria-label="filter" v-model="setting.script_file.filter">
+                </div>
+            </div>
+
+            <br/>
+
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>

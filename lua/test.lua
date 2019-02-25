@@ -15,4 +15,4 @@ local d = khistory["nice"]
 print(d)
 print(type(d))
 
-return a
+return 0

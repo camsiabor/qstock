@@ -11,24 +11,23 @@ const def_setting = {
         page_size : 5,
         fields : _columns_default
     },
-    locate : {
-        path : "",
-        filter : "",
-        category : "lua"
-    },
-    mode: "raw",
     exclude: "buy,sell",
     script_file : {
+        mode: "raw",
         last: "",
-        timeout : 300000
+        path : "",
+        filter : "",
+        category : "lua",
+        timeout : 300000,
+        select_then_run : true,
+        save_before_run : false,
+        save_with_confirm : true
     },
     editor : {
         font_size : 1,
         height_mode : "min",
         height_min : 120,
-        height_max : 360,
-        save_before_run : false,
-        save_with_confirm : true
+        height_max : 360
     },
     display: {
         editor: true,
@@ -187,8 +186,8 @@ vue_options.methods = {
         }
         return false;
     },
-    setting_show: function () {
-        $('#div_setting').modal('toggle');
+    editor_setting_show: function () {
+        $('#div_editor_setting').modal('toggle');
     },
     setting_save: function () {
         $('#div_setting').modal('hide');
@@ -372,7 +371,7 @@ vue_options.mounted = function () {
     this.editor_init();
     this.table_init();
 
-    this.script_file_list(this.setting.locate).then(function(){
+    this.script_file_list(this.setting.script_file).then(function(){
         if (this.setting.script_file.last) {
             this.script_file_select({
                 id : this.setting.script_file.last

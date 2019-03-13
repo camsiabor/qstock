@@ -13,7 +13,22 @@ local headers = {}
 headers["hexin-v"] = "AqNsoKE1-wN1F7c32WAV9OtUMuxOmDPfcSd7bdUE_cV4m80aXWjHKoH8C1Hm"
 headers["Host"] = "data.10jqka.com.cn"
 headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
-local b = Q.http.Get(url, headers, "gbk")
+local html = Q.http.Get(url, headers, "gbk")
+
+
+local xml = require("common.xml2lua.xml2lua")
+local tree = require("common.xml2lua.tree")
+local parser = xml.parser(tree)
+parser:parse(html)
+
+for k, v in pairs(tree.root) do
+    print(k)
+end
+
+
+--print(tree)
+
+
 --local b, c, h = http.request(url)
 
 --[[
@@ -30,6 +45,6 @@ print(type(d))
 return a
 ]]--
 
-print(b)
+--print(b)
 
 return 0

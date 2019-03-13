@@ -23,7 +23,7 @@ local tree_handler = require("common.xml2lua.tree")
 function request(page, opts, result)
 
     local headers = {}
-    headers["hexin-v"] = "AtQbtWrgdA6pAuBCWb7qiRBZpRlFLftoOl2MF26zYpbj13qPlj3Ip4phXOa9"
+    headers["hexin-v"] = "Ane4LC2R58dSPWNL9Hd5sB-4BmDCPEEnJQrPjskskW2vLpmW0Qzb7jXgX3Ta"
     headers["Host"] = "data.10jqka.com.cn"
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
     headers["X-Request-With"] = "XMLHttpRequest"
@@ -93,7 +93,7 @@ function request(page, opts, result)
         flow_big = string.sub(flow_big, 1, 5) + 0
         
         local flow_big_rate = flow_big / amount * 100
-        local flow_big_rate_compare = flow_big / flow
+        local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
         
         flow_big_rate = string.sub(flow_big_rate.."", 1, 5) + 0
@@ -149,7 +149,7 @@ for i = 1, n do
     end
 end
 
-local print_head = "code\tname\tch\tfbr\tbig_T\tbig_c\tbig"
+local print_head = "i\tcode\tname\tch\tbig_r\tbig_T\tbig_c\tbig"
 print(print_head)
 for i = 1, #result do
     local one = result[i]
@@ -158,7 +158,7 @@ for i = 1, #result do
         print(print_head)
     end
     
-    print(one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
     
     
 end

@@ -23,23 +23,29 @@ local tree_handler = require("common.xml2lua.tree")
 function request(page, opts, result)
 
     local headers = {}
-    headers["hexin-v"] = "AlSbNepg9I5NFWDCq81qCZDZJZnFrXk-utYMye404s9jQvoPFr1IJwrh3G4"
+    headers["hexin-v"] = "AtQbtWrgdA6pAuBCWb7qiRBZpRlFLftoOl2MF26zYpbj13qPlj3Ip4phXOa9"
     headers["Host"] = "data.10jqka.com.cn"
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
+    headers["X-Request-With"] = "XMLHttpRequest"
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/"
     local url_suffix = "/ajax/1/"
     local url = url_prefix..page..url_suffix
     
-    local html, response_header = Q.http.Get(url, headers, "gbk")
-    
+    local html = Q.http.Get(url, headers, "gbk")
 
     local tree = tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
 
+    if tree.root.table == nil then
+        print("[error] request failure")
+        print(url)
+        return
+    end
 
     local tbody = tree.root.table.tbody
+    
     local tr_count = #tbody.tr
     
     for i = 1, tr_count do
@@ -57,7 +63,6 @@ function request(page, opts, result)
         
         turnover = string.gsub(turnover, "%%", "") + 0
         change_rate = string.gsub(change_rate, "%%", "") + 0
-        
         
         local n = string.find(flow, "亿" )
         if n == nil then
@@ -88,8 +93,13 @@ function request(page, opts, result)
         flow_big = string.sub(flow_big, 1, 5) + 0
         
         local flow_big_rate = flow_big / amount * 100
-        local flow_big_rate_compare = flow_big / flow * 100
+        local flow_big_rate_compare = flow_big / flow
         local flow_big_rate_total = turnover * flow_big_rate / 100
+        
+        flow_big_rate = string.sub(flow_big_rate.."", 1, 5) + 0
+        flow_big_rate_compare = string.sub(flow_big_rate_compare.."", 1, 5) + 0
+        flow_big_rate_total = string.sub(flow_big_rate_total.."", 1, 5) + 0
+        
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         
@@ -111,7 +121,7 @@ function request(page, opts, result)
             
             result[#result + 1] = one
             
-            print(index.."\t"..code.."\t"..name.."\t"..change_rate.."\t"..amount.."\t"..flow_big)
+            --print(index.."\t"..code.."\t"..name.."\t"..change_rate.."\t"..amount.."\t"..flow_big)
         end -- ciritical end
     end -- for tr end
     
@@ -122,7 +132,37 @@ local result = {}
 opts.ch_lower = -2
 opts.ch_upper = 3
 
-request(1, opts, result)
+
+for i = 1, 4 do
+    request(i, opts, result)
+end
+
+local n = #result
+for i = 1, n do
+    for j = 1, n - i do
+        local a = result[j]
+        local b = result[j + 1]
+        if a.flow_big_rate_total < b.flow_big_rate_total then
+            result[j] = b
+            result[j + 1] = a
+        end
+    end
+end
+
+local print_head = "code\tname\tch\tfbr\tbig_T\tbig_c\tbig"
+print(print_head)
+for i = 1, #result do
+    local one = result[i]
+    
+    if i % 10 == 0 then
+        print(print_head)
+    end
+    
+    print(one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
+    
+    
+end
+
 --request(1, opts, result)
 
 return 0

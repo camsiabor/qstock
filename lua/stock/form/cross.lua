@@ -30,7 +30,6 @@
 
 function form_cross(A)
 
-
     local market = A.market
     local date_offset = A.date_offset
     local c_change_rate = A.c_change_rate

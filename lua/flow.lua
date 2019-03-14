@@ -48,15 +48,17 @@ end
 
 function request(page, opts, result, retry)
 
+
+    
+
     local headers = {}
     headers["Host"] = "data.10jqka.com.cn"
-    headers["hexin-v"] = opts.token
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
     headers["X-Request-With"] = "XMLHttpRequest"
     headers["Upgrade-Insecure-Requests"] = "1"
     headers["Accept"] = "text/html, */*; q=0.01"
     headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
-    
+    headers["hexin-v"] = "AiLtrygeiveR65YrAgaEw_K_c6OHczaZ2CEaOGyxTSZBvMyVVAN2nagHav8_"
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/"
     local url_suffix = "/ajax/1"
@@ -115,11 +117,16 @@ function request(page, opts, result, retry)
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
-        local flow_big_rate_cross = flow_big_rate_total * flow_big_rate_compare
-        local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
         
+        local flow_in_rate = flow_in / amount * 100
+        local flow_out_rate = flow_out / amount * 100
         local flow_io_rate = flow_in / flow_out
-
+        
+        local flow_big_in_rate = flow_big / flow_in * 100
+        
+        --local flow_big_rate_cross = (turnover * amount * flow_big_rate / 100) * flow_io_rate * flow_big_in_rate
+        local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
+        local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
 
         flow_big_rate = numcon(flow_big_rate)
         flow_big_rate_compare = numcon(flow_big_rate_compare)
@@ -127,7 +134,11 @@ function request(page, opts, result, retry)
         flow_big_rate_cross = numcon(flow_big_rate_cross)
         flow_big_rate_cross_ex = numcon(flow_big_rate_cross_ex)
         
+        flow_in_rate = numcon(flow_in_rate)
+        flow_out_rate = numcon(flow_out_rate)
         flow_io_rate = numcon(flow_io_rate)
+        
+        flow_big_in_rate = numcon(flow_big_in_rate)
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         if critical then
@@ -152,7 +163,11 @@ function request(page, opts, result, retry)
             one.flow_big_rate_cross = flow_big_rate_cross
             one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
             
+            one.flow_in_rate = flow_in_rate
+            one.flow_out_rate = flow_out_rate
             one.flow_io_rate = flow_io_rate
+            
+            one.flow_big_in_rate = flow_big_in_rate
             
             result[#result + 1] = one
         
@@ -169,7 +184,7 @@ opts.ch_lower = -2.5
 opts.ch_upper = 5.5
 opts.big_c_lower = 0.2
 opts.big_c_upper = 10
-opts.token = "AhTb9aqgNE1kZ6CBDXuqSVCZ5VmFbTuaeojMh673ovIjE7rP1n0I58qhnD79"
+opts.token = "AvQ7FYpAFK2T7YDhow3KKTD5xbllzRerWr-sco5dghwDdJpvtt3oR6oBfL3d"
 
 
 for i = 1, 10 do
@@ -184,14 +199,14 @@ for i = 1, n do
     for j = 1, n - i do
         local a = result[j]
         local b = result[j + 1]
-        if a.flow_big_rate_cross_ex < b.flow_big_rate_cross_ex then
+        if a.flow_big_rate_cross < b.flow_big_rate_cross then
             result[j] = b
             result[j + 1] = a
         end
     end
 end
 
-local print_head = "i\tcode\tname\tch\tturn\tio\tbig_r\tbig_t\tbig_c\tbig_x\tbig_x2\tbig"
+local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tbig"
 local count = 1
 for i = 1, #result do
     local one = result[i]
@@ -199,6 +214,6 @@ for i = 1, #result do
         print("")
         print(print_head)
     end
-    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big)
     count = count + 1
 end

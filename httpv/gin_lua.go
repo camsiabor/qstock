@@ -323,6 +323,7 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 			m["code"] = luaerr.Code()
 			m["error"] = luaerr.Error()
 			m["stacktrace"] = stacktrace
+			m["qtrace"] = rets
 			o.RespJson(luaerr.Code(), m, c)
 		} else {
 			o.RespJsonEx(nil, rerr, c)

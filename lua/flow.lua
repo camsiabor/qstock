@@ -100,19 +100,22 @@ function request(page, opts, result, retry)
             flow_big = string.gsub(flow_big, "亿", "")
         end
         flow_big = string.sub(flow_big, 1, 5) + 0
-        
+        if flow_big <= 0 then
+            flow_big = 0.01
+        end
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
         local flow_big_rate_cross = flow_big_rate_total * flow_big_rate_compare
         local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
         
+    
+        --Qrace( { flow_big_rate_compare, flow_big, amount, code, index } )
         flow_big_rate = string.sub(flow_big_rate.."", 1, 5) + 0
         flow_big_rate_compare = string.sub(flow_big_rate_compare.."", 1, 5) + 0
         flow_big_rate_total = string.sub(flow_big_rate_total.."", 1, 5) + 0
         flow_big_rate_cross = string.sub(flow_big_rate_cross.."", 1, 5) + 0
         flow_big_rate_cross_ex = string.sub(flow_big_rate_cross_ex.."", 1, 5) + 0
-        
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         if critical then
@@ -138,26 +141,29 @@ function request(page, opts, result, retry)
             one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
             
             result[#result + 1] = one
-            
-            --print(index.."\t"..code.."\t"..name.."\t"..change_rate.."\t"..amount.."\t"..flow_big)
-        end -- ciritical end
+        
+        end -- if ciritical end
+        
     end -- for tr end
     
 end
 
 local opts = {}
 local result = {}
+opts.debug = false
 opts.ch_lower = -2.5
-opts.ch_upper = 5
+opts.ch_upper = 5.5
 opts.big_c_lower = 0.2
 opts.big_c_upper = 10
-opts.token = "Ak-ApNVZT8wWYEuwEjAhqDdw3uhadKaKPdKnkmFZ6cnEtGEeaUQz5k2YN8xy"
+opts.token = "AhTb9aqgNE1kZ6CBDXuqSVCZ5VmFbTuaeojMh673ovIjE7rP1n0I58qhnD79"
 
 
-for i = 6, 10 do
+for i = 1, 10 do
     request(i, opts, result)
-    --Q.http.Sleep(100)
+    Q.http.Sleep(200)
 end
+
+
 
 local n = #result
 for i = 1, n do
@@ -181,10 +187,4 @@ for i = 1, #result do
     end
     print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
     count = count + 1
-    
-    
 end
-
---request(1, opts, result)
-
-return 0

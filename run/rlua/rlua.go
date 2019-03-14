@@ -273,6 +273,12 @@ func RunFile(L *lua.State, filename string, errhandler lua.LuaGoErrHandler) (ret
 		return rets, err
 	}
 
+	luar.Register(L, "", map[string]interface{}{
+		"Qrace": func(data interface{}) {
+			L.SetData("qrace", data)
+		},
+	})
+
 	if errhandler == nil {
 		errhandler = DefaultErrHandler
 	}
@@ -297,5 +303,14 @@ func RunFile(L *lua.State, filename string, errhandler lua.LuaGoErrHandler) (ret
 			L.Pop(-1)
 		}
 	}
+
+	if err != nil {
+		var qrace = L.GetData("qrace")
+		if qrace != nil {
+			rets = make([]interface{}, 1)
+			rets[0] = qrace
+		}
+	}
+
 	return rets, err
 }

@@ -20,20 +20,25 @@
 local xml = require("common.xml2lua.xml2lua")
 local tree_handler = require("common.xml2lua.tree")
 
-function request(page, opts, result)
+function request(page, opts, result, retry)
 
     local headers = {}
-    headers["hexin-v"] = "AopFV8AW4kxlMm7gHzacixon23svewxWAPGCWxTANNlpQCSt_Ate5dCP0oLn"
     headers["Host"] = "data.10jqka.com.cn"
+    headers["hexin-v"] = opts.token
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
     headers["X-Request-With"] = "XMLHttpRequest"
+    headers["Upgrade-Insecure-Requests"] = "1"
+    headers["Accept"] = "text/html, */*; q=0.01"
+    headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
+    
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/"
-    local url_suffix = "/ajax/1/"
+    local url_suffix = "/ajax/1"
     local url = url_prefix..page..url_suffix
     
-    local html = Q.http.Get(url, headers, "gbk")
-
+    local html, resp = Q.http.Get(url, headers, "gbk")
+    
+    
     local tree = tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
@@ -41,6 +46,10 @@ function request(page, opts, result)
     if tree.root.table == nil then
         print("[error] request failure")
         print(url)
+        --print(html)
+        if retry == nil then
+            --request(page, opts, result, 1)
+        end
         return
     end
 
@@ -95,10 +104,14 @@ function request(page, opts, result)
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
+        local flow_big_rate_cross = flow_big_rate_total * flow_big_rate_compare
+        local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
         
         flow_big_rate = string.sub(flow_big_rate.."", 1, 5) + 0
         flow_big_rate_compare = string.sub(flow_big_rate_compare.."", 1, 5) + 0
         flow_big_rate_total = string.sub(flow_big_rate_total.."", 1, 5) + 0
+        flow_big_rate_cross = string.sub(flow_big_rate_cross.."", 1, 5) + 0
+        flow_big_rate_cross_ex = string.sub(flow_big_rate_cross_ex.."", 1, 5) + 0
         
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
@@ -121,6 +134,8 @@ function request(page, opts, result)
             one.flow_big_rate = flow_big_rate
             one.flow_big_rate_total = flow_big_rate_total
             one.flow_big_rate_compare = flow_big_rate_compare
+            one.flow_big_rate_cross = flow_big_rate_cross
+            one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
             
             result[#result + 1] = one
             
@@ -132,14 +147,16 @@ end
 
 local opts = {}
 local result = {}
-opts.ch_lower = -2
+opts.ch_lower = -2.5
 opts.ch_upper = 5
-opts.big_c_lower = 0.5
+opts.big_c_lower = 0.2
 opts.big_c_upper = 10
+opts.token = "Ak-ApNVZT8wWYEuwEjAhqDdw3uhadKaKPdKnkmFZ6cnEtGEeaUQz5k2YN8xy"
 
 
-for i = 1, 7 do
+for i = 6, 10 do
     request(i, opts, result)
+    --Q.http.Sleep(100)
 end
 
 local n = #result
@@ -147,25 +164,24 @@ for i = 1, n do
     for j = 1, n - i do
         local a = result[j]
         local b = result[j + 1]
-        if a.flow_big_rate_total < b.flow_big_rate_total then
+        if a.flow_big_rate_cross_ex < b.flow_big_rate_cross_ex then
             result[j] = b
             result[j + 1] = a
         end
     end
 end
 
-local print_head = "i\tcode\tname\tch\tturn\tbig_r\tbig_T\tbig_c\tbig"
-print(print_head)
-
+local print_head = "i\tcode\tname\tch\tturn\tbig_r\tbig_t\tbig_c\tbig_x\tbig_x2\tbig"
 local count = 1
 for i = 1, #result do
     local one = result[i]
-    
-    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
-    count = count + 1
-    if count % 10 == 0 then
+    if count % 10 == 1 then
+        print("")
         print(print_head)
     end
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
+    count = count + 1
+    
     
 end
 

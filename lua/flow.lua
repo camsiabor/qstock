@@ -23,7 +23,7 @@ local tree_handler = require("common.xml2lua.tree")
 function request(page, opts, result)
 
     local headers = {}
-    headers["hexin-v"] = "AkSLBXqwxL6WCnDyX5R6OQBpFck1XWQoKqP8l17o0jLQ1Op_hm04V3qRzIet"
+    headers["hexin-v"] = "AopFV8AW4kxlMm7gHzacixon23svewxWAPGCWxTANNlpQCSt_Ate5dCP0oLn"
     headers["Host"] = "data.10jqka.com.cn"
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
     headers["X-Request-With"] = "XMLHttpRequest"
@@ -102,6 +102,9 @@ function request(page, opts, result)
         
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
+        if critical then
+            critical = flow_big_rate_compare >= opts.big_c_lower and flow_big_rate_compare <= opts.big_c_upper
+        end
         
         if critical then
             
@@ -130,7 +133,9 @@ end
 local opts = {}
 local result = {}
 opts.ch_lower = -2
-opts.ch_upper = 3
+opts.ch_upper = 5
+opts.big_c_lower = 0.5
+opts.big_c_upper = 10
 
 
 for i = 1, 7 do
@@ -156,16 +161,11 @@ local count = 1
 for i = 1, #result do
     local one = result[i]
     
-    include = one.flow_big_rate_compare >= 0.5
-    
-    if include then
-        print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
-        count = count + 1
-        if count % 10 == 0 then
-            print(print_head)
-        end
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big)
+    count = count + 1
+    if count % 10 == 0 then
+        print(print_head)
     end
-    
     
 end
 

@@ -20,6 +20,32 @@
 local xml = require("common.xml2lua.xml2lua")
 local tree_handler = require("common.xml2lua.tree")
 
+
+function str2num(str, keep)
+    if keep == nil then
+        keep = 5
+    end
+    local n = string.find(str, "亿" )
+    if n == nil then
+        str = string.gsub(str, "万", "") + 0
+        str = str / 10000
+    else
+        str = string.gsub(str, "亿", "") + 0
+    end
+    return string.sub(str, 1, keep) + 0
+end
+
+function numcon(num)
+    return string.sub(num.."", 1, 5) + 0
+end
+
+function nozero(num)
+    if num <= 0 then
+        num = 0.0001
+    end
+    return num 
+end
+
 function request(page, opts, result, retry)
 
     local headers = {}
@@ -66,6 +92,8 @@ function request(page, opts, result, retry)
         local name = tr.td[3].a[1]
         local change_rate = tr.td[5][1]
         local turnover = tr.td[6][1]
+        local flow_in = tr.td[7][1]
+        local flow_out = tr.td[8][1]
         local flow = tr.td[9][1]
         local amount = tr.td[10][1]
         local flow_big = tr.td[11][1]
@@ -73,49 +101,33 @@ function request(page, opts, result, retry)
         turnover = string.gsub(turnover, "%%", "") + 0
         change_rate = string.gsub(change_rate, "%%", "") + 0
         
-        local n = string.find(flow, "亿" )
-        if n == nil then
-            flow = string.gsub(flow, "万", "")
-            flow = flow / 10000
-        else
-            flow = string.gsub(flow, "亿", "")
-        end
-        flow = string.sub(flow, 1, 5) + 0
+        flow = str2num(flow)
+        flow_in = str2num(flow_in)
+        flow_out = str2num(flow_out)
+        flow_big = str2num(flow_big)
         
-        n = string.find(amount, "亿" )
-        if n == nil then
-            amount = string.gsub(amount, "万", "")
-            amount = amount / 10000
-        else
-            amount = string.gsub(amount, "亿", "")
-        end
-        amount = string.sub(amount, 1, 5) + 0
+        flow_in = nozero(flow_in)
+        flow_out = nozero(flow_out)
+        flow_big = nozero(flow_big)
         
-
-        n = string.find(flow_big, "亿" )
-        if n == nil then
-            flow_big = string.gsub(flow_big, "万", "")
-            flow_big = flow_big / 10000
-        else
-            flow_big = string.gsub(flow_big, "亿", "")
-        end
-        flow_big = string.sub(flow_big, 1, 5) + 0
-        if flow_big <= 0 then
-            flow_big = 0.01
-        end
+        amount = str2num(amount)
+        
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
         local flow_big_rate_cross = flow_big_rate_total * flow_big_rate_compare
         local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
         
-    
-        --Qrace( { flow_big_rate_compare, flow_big, amount, code, index } )
-        flow_big_rate = string.sub(flow_big_rate.."", 1, 5) + 0
-        flow_big_rate_compare = string.sub(flow_big_rate_compare.."", 1, 5) + 0
-        flow_big_rate_total = string.sub(flow_big_rate_total.."", 1, 5) + 0
-        flow_big_rate_cross = string.sub(flow_big_rate_cross.."", 1, 5) + 0
-        flow_big_rate_cross_ex = string.sub(flow_big_rate_cross_ex.."", 1, 5) + 0
+        local flow_io_rate = flow_in / flow_out
+
+
+        flow_big_rate = numcon(flow_big_rate)
+        flow_big_rate_compare = numcon(flow_big_rate_compare)
+        flow_big_rate_total = numcon(flow_big_rate_total)
+        flow_big_rate_cross = numcon(flow_big_rate_cross)
+        flow_big_rate_cross_ex = numcon(flow_big_rate_cross_ex)
+        
+        flow_io_rate = numcon(flow_io_rate)
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         if critical then
@@ -139,6 +151,8 @@ function request(page, opts, result, retry)
             one.flow_big_rate_compare = flow_big_rate_compare
             one.flow_big_rate_cross = flow_big_rate_cross
             one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
+            
+            one.flow_io_rate = flow_io_rate
             
             result[#result + 1] = one
         
@@ -177,7 +191,7 @@ for i = 1, n do
     end
 end
 
-local print_head = "i\tcode\tname\tch\tturn\tbig_r\tbig_t\tbig_c\tbig_x\tbig_x2\tbig"
+local print_head = "i\tcode\tname\tch\tturn\tio\tbig_r\tbig_t\tbig_c\tbig_x\tbig_x2\tbig"
 local count = 1
 for i = 1, #result do
     local one = result[i]
@@ -185,6 +199,6 @@ for i = 1, #result do
         print("")
         print(print_head)
     end
-    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
     count = count + 1
 end

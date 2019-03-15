@@ -50,7 +50,7 @@ function request(opts, result, retry)
     count = count - 1
 
     --reqopts = Q.http.Gets(reqopts)
-    reqopts = Q.selenium.Get(reqopts, 0)
+    reqopts = Q.selenium.GetEx(reqopts, 0, 1)
     
     for i = 1, count do
         local reqopt = reqopts[i]
@@ -189,7 +189,7 @@ local opts = {}
 local result = {}
 
 opts.from = 1
-opts.to = 10
+opts.to = 20
 
 opts.ch_lower = -2.5
 opts.ch_upper = 6

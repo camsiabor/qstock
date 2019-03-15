@@ -17,39 +17,11 @@
     11大单流入(元)
 ]]--
 
+local simple = require("common.simple")
 local xml = require("common.xml2lua.xml2lua")
 local tree_handler = require("common.xml2lua.tree")
 
-
-function str2num(str, keep)
-    if keep == nil then
-        keep = 5
-    end
-    local n = string.find(str, "亿" )
-    if n == nil then
-        str = string.gsub(str, "万", "") + 0
-        str = str / 10000
-    else
-        str = string.gsub(str, "亿", "") + 0
-    end
-    return string.sub(str, 1, keep) + 0
-end
-
-function numcon(num)
-    return string.sub(num.."", 1, 5) + 0
-end
-
-function nozero(num)
-    if num <= 0 then
-        num = 0.0001
-    end
-    return num 
-end
-
 function request(page, opts, result, retry)
-
-
-    
 
     local headers = {}
     headers["Host"] = "data.10jqka.com.cn"
@@ -60,13 +32,12 @@ function request(page, opts, result, retry)
     headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
     headers["hexin-v"] = opts.token
     
-    local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/"
+    local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
     local url = url_prefix..page..url_suffix
     
-    local html, resp = Q.http.Get(url, headers, "gbk")
-    
-    
+    local html = Q.http.Get(url, headers, "gbk")
+
     local tree = tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
@@ -103,16 +74,16 @@ function request(page, opts, result, retry)
         turnover = string.gsub(turnover, "%%", "") + 0
         change_rate = string.gsub(change_rate, "%%", "") + 0
         
-        flow = str2num(flow)
-        flow_in = str2num(flow_in)
-        flow_out = str2num(flow_out)
-        flow_big = str2num(flow_big)
+        flow = simple.str2num(flow)
+        flow_in = simple.str2num(flow_in)
+        flow_out = simple.str2num(flow_out)
+        flow_big = simple.str2num(flow_big)
         
-        flow_in = nozero(flow_in)
-        flow_out = nozero(flow_out)
-        flow_big = nozero(flow_big)
+        flow_in = simple.nozero(flow_in)
+        flow_out = simple.nozero(flow_out)
+        flow_big = simple.nozero(flow_big)
         
-        amount = str2num(amount)
+        amount = simple.str2num(amount)
         
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
@@ -128,17 +99,17 @@ function request(page, opts, result, retry)
         local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
         local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
 
-        flow_big_rate = numcon(flow_big_rate)
-        flow_big_rate_compare = numcon(flow_big_rate_compare)
-        flow_big_rate_total = numcon(flow_big_rate_total)
-        flow_big_rate_cross = numcon(flow_big_rate_cross)
-        flow_big_rate_cross_ex = numcon(flow_big_rate_cross_ex)
+        flow_big_rate = simple.numcon(flow_big_rate)
+        flow_big_rate_compare = simple.numcon(flow_big_rate_compare)
+        flow_big_rate_total = simple.numcon(flow_big_rate_total)
+        flow_big_rate_cross = simple.numcon(flow_big_rate_cross)
+        flow_big_rate_cross_ex = simple.numcon(flow_big_rate_cross_ex)
         
-        flow_in_rate = numcon(flow_in_rate)
-        flow_out_rate = numcon(flow_out_rate)
-        flow_io_rate = numcon(flow_io_rate)
+        flow_in_rate = simple.numcon(flow_in_rate)
+        flow_out_rate = simple.numcon(flow_out_rate)
+        flow_io_rate = simple.numcon(flow_io_rate)
         
-        flow_big_in_rate = numcon(flow_big_in_rate)
+        flow_big_in_rate = simple.numcon(flow_big_in_rate)
         
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         if critical then
@@ -184,27 +155,18 @@ opts.ch_lower = -2.5
 opts.ch_upper = 6
 opts.big_c_lower = 0.2
 opts.big_c_upper = 10
+
+opts.field = "zjjlr"
+opts.order = "desc"
 opts.token = "AifoPH0hN7UGgrM5p3rJoE8ItlDyrPjDVZN_AvmVQbbcQ0mGAXyL3mVQD0EK"
 
 
 for i = 1, 10 do
     request(i, opts, result)
-    Q.http.Sleep(200)
+    Q.http.Sleep(100)
 end
 
-
-
-local n = #result
-for i = 1, n do
-    for j = 1, n - i do
-        local a = result[j]
-        local b = result[j + 1]
-        if a.flow_big_rate_cross < b.flow_big_rate_cross then
-            result[j] = b
-            result[j + 1] = a
-        end
-    end
-end
+simple.table_sort(result, "flow_big_rate_cross")
 
 local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tbig"
 local count = 1

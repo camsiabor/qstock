@@ -7,11 +7,11 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
-	"github.com/camsiabor/qcom/qnet"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
 	"github.com/camsiabor/qstock/dict"
+	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/run/rlua"
 	"io/ioutil"
 	"log"
@@ -127,21 +127,23 @@ func testCycle() {
 
 func TestLuaBenchmark(t *testing.T) {
 
-	var h = qnet.GetSimpleHttp()
-	var url = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/3/ajax/1/"
+	var opts = []map[string]interface{}{
+		{"url": "http://www.baidu.com"},
+		{"url": "http://www.baidu.com"},
+		{"url": "http://www.baidu.com"},
+	}
 
-	var headers = make(map[string]string)
-	headers["Host"] = "data.10jqka.com.cn"
-	headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
-	// headers["X-Request-With"] = "XMLHttpRequest"
-	headers["Upgrade-Insecure-Requests"] = "1"
-	headers["Accept"] = "text/html, */*; q=0.01"
-	headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
-	headers["Cookie"] = "Hm_lvt_f79b64788a4e377c608617fba4c736e2=1552559922; Hm_lvt_78c58f01938e4d85eaf619eae71b4ed1=1552559922; Hm_lvt_60bad21af9c824a4a0530d5dbf4357ca=1552559922; user=MDpjYW1zaWFib3I6Ok5vbmU6NTAwOjQ4NzY2MjU2ODo1LDEsNDA7NiwxLDQwOzcsMTExMTExMTExMTEwLDQwOzgsMTExMTAxMTEwMDAwMTExMTEwMDEwMDAwMDEwMCwzNTY7MzMsMDAwMTAwMDAwMDAwLDM1NjszNiwxMDAxMTExMTAwMDAxMTAwMTAxMTExMTEsMzU2OzQ2LDAwMDAxMTAwMTAwMDAwMTExMTExMTExMSwzNTY7NTEsMTEwMDAwMDAwMDAwMDAwMCwzNTY7NTgsMDAwMDAwMDAwMDAwMDAwMDEsMzU2Ozc4LDEsMzU2Ozg3LDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwMCwzNTY7NDQsMTEsNDA6MTE6Ojo0Nzc2NjI1Njg6MTU1MjU1OTgzMzo6OjE1NTE1NDc0NDA6NDAwOTY3OjA6MTBhYzQ1MzIzYTkxMmY1MmRiZGU5NGJjZjljOGEyZjljOmRlZmF1bHRfMjow; userid=477662568; u_name=camsiabor; escapename=camsiabor; ticket=433abeffd6fcde2a6cadca1edb9aa885; refreshStat=off; historystock=002883; Hm_lpvt_78c58f01938e4d85eaf619eae71b4ed1=1552579608; Hm_lpvt_60bad21af9c824a4a0530d5dbf4357ca=1552579608; Hm_lpvt_f79b64788a4e377c608617fba4c736e2=1552579608; v=AqNsoKE1-wAdJLc0RA8V9OtUMuxOmDfacSx7DtUA_4J5FM0aXWjHKoH8Cxrm"
-	var content, resp, _ = h.Get(url, headers, "gbk")
-	fmt.Println(resp.Header)
-	fmt.Println("------------------------------")
-	fmt.Println(content)
+	var seleni = &httpv.Seleni{}
+	var _, err = seleni.Get(opts, 500)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < len(opts); i++ {
+		var one = opts[i]
+		var content = util.AsStr(one["content"], "")
+		fmt.Println(len(content))
+	}
 
 }
 

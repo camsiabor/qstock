@@ -60,7 +60,7 @@ func master(g *global.G) {
 	initSyncer(g)
 
 	g.SetData("http", qnet.GetSimpleHttp())
-
+	g.SetData("selenium", &httpv.Seleni{})
 }
 func initAgenda(g *global.G) {
 	var agendaConfig = util.GetMap(g.Config, true, "agenda")

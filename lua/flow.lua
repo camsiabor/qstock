@@ -49,7 +49,8 @@ function request(opts, result, retry)
     end
     count = count - 1
 
-    reqopts = Q.http.Gets(reqopts)
+    --reqopts = Q.http.Gets(reqopts)
+    reqopts = Q.selenium.Get(reqopts, 2000)
     
     for i = 1, count do
         local reqopt = reqopts[i]
@@ -73,13 +74,16 @@ function response_handle(opts, result, reqopt)
     local parser = xml.parser(tree)
     parser:parse(html)
     
-    if tree.root.table == nil then
+    local htable = tree.root.html.body.table
+    if htable == nil then
         print("[error] response content invalid "..#html)
         print(url)
+        print(html)
+        print("")
         return
     end
 
-    local tbody = tree.root.table.tbody
+    local tbody = htable.tbody
     
     local tr_count = #tbody.tr
     
@@ -185,7 +189,7 @@ local opts = {}
 local result = {}
 
 opts.from = 1
-opts.to = 8
+opts.to = 10
 
 opts.ch_lower = -2.5
 opts.ch_upper = 6
@@ -194,7 +198,7 @@ opts.big_c_upper = 10
 
 opts.field = "zjjlr"
 opts.order = "desc"
-opts.token = "AkOMgEEVGyHY4tdVgat1lIt00gzuuMULEeQbE3UpnMYbIm16_YhnSiEcq-CG"
+opts.token = "Arxz_YJYzMR3i_iYqm2C0bhBjVFttXUP4uJ06JY2y4OLNVLHvsUwbzJpRIHl"
 
 request(opts, result)
     

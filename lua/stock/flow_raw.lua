@@ -3,17 +3,17 @@
 
 
 
---[[ 
-     1序号	
-    2股票代码	
-    3股票简称	
-    4最新价	
-    5涨跌幅	
-    6换手率	
-    7流入资金(元)	
-    8流出资金(元)	
-    9净额(元)	
-    10成交额(元)	
+--[[
+     1序号
+    2股票代码
+    3股票简称
+    4最新价
+    5涨跌幅
+    6换手率
+    7流入资金(元)
+    8流出资金(元)
+    9净额(元)
+    10成交额(元)
     11大单流入(元)
 ]]--
 
@@ -23,7 +23,7 @@ local tree_handler = require("common.xml2lua.tree")
 
 
 function request(opts, result, retry)
-    
+
     local headers = {}
     headers["Host"] = "data.10jqka.com.cn"
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
@@ -32,14 +32,14 @@ function request(opts, result, retry)
     headers["Accept"] = "text/html, */*; q=0.01"
     headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
     headers["hexin-v"] = opts.token
-    
+
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
-    
+
     local count = 1
     local reqopts = {}
     for page = opts.from, opts.to do
-        local url = url_prefix..page..url_suffix    
+        local url = url_prefix..page..url_suffix
         local reqopt = {}
         reqopt["url"] = url
         reqopt["headers"] = headers
@@ -49,9 +49,9 @@ function request(opts, result, retry)
     end
     count = count - 1
 
-    --reqopts = Q.http.Gets(reqopts)
-    reqopts = Q.selenium.Get(reqopts, 0)
-    
+    reqopts = Q.http.Gets(reqopts)
+    --reqopts = Q.selenium.Get(reqopts, 0)
+
     for i = 1, count do
         local reqopt = reqopts[i]
         response_handle(opts, result, reqopt)
@@ -63,18 +63,22 @@ end
 function response_handle(opts, result, reqopt)
     local url = reqopt["url"]
     local html = reqopt["content"]
-    
+
     if html == nil then
         print("[error] request failure")
         print(url)
         return
     end
-    
+
     local tree = tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
-    
-    local htable = tree.root.html.body.table
+
+    local htable = tree.root.table
+    if htable == nil then
+        htable = tree.root.html.body.table
+    end
+
     if htable == nil then
         print("[error] response content invalid "..#html)
         print(url)
@@ -84,11 +88,11 @@ function response_handle(opts, result, reqopt)
     end
 
     local tbody = htable.tbody
-    
+
     local tr_count = #tbody.tr
-    
+
     for i = 1, tr_count do
-        
+
         local tr = tbody.tr[i]
         local index = tr.td[1][1]
         local code = tr.td[2].a[1]
@@ -100,31 +104,31 @@ function response_handle(opts, result, reqopt)
         local flow = tr.td[9][1]
         local amount = tr.td[10][1]
         local flow_big = tr.td[11][1]
-        
+
         turnover = string.gsub(turnover, "%%", "") + 0
         change_rate = string.gsub(change_rate, "%%", "") + 0
-        
+
         flow = simple.str2num(flow)
         flow_in = simple.str2num(flow_in)
         flow_out = simple.str2num(flow_out)
         flow_big = simple.str2num(flow_big)
-        
+
         flow_in = simple.nozero(flow_in)
         flow_out = simple.nozero(flow_out)
         flow_big = simple.nozero(flow_big)
-        
+
         amount = simple.str2num(amount)
-        
+
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
-        
+
         local flow_in_rate = flow_in / amount * 100
         local flow_out_rate = flow_out / amount * 100
         local flow_io_rate = flow_in / flow_out
-        
+
         local flow_big_in_rate = flow_big / flow_in * 100
-        
+
         --local flow_big_rate_cross = (turnover * amount * flow_big_rate / 100) * flow_io_rate * flow_big_in_rate
         local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
         local change_rate_ex = change_rate
@@ -138,20 +142,20 @@ function response_handle(opts, result, reqopt)
         flow_big_rate_total = simple.numcon(flow_big_rate_total)
         flow_big_rate_cross = simple.numcon(flow_big_rate_cross)
         flow_big_rate_cross_ex = simple.numcon(flow_big_rate_cross_ex)
-        
+
         flow_in_rate = simple.numcon(flow_in_rate)
         flow_out_rate = simple.numcon(flow_out_rate)
         flow_io_rate = simple.numcon(flow_io_rate)
-        
+
         flow_big_in_rate = simple.numcon(flow_big_in_rate)
-        
+
         local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
         if critical then
             critical = flow_big_rate_compare >= opts.big_c_lower and flow_big_rate_compare <= opts.big_c_upper
         end
-        
+
         if critical then
-            
+
             local one = {}
             one.index = index
             one.code = code
@@ -163,23 +167,23 @@ function response_handle(opts, result, reqopt)
             one.turnover = turnover
             one.flow_big = flow_big
             one.change_rate = change_rate
-            
+
             one.flow_big_rate = flow_big_rate
             one.flow_big_rate_total = flow_big_rate_total
             one.flow_big_rate_compare = flow_big_rate_compare
             one.flow_big_rate_cross = flow_big_rate_cross
             one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
-            
+
             one.flow_in_rate = flow_in_rate
             one.flow_out_rate = flow_out_rate
             one.flow_io_rate = flow_io_rate
-            
+
             one.flow_big_in_rate = flow_big_in_rate
-            
+
             result[#result + 1] = one
-        
+
         end -- if ciritical end
-        
+
     end -- for tr end
 end
 
@@ -201,7 +205,7 @@ opts.order = "desc"
 opts.token = "Arxz_YJYzMR3i_iYqm2C0bhBjVFttXUP4uJ06JY2y4OLNVLHvsUwbzJpRIHl"
 
 request(opts, result)
-    
+
 
 simple.table_sort(result, "flow_big_rate_cross")
 

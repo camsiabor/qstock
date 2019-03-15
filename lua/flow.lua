@@ -58,7 +58,7 @@ function request(page, opts, result, retry)
     headers["Upgrade-Insecure-Requests"] = "1"
     headers["Accept"] = "text/html, */*; q=0.01"
     headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
-    headers["hexin-v"] = "AiLtrygeiveR65YrAgaEw_K_c6OHczaZ2CEaOGyxTSZBvMyVVAN2nagHav8_"
+    headers["hexin-v"] = opts.token
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/"
     local url_suffix = "/ajax/1"
@@ -181,10 +181,10 @@ local opts = {}
 local result = {}
 opts.debug = false
 opts.ch_lower = -2.5
-opts.ch_upper = 5.5
+opts.ch_upper = 6
 opts.big_c_lower = 0.2
 opts.big_c_upper = 10
-opts.token = "AvQ7FYpAFK2T7YDhow3KKTD5xbllzRerWr-sco5dghwDdJpvtt3oR6oBfL3d"
+opts.token = "AifoPH0hN7UGgrM5p3rJoE8ItlDyrPjDVZN_AvmVQbbcQ0mGAXyL3mVQD0EK"
 
 
 for i = 1, 10 do

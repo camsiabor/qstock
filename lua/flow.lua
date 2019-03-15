@@ -21,8 +21,9 @@ local simple = require("common.simple")
 local xml = require("common.xml2lua.xml2lua")
 local tree_handler = require("common.xml2lua.tree")
 
-function request(page, opts, result, retry)
 
+function request(opts, result, retry)
+    
     local headers = {}
     headers["Host"] = "data.10jqka.com.cn"
     headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
@@ -34,21 +35,47 @@ function request(page, opts, result, retry)
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
-    local url = url_prefix..page..url_suffix
     
-    local html = Q.http.Get(url, headers, "gbk")
+    local count = 1
+    local reqopts = {}
+    for page = opts.from, opts.to do
+        local url = url_prefix..page..url_suffix    
+        local reqopt = {}
+        reqopt["url"] = url
+        reqopt["headers"] = headers
+        reqopt["encoding"] = "gbk"
+        reqopts[count] = reqopt
+        count = count + 1
+    end
+    count = count - 1
 
+    reqopts = Q.http.Gets(reqopts)
+    
+    for i = 1, count do
+        local reqopt = reqopts[i]
+        response_handle(opts, result, reqopt)
+    end
+
+end
+
+
+function response_handle(opts, result, reqopt)
+    local url = reqopt["url"]
+    local html = reqopt["content"]
+    
+    if html == nil then
+        print("[error] request failure")
+        print(url)
+        return
+    end
+    
     local tree = tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
-
+    
     if tree.root.table == nil then
-        print("[error] request failure")
+        print("[error] response content invalid "..#html)
         print(url)
-        --print(html)
-        if retry == nil then
-            --request(page, opts, result, 1)
-        end
         return
     end
 
@@ -57,7 +84,6 @@ function request(page, opts, result, retry)
     local tr_count = #tbody.tr
     
     for i = 1, tr_count do
-        
         
         local tr = tbody.tr[i]
         local index = tr.td[1][1]
@@ -97,7 +123,11 @@ function request(page, opts, result, retry)
         
         --local flow_big_rate_cross = (turnover * amount * flow_big_rate / 100) * flow_io_rate * flow_big_in_rate
         local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
-        local flow_big_rate_cross_ex = flow_big_rate_cross * flow_big_rate
+        local change_rate_ex = change_rate
+        if change_rate_ex < 0 then
+            change_rate_ex = 0.1
+        end
+        local flow_big_rate_cross_ex = flow_big_rate_cross / (change_rate_ex + 2.5)
 
         flow_big_rate = simple.numcon(flow_big_rate)
         flow_big_rate_compare = simple.numcon(flow_big_rate_compare)
@@ -123,6 +153,8 @@ function request(page, opts, result, retry)
             one.code = code
             one.name = name
             one.flow = flow
+            one.flow_in = flow_in
+            one.flow_out = flow_out
             one.amount = amount
             one.turnover = turnover
             one.flow_big = flow_big
@@ -145,12 +177,16 @@ function request(page, opts, result, retry)
         end -- if ciritical end
         
     end -- for tr end
-    
 end
+
+------------------------------------------------------------------------------------------
 
 local opts = {}
 local result = {}
-opts.debug = false
+
+opts.from = 1
+opts.to = 5
+
 opts.ch_lower = -2.5
 opts.ch_upper = 6
 opts.big_c_lower = 0.2
@@ -158,17 +194,14 @@ opts.big_c_upper = 10
 
 opts.field = "zjjlr"
 opts.order = "desc"
-opts.token = "AifoPH0hN7UGgrM5p3rJoE8ItlDyrPjDVZN_AvmVQbbcQ0mGAXyL3mVQD0EK"
+opts.token = "AvE-mmdzCQumnKUfoLWnLsW6AHaI3msxDy8JctMO79nWch9gGy51IJ-iGUFg"
 
-
-for i = 1, 10 do
-    request(i, opts, result)
-    Q.http.Sleep(100)
-end
+request(opts, result)
+    
 
 simple.table_sort(result, "flow_big_rate_cross")
 
-local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tbig"
+local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
 local count = 1
 for i = 1, #result do
     local one = result[i]
@@ -176,6 +209,6 @@ for i = 1, #result do
         print("")
         print(print_head)
     end
-    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big)
+    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
     count = count + 1
 end

@@ -21,17 +21,8 @@ local simple = require("common.simple")
 local xml = require("common.xml2lua.xml2lua")
 local tree_handler = require("common.xml2lua.tree")
 
-
-function request(opts, result, retry)
-    
-    local headers = {}
-    headers["Host"] = "data.10jqka.com.cn"
-    headers["Referer"] = "http://data.10jqka.com.cn/funds/ggzjl/"
-    headers["X-Request-With"] = "XMLHttpRequest"
-    headers["Upgrade-Insecure-Requests"] = "1"
-    headers["Accept"] = "text/html, */*; q=0.01"
-    headers["Accept-Language"] = "zh,zh-TW;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6"
-    headers["hexin-v"] = opts.token
+-------------------------------------------------------------------------------------------
+function request(opts, data, result)
     
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
@@ -42,11 +33,10 @@ function request(opts, result, retry)
         local url = url_prefix..page..url_suffix    
         local reqopt = {}
         reqopt["url"] = url
-        reqopt["headers"] = headers
-        reqopt["encoding"] = "gbk"
         reqopts[count] = reqopt
         count = count + 1
     end
+    
     count = count - 1
 
     if opts.concurrent <= 1 then
@@ -61,13 +51,19 @@ function request(opts, result, retry)
     
     for i = 1, count do
         local reqopt = reqopts[i]
-        response_handle(opts, result, reqopt)
+        parse_html(opts, data, result, reqopt)
     end
+    
+    persist(opts, data)
+    
+    filter(opts, data, result)
+    
+    return result
 
 end
 
-
-function response_handle(opts, result, reqopt)
+-------------------------------------------------------------------------------------------
+function parse_html(opts, data, result, reqopt)
     local url = reqopt["url"]
     local html = reqopt["content"]
     
@@ -89,6 +85,9 @@ function response_handle(opts, result, reqopt)
         print("")
         return
     end
+
+
+    local data = { }
 
     local tbody = htable.tbody
     
@@ -152,54 +151,91 @@ function response_handle(opts, result, reqopt)
         
         flow_big_in_rate = simple.numcon(flow_big_in_rate)
         
-        local critical = change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
-        if critical then
-            critical = flow_big_rate_compare >= opts.big_c_lower and flow_big_rate_compare <= opts.big_c_upper
-        end
+        local one = {}
+        one.index = index
+        one.code = code
+        one.name = name
+        one.flow = flow
+        one.flow_in = flow_in
+        one.flow_out = flow_out
+        one.amount = amount
+        one.turnover = turnover
+        one.flow_big = flow_big
+        one.change_rate = change_rate
         
-        if critical then
-            
-            local one = {}
-            one.index = index
-            one.code = code
-            one.name = name
-            one.flow = flow
-            one.flow_in = flow_in
-            one.flow_out = flow_out
-            one.amount = amount
-            one.turnover = turnover
-            one.flow_big = flow_big
-            one.change_rate = change_rate
-            
-            one.flow_big_rate = flow_big_rate
-            one.flow_big_rate_total = flow_big_rate_total
-            one.flow_big_rate_compare = flow_big_rate_compare
-            one.flow_big_rate_cross = flow_big_rate_cross
-            one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
-            
-            one.flow_in_rate = flow_in_rate
-            one.flow_out_rate = flow_out_rate
-            one.flow_io_rate = flow_io_rate
-            
-            one.flow_big_in_rate = flow_big_in_rate
-            
-            result[#result + 1] = one
+        one.flow_big_rate = flow_big_rate
+        one.flow_big_rate_total = flow_big_rate_total
+        one.flow_big_rate_compare = flow_big_rate_compare
+        one.flow_big_rate_cross = flow_big_rate_cross
+        one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
         
-        end -- if ciritical end
+        one.flow_in_rate = flow_in_rate
+        one.flow_out_rate = flow_out_rate
+        one.flow_io_rate = flow_io_rate
+        
+        one.flow_big_in_rate = flow_big_in_rate
+        
+        data[#data + 1] = one
+    
         
     end -- for tr end
 end
 
+-------------------------------------------------------------------------------------------
+function persist(opts, data) 
+    
+end
+
+-------------------------------------------------------------------------------------------
+function filter(opts, data, result)
+    
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local critical = one.change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
+        if critical then
+            critical = one.flow_big_rate_compare >= opts.big_c_lower and one.flow_big_rate_compare <= opts.big_c_upper
+            if critical then
+                result[#result + 1] = one
+            end
+        end
+    end
+    
+    simple.table_sort(result, opts.sort_field)
+    
+end
+
+-------------------------------------------------------------------------------------------
+function print_data(data)
+    local n = #data
+    local count = 1    
+    local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
+    for i = 1, n do
+        local one = data[i]
+        if count % 10 == 1 then
+            print("")
+            print(print_head)
+        end
+        print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
+        count = count + 1
+    end
+end
+
+
 ------------------------------------------------------------------------------------------
 
 local opts = {}
+local data = {}
 local result = {}
 
 opts.from = 1
 opts.to = 20
-opts.nice = 1000
-opts.concurrent = 0
-opts.newsession = false
+opts.nice = 0
+opts.concurrent = 1
+opts.newsession = true
+
+opts.dofetch = true
+opts.persist = true
 
 opts.ch_lower = -2.5
 opts.ch_upper = 6
@@ -209,19 +245,7 @@ opts.big_c_upper = 10
 opts.field = "zjjlr"
 opts.order = "desc"
 
-request(opts, result)
-    
+opts.sort_field = "flow_big_rate_cross_ex"
 
-simple.table_sort(result, "flow_big_rate_cross_ex")
-
-local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
-local count = 1
-for i = 1, #result do
-    local one = result[i]
-    if count % 10 == 1 then
-        print("")
-        print(print_head)
-    end
-    print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
-    count = count + 1
-end
+request(opts, data, result)
+print_data(result)

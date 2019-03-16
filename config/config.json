@@ -9,6 +9,10 @@
     "active" : false
   },
 
+  "lua" : {
+
+  },
+
   "database": {
     "main": {
       "type": "redis",
@@ -21,7 +25,8 @@
         "def" : 0,
         "history" : 1,
         "common" : 2,
-        "calendar" : 3
+        "calendar" : 3,
+        "flow" : 4
       }
     },
     "es" : {
@@ -48,6 +53,12 @@
     "script" : {
       "include" : "res/include.lua"
     }
+  },
+
+  "selenium" : {
+    "port" : 60000,
+    "type" : "chrome",
+    "path" : "selenium-server.jar"
   },
 
   "agenda" : {

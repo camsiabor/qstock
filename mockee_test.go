@@ -7,6 +7,7 @@ import (
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
 	"github.com/camsiabor/qcom/util"
@@ -26,6 +27,21 @@ import (
 // https://colobu.com/
 // https://github.com/camsiabor/golua
 // https://github.com/camsiabor/golua/luar/
+
+func TestLuaBenchmark(t *testing.T) {
+
+	var luapath = rlua.GetLuaPath()
+	var jspath = luapath + "js/"
+	var js = jspath + "phantom.js"
+	var url = "http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/"
+	var stdout, stderr, dotimeout, err = qos.ExecCmd(10, "phantomjs.exe", js, url)
+
+	fmt.Println(stdout)
+	fmt.Println(stderr)
+	fmt.Println(dotimeout)
+	fmt.Println(err)
+
+}
 
 func BenchmarkGolua(b *testing.B) {
 
@@ -125,7 +141,7 @@ func testCycle() {
 	}
 }
 
-func TestLuaBenchmark(t *testing.T) {
+func TestLuaBenchmark_Seleni(t *testing.T) {
 
 	var u = map[string]interface{}{"url": "http://www.google.com.tw"}
 	var opts = []map[string]interface{}{u}

@@ -89,7 +89,8 @@
         "interval" : 86400,
         "dao" : "main",
         "db" : "common",
-        "handler" : "TuShare_trade_concept"
+        "script" : "sync/tushare/cn_stock_group.lua",
+        "handler" : "Lua_handler"
       }
     }
   },

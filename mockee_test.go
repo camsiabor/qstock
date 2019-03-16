@@ -127,22 +127,32 @@ func testCycle() {
 
 func TestLuaBenchmark(t *testing.T) {
 
-	var opts = []map[string]interface{}{
-		{"url": "http://www.baidu.com"},
-		{"url": "http://www.baidu.com"},
-		{"url": "http://www.baidu.com"},
+	var u = map[string]interface{}{"url": "http://www.google.com.tw"}
+	var opts = []map[string]interface{}{u}
+
+	for i := 1; i <= 0; i++ {
+		opts = append(opts, u)
 	}
 
 	var seleni = &httpv.Seleni{}
-	var _, err = seleni.Get(opts, 500)
+	defer seleni.Terminate()
+	_, err := seleni.InitService()
 	if err != nil {
 		panic(err)
 	}
 
-	for i := 0; i < len(opts); i++ {
-		var one = opts[i]
-		var content = util.AsStr(one["content"], "")
-		fmt.Println(len(content))
+	for n := 1; n <= 2; n++ {
+		_, err = seleni.Get(opts, 0)
+		if err != nil {
+			panic(err)
+		}
+		for i := 0; i < len(opts); i++ {
+			var one = opts[i]
+			var url = util.AsStr(one["url"], "")
+			var content = util.AsStr(one["content"], "")
+			fmt.Println(url)
+			fmt.Println(len(content))
+		}
 	}
 
 }

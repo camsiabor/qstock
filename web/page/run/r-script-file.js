@@ -282,6 +282,13 @@ const script_file_methods = {
             let data = util.handle_response(resp);
             if (mode === "raw") {
                 let layout = [];
+
+                if (data.consume) {
+                    layout.push("[consume]");
+                    layout.push(data.consume);
+                    layout.push("\n");
+                }
+
                 if (data.error) {
                     layout.push("[error]");
                     if (typeof data.error === 'object') {
@@ -292,6 +299,7 @@ const script_file_methods = {
                     }
                     layout.push("\n");
                 }
+
                 layout.push("[data]");
                 if (typeof data.data === 'object') {
                     let data_stringify = JSON.stringify(data.data, null, 2);
@@ -307,11 +315,7 @@ const script_file_methods = {
                     layout.push("\n");
                 }
 
-                if (data.consume) {
-                    layout.push("[consume]");
-                    layout.push(data.consume);
-                    layout.push("\n");
-                }
+
 
                 this.console.text = layout.join("\n");
                 return data;

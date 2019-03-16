@@ -54,9 +54,7 @@ function request(opts, data, result)
         parse_html(opts, data, result, reqopt)
     end
     
-    persist(opts, data)
     
-    filter(opts, data, result)
     
     return result
 
@@ -184,12 +182,15 @@ function parse_html(opts, data, result, reqopt)
     end -- for tr end
 end
 
+
 -------------------------------------------------------------------------------------------
 
 function keygen(opts, page) 
     local key = string.format("%s.%s.%s.%d", opts.datasrc, opts.field, opts.order, page)
     return key
 end
+
+
 
 -------------------------------------------------------------------------------------------
 
@@ -211,6 +212,7 @@ function persist(opts, data)
         pageone[#pageone + 1] = data[i]
         if (i % 50 == 0) or (i == n) then
             local jsonstr = json.encode(pageone)
+            --print(jsonstr)
             local key = keygen(opts, page)
             _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)        
             if err == nil then
@@ -222,8 +224,36 @@ function persist(opts, data)
             pageone = {}
         end
     end
+end
+
+-------------------------------------------------------------------------------------------
+
+function reload(opts, data, result)
+    local dates = Q.calendar.List(0, 0, 0, true)
+    local datestr = dates[1]
+    local db = opts.db
+    local dao = Q.daom.Get("main")
+    
+    for page = opts.from, opts.to do
+        local key = keygen(opts, page)
+        local datastr, err = dao.Get(db, datestr, key, 0, nil)
+        if err ~= nil then
+            print("[reload] failure", datestr, key, err)
+        end
+        if datastr == nil or #datastr == 0 then
+            print("[reload] empty", datestr, key)
+        else
+            local fragment = json.decode(datastr)
+            local n = #fragment
+            for i = 1, n do
+                data[#data + 1] = fragment[i]
+            end
+        end
+        
+    end
     
 end
+
 
 -------------------------------------------------------------------------------------------
 function filter(opts, data, result)
@@ -263,19 +293,34 @@ end
 
 ------------------------------------------------------------------------------------------
 
+function go(opts) 
+    local data = {}
+    local result = {}
+    if opts.dofetch then
+        request(opts, data, result)
+        persist(opts, data)
+    else
+        reload(opts, data, result)
+    end
+    filter(opts, data, result)
+    print_data(result)
+    return data, result
+end
+
+------------------------------------------------------------------------------------------
+
 local opts = {}
-local data = {}
-local result = {}
+
 
 opts.from = 1
-opts.to = 5
+opts.to = 20
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = true
 
-opts.dofetch = true
+opts.dofetch = false
 opts.persist = true
-opts.persist_page = 50
+opts.pagesize = 50
 
 opts.ch_lower = -2.5
 opts.ch_upper = 6
@@ -289,5 +334,4 @@ opts.order = "desc"
 
 opts.sort_field = "flow_big_rate_cross_ex"
 
-request(opts, data, result)
-print_data(result)
+go(opts)

@@ -57,8 +57,7 @@
 
   "selenium" : {
     "port" : 60000,
-    "type" : "chrome",
-    "path" : "selenium-server.jar"
+    "type" : "gecko"
   },
 
   "agenda" : {

@@ -6,9 +6,11 @@ import (
 	"github.com/camsiabor/qcom/util"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
+	"github.com/tebeka/selenium/firefox"
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -35,15 +37,19 @@ func (o *Seleni) initDefault() {
 
 	if o.DriverPath == "" {
 		if o.Type == "chrome" {
-			if runtime.GOOS == "windows" {
-				o.DriverPath = "chromedriver.exe"
-			} else {
-				o.DriverPath = "chromedriver"
-			}
+			o.DriverPath = "chromedriver"
 		} else {
-			// TODO
+			o.DriverPath = "geckodriver"
 		}
 	}
+
+	if runtime.GOOS == "windows" {
+		if !strings.Contains(o.DriverPath, ".exe") {
+			o.DriverPath = o.DriverPath + ".exe"
+		}
+	}
+	// TODO other os
+
 }
 
 func (o *Seleni) InitService() (service *selenium.Service, err error) {
@@ -81,13 +87,21 @@ func (o *Seleni) InitService() (service *selenium.Service, err error) {
 
 func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
 
-	caps := selenium.Capabilities{"browserName": o.Type}
+	var browserName string
+	if o.Type == "chrome" {
+		browserName = o.Type
+	} else {
+		browserName = "firefox"
+	}
+	caps := selenium.Capabilities{"browserName": browserName}
 	if o.Type == "chrome" {
 		caps.AddChrome(chrome.Capabilities{
 			Args: []string{"headless"},
 		})
 	} else {
-		// TODO
+		caps.AddFirefox(firefox.Capabilities{
+			Args: []string{"-headless"},
+		})
 	}
 	var url = fmt.Sprintf("http://localhost:%d/wd/hub", o.Port)
 	driver, err = selenium.NewRemote(caps, url)

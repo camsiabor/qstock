@@ -49,18 +49,15 @@ function request(opts, result, retry)
     end
     count = count - 1
 
-    --reqopts = Q.http.Gets(reqopts)
-    if opts.concurrent <= 0 then
-        reqopts = Q.selenium.Get(reqopts, opts.nice)
-    end
-    if opts.concurrent == 1 then
-        reqopts = Q.selenium.GetEx(reqopts, opts.nice)
-    end
-    if opts.concurrent >= 2 then
+    if opts.concurrent <= 1 then
+        if opts.newsession then
+            reqopts = Q.selenium.GetEx(reqopts, opts.nice)
+        else
+            reqopts = Q.selenium.Get(reqopts, opts.nice)
+        end
+    else
         reqopts = Q.selenium.GetConcurrent(reqopts, opts.nice, opts.concurrent, opts.newsession)
     end
-    
-    
     
     for i = 1, count do
         local reqopt = reqopts[i]
@@ -200,8 +197,8 @@ local result = {}
 
 opts.from = 1
 opts.to = 20
-opts.nice = 100
-opts.concurrent = 3
+opts.nice = 1000
+opts.concurrent = 0
 opts.newsession = false
 
 opts.ch_lower = -2.5

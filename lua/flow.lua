@@ -17,9 +17,9 @@
     11大单流入(元)
 ]]--
 
+local xml, xml_tree_handler
+local json = require('common.json')
 local simple = require("common.simple")
-local xml = require("common.xml2lua.xml2lua")
-local tree_handler = require("common.xml2lua.tree")
 
 -------------------------------------------------------------------------------------------
 function request(opts, data, result)
@@ -73,9 +73,15 @@ function parse_html(opts, data, result, reqopt)
         return
     end
     
-    local tree = tree_handler:new()
+    if xml == nil then
+        xml = require("common.xml2lua.xml2lua")
+        xml_tree_handler = require("common.xml2lua.tree")
+    end
+    
+    local tree = xml_tree_handler:new()
     local parser = xml.parser(tree)
     parser:parse(html)
+
     
     local htable = tree.root.html.body.table
     if htable == nil then
@@ -85,9 +91,6 @@ function parse_html(opts, data, result, reqopt)
         print("")
         return
     end
-
-
-    local data = { }
 
     local tbody = htable.tbody
     
@@ -182,7 +185,43 @@ function parse_html(opts, data, result, reqopt)
 end
 
 -------------------------------------------------------------------------------------------
+
+function keygen(opts, page) 
+    local key = string.format("%s.%s.%s.%d", opts.datasrc, opts.field, opts.order, page)
+    return key
+end
+
+-------------------------------------------------------------------------------------------
+
 function persist(opts, data) 
+        
+    local dates = Q.calendar.List(0, 0, 0, true)
+    
+    local db = opts.db
+    local datestr = dates[1]
+    local dao = Q.daom.Get("main")
+    
+    local page = 1
+    local pageone = {}
+    local pagesize = 50
+    
+    local n = #data
+    
+    for i = 1, n do
+        pageone[#pageone + 1] = data[i]
+        if (i % 50 == 0) or (i == n) then
+            local jsonstr = json.encode(pageone)
+            local key = keygen(opts, page)
+            _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)        
+            if err == nil then
+                print("[persist]", datestr, key, #pageone)
+            else
+                print("[persist] failure", err)
+            end
+            page = page + 1
+            pageone = {}
+        end
+    end
     
 end
 
@@ -192,7 +231,7 @@ function filter(opts, data, result)
     local n = #data
     for i = 1, n do
         local one = data[i]
-        local critical = one.change_rate >= opts.ch_lower and change_rate <= opts.ch_upper
+        local critical = one.change_rate >= opts.ch_lower and one.change_rate <= opts.ch_upper
         if critical then
             critical = one.flow_big_rate_compare >= opts.big_c_lower and one.flow_big_rate_compare <= opts.big_c_upper
             if critical then
@@ -229,19 +268,22 @@ local data = {}
 local result = {}
 
 opts.from = 1
-opts.to = 20
+opts.to = 5
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = true
 
 opts.dofetch = true
 opts.persist = true
+opts.persist_page = 50
 
 opts.ch_lower = -2.5
 opts.ch_upper = 6
 opts.big_c_lower = 0.2
 opts.big_c_upper = 10
 
+opts.db = "flow"
+opts.datasrc = "th"
 opts.field = "zjjlr"
 opts.order = "desc"
 

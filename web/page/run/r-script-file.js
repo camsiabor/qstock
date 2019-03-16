@@ -111,7 +111,8 @@ const script_file_methods = {
             category: this.setting.script_file.category,
             text : this.script_file.script
         }).then(function (resp) {
-            util.handle_response(resp, this.console, "saved @ " + current.id);
+            let timestamp = QUtil.time_format(new Date());
+            util.handle_response(resp, this.console, "saved @ " + current.id + "   " + timestamp);
             util.popover("#button_script_file_save", "save success", "bottom");
             return resp
         }.bind(this)).catch(util.handle_error.bind(this));
@@ -284,9 +285,7 @@ const script_file_methods = {
                 let layout = [];
 
                 if (data.consume) {
-                    layout.push("[consume]");
-                    layout.push(data.consume);
-                    layout.push("\n");
+                    layout.push("[consume] " + data.consume);
                 }
 
                 if (data.error) {

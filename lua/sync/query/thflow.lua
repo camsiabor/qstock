@@ -10,13 +10,13 @@ opts.debug = false
 opts.browser = "firefox"
 
 opts.from = 1
-opts.to = 10
+opts.to = 1
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = true
+opts.dofetch = false
 opts.date_offset = 0
 
 opts.pagesize = 50

@@ -295,18 +295,24 @@ end
 
 -------------------------------------------------------------------------------------------
 function M:print_data(data)
-    local n = #data
-    local count = 1
-    local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
-    for i = 1, n do
-        local one = data[i]
-        if count % 10 == 1 then
-            print("")
-            print(print_head)
-        end
-        print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
-        count = count + 1
-    end
+
+    local fields =
+        {
+            "index", "code", "name", "change_rate", "turnover",
+            "flow_io_rate", "flow_in_rate",
+            "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
+            "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big"
+        }
+
+    local headers =
+        {
+            "i", "code", "name", "ch", "turn",
+            "io", "in",
+            "big_in", "big_r", "big_t", "big_c",
+            "cross", "crossex", "big"
+        }
+
+    simple.table_array_print_with_header(data, fields, headers, 10, "\n")
 end
 
 

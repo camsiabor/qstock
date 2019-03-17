@@ -3,26 +3,37 @@
 
 
 
---[[ 
-     1序号	
-    2股票代码	
-    3股票简称	
-    4最新价	
-    5涨跌幅	
-    6换手率	
-    7流入资金(元)	
-    8流出资金(元)	
-    9净额(元)	
-    10成交额(元)	
+--[[
+     1序号
+    2股票代码
+    3股票简称
+    4最新价
+    5涨跌幅
+    6换手率
+    7流入资金(元)
+    8流出资金(元)
+    9净额(元)
+    10成交额(元)
     11大单流入(元)
 ]]--
+
+local M = {}
 
 local xml, xml_tree_handler
 local json = require('common.json')
 local simple = require("common.simple")
 
 -------------------------------------------------------------------------------------------
-function request(opts, data, result)
+
+function M:new()
+    local inst = {}
+    inst.__index = self
+    setmetatable(inst, self)
+    return inst
+end
+
+-------------------------------------------------------------------------------------------
+function M:request(opts, data, result)
 
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
@@ -56,7 +67,7 @@ function request(opts, data, result)
 
     for i = 1, count do
         local reqopt = reqopts[i]
-        parse_html(opts, data, result, reqopt)
+        self:parse_html(opts, data, result, reqopt)
     end
 
 
@@ -66,7 +77,7 @@ function request(opts, data, result)
 end
 
 -------------------------------------------------------------------------------------------
-function parse_html(opts, data, result, reqopt)
+function M:parse_html(opts, data, result, reqopt)
     local url = reqopt["url"]
     local html = reqopt["content"]
 
@@ -191,7 +202,7 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function keygen(opts, page)
+function M:keygen(opts, page)
     local key = string.format("%s.%s.%s.%d", opts.datasrc, opts.field, opts.order, page)
     return key
 end
@@ -200,7 +211,7 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function persist(opts, data)
+function M:persist(opts, data)
 
     local dates = Q.calendar.List(0, 0, 0, true)
 
@@ -237,7 +248,7 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function reload(opts, data, result)
+function M:reload(opts, data, result)
     local dates = Q.calendar.List(0, 0, 0, true)
     local datestr = dates[1]
     local db = opts.db
@@ -265,7 +276,7 @@ end
 
 
 -------------------------------------------------------------------------------------------
-function filter(opts, data, result)
+function M:filter(opts, data, result)
 
     local n = #data
     for i = 1, n do
@@ -279,12 +290,12 @@ function filter(opts, data, result)
         end
     end
 
-    simple.table_sort(result, opts.sort_field)
+
 
 end
 
 -------------------------------------------------------------------------------------------
-function print_data(data)
+function M:print_data(data)
     local n = #data
     local count = 1
     local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
@@ -302,52 +313,27 @@ end
 
 ------------------------------------------------------------------------------------------
 
-function go(opts)
+function M:go(opts)
     local data = {}
     local result = {}
     if opts.dofetch then
-        request(opts, data, result)
-        persist(opts, data)
+        self:request(opts, data, result)
+        self:persist(opts, data)
     else
-        reload(opts, data, result)
+        self:reload(opts, data, result)
     end
 
     if opts.filter == nil then
-        filter(opts, data, result)
+        self:filter(opts, data, result)
     else
         opts.filter(opts, data, result)
     end
 
-    print_data(result)
+    simple.table_sort(result, opts.sort_field)
+
+    self:print_data(result)
     return data, result
 end
 
-------------------------------------------------------------------------------------------
 
-local opts = {}
-
-opts.debug = false
-
-opts.from = 1
-opts.to = 15
-opts.nice = 0
-opts.concurrent = 1
-opts.newsession = false
-
-opts.dofetch = false
-opts.persist = true
-opts.pagesize = 50
-
-opts.ch_lower = -2.5
-opts.ch_upper = 6
-opts.big_c_lower = 0.2
-opts.big_c_upper = 10
-
-opts.db = "flow"
-opts.datasrc = "th"
-opts.field = "zjjlr"
-opts.order = "desc"
-
-opts.sort_field = "flow_big_rate_cross_ex"
-
-go(opts)
+return M

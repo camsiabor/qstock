@@ -10,12 +10,12 @@ local opts = {}
 opts.debug = false
 
 opts.from = 1
-opts.to = 15
+opts.to = 5
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = false
 
-opts.dofetch = false
+opts.dofetch = true
 opts.persist = true
 opts.pagesize = 50
 

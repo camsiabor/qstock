@@ -18,6 +18,7 @@
 ]]--
 
 local M = {}
+M.__index = M
 
 local xml, xml_tree_handler
 local json = require('common.json')
@@ -230,7 +231,7 @@ function M:persist(opts, data)
         if (i % 50 == 0) or (i == n) then
             local jsonstr = json.encode(pageone)
             --print(jsonstr)
-            local key = keygen(opts, page)
+            local key = self:keygen(opts, page)
             _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
             if err == nil then
                 if opts.debug then
@@ -255,7 +256,7 @@ function M:reload(opts, data, result)
     local dao = Q.daom.Get("main")
 
     for page = opts.from, opts.to do
-        local key = keygen(opts, page)
+        local key = self:keygen(opts, page)
         local datastr, err = dao.Get(db, datestr, key, 0, nil)
         if err ~= nil then
             print("[reload] failure", datestr, key, err)
@@ -334,6 +335,5 @@ function M:go(opts)
     self:print_data(result)
     return data, result
 end
-
 
 return M

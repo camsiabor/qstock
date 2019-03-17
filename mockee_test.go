@@ -150,7 +150,7 @@ func TestLuaBenchmark_Seleni(t *testing.T) {
 		opts = append(opts, u)
 	}
 
-	var seleni = &httpv.Seleni{}
+	var seleni = &httpv.HttpAgent{}
 	defer seleni.Terminate()
 	_, err := seleni.InitService()
 	if err != nil {

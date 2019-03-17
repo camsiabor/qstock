@@ -15,26 +15,25 @@ import (
 	"time"
 )
 
-type Seleni struct {
+type HttpAgent struct {
 	Name         string
-	Config       map[string]interface{}
 	Type         string
 	DriverPath   string
-	SeleniumPath string
-	Port         int
+	RemotePath   string
+	RemotePort   int
 	Output       io.Writer
-	service      *selenium.Service
 	Headless     bool
-
+	service      *selenium.Service
 	simpleClient *qnet.SimpleHttp
+	Config       map[string]interface{}
 }
 
-func (o *Seleni) initDefault() {
+func (o *HttpAgent) initDefault() {
 
 	var opts = o.Config
 	o.Type = util.GetStr(opts, "firefox", "type")
-	o.Port = util.GetInt(opts, 60001, "port")
-	o.SeleniumPath = util.GetStr(opts, "selenium-server.jar", "path")
+	o.RemotePort = util.GetInt(opts, 60001, "port")
+	o.RemotePath = util.GetStr(opts, "selenium-server.jar", "path")
 	o.DriverPath = util.GetStr(opts, "", "driver")
 	o.Headless = util.GetBool(opts, true, "headless")
 
@@ -60,7 +59,7 @@ func (o *Seleni) initDefault() {
 
 }
 
-func (o *Seleni) InitService() (service *selenium.Service, err error) {
+func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 	o.initDefault()
 
@@ -93,11 +92,11 @@ func (o *Seleni) InitService() (service *selenium.Service, err error) {
 		selenium.Output(o.Output), // Output debug information to STDERR.
 	}
 	selenium.SetDebug(false)
-	o.service, err = selenium.NewSeleniumService(o.SeleniumPath, o.Port, opts...)
+	o.service, err = selenium.NewSeleniumService(o.RemotePath, o.RemotePort, opts...)
 	return o.service, err
 }
 
-func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
+func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 
 	if o.Type == "wget" {
 		return nil, nil
@@ -121,7 +120,7 @@ func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
 			})
 		}
 	}
-	var url = fmt.Sprintf("http://localhost:%d/wd/hub", o.Port)
+	var url = fmt.Sprintf("http://localhost:%d/wd/hub", o.RemotePort)
 	driver, err = selenium.NewRemote(caps, url)
 	if err != nil {
 		if o.service == nil {
@@ -134,7 +133,7 @@ func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
 	return driver, err
 }
 
-func (o *Seleni) InitDrivers(count int) (drivers []selenium.WebDriver, err error) {
+func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err error) {
 	drivers = make([]selenium.WebDriver, count)
 
 	defer func() {
@@ -152,7 +151,7 @@ func (o *Seleni) InitDrivers(count int) (drivers []selenium.WebDriver, err error
 	return drivers, err
 }
 
-func (o *Seleni) ReleaseDrivers(drivers []selenium.WebDriver) {
+func (o *HttpAgent) ReleaseDrivers(drivers []selenium.WebDriver) {
 	if drivers == nil {
 		return
 	}
@@ -164,7 +163,12 @@ func (o *Seleni) ReleaseDrivers(drivers []selenium.WebDriver) {
 	}
 }
 
-func (o *Seleni) Get(opts []map[string]interface{}, nicemilli int, newsession bool) ([]map[string]interface{}, error) {
+func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int) ([]map[string]interface{}, error) {
+
+	if concurrent > 1 {
+		return o.GetConcurrent(opts, nicemilli, newsession, concurrent)
+	}
+
 	var driver, err = o.InitDriver()
 	if err != nil {
 		return opts, err
@@ -181,7 +185,7 @@ func (o *Seleni) Get(opts []map[string]interface{}, nicemilli int, newsession bo
 	}
 }
 
-func (o *Seleni) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 
 	for i := 0; i < n; i++ {
@@ -214,7 +218,7 @@ func (o *Seleni) GetBySameSession(driver selenium.WebDriver, opts []map[string]i
 	return opts, nil
 }
 
-func (o *Seleni) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 	for i := 0; i < n; i++ {
 		var html string
@@ -252,35 +256,35 @@ func (o *Seleni) GetByNewSession(driver selenium.WebDriver, opts []map[string]in
 	return opts, nil
 }
 
-func (o *Seleni) GetConcurrent(opts []map[string]interface{}, nicemilli int, forkcount int, newsession bool) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int) ([]map[string]interface{}, error) {
 	var optscount = len(opts)
-	if forkcount > optscount {
-		forkcount = optscount
+	if concurrent > optscount {
+		concurrent = optscount
 	}
-	var drivers, err = o.InitDrivers(forkcount)
+	var drivers, err = o.InitDrivers(concurrent)
 	defer o.ReleaseDrivers(drivers)
 	if err != nil {
 		return opts, err
 	}
 
-	var driveropts = make([][]map[string]interface{}, forkcount)
-	for i := 0; i < forkcount; i++ {
+	var driveropts = make([][]map[string]interface{}, concurrent)
+	for i := 0; i < concurrent; i++ {
 		driveropts[i] = make([]map[string]interface{}, 1)
 		driveropts[i][0] = opts[i]
 	}
 
 	var n = 0
-	for i := forkcount; i < optscount; i++ {
+	for i := concurrent; i < optscount; i++ {
 		var opt = opts[i]
 		driveropts[n] = append(driveropts[n], opt)
-		if n >= forkcount {
+		if n >= concurrent {
 			n = 0
 		}
 	}
 
 	var waitgroup sync.WaitGroup
-	waitgroup.Add(forkcount)
-	for i := 0; i < forkcount; i++ {
+	waitgroup.Add(concurrent)
+	for i := 0; i < concurrent; i++ {
 		var driver = drivers[i]
 		var driveropt = driveropts[i]
 		go func(driver selenium.WebDriver, driveropt []map[string]interface{}) {
@@ -296,7 +300,7 @@ func (o *Seleni) GetConcurrent(opts []map[string]interface{}, nicemilli int, for
 	return opts, err
 }
 
-func (o *Seleni) Terminate() error {
+func (o *HttpAgent) Terminate() error {
 	if o.service != nil {
 		return o.service.Stop()
 	}

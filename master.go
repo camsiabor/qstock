@@ -143,7 +143,7 @@ func initHttpClient(g *global.G) {
 	var seleniumConfig = util.GetMap(g.Config, true, "httpclient")
 
 	for driverName, driverConfig := range seleniumConfig {
-		var seleni = &httpv.Seleni{}
+		var seleni = &httpv.HttpAgent{}
 		seleni.Name = driverName
 		seleni.Config = util.AsMap(driverConfig, true)
 		g.RegisterModule(driverName, seleni)

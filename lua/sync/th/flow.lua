@@ -53,18 +53,7 @@ function M:request(opts, data, result)
 
     local err
     local browser = Q[opts.browser]
-    if browser == nil then
-        browser = Q.firefox
-    end
-    if opts.concurrent <= 1 then
-        if opts.newsession then
-            reqopts, err = browser.GetEx(reqopts, opts.nice)
-        else
-            reqopts, err = browser.Get(reqopts, opts.nice)
-        end
-    else
-        reqopts, err = browser.GetConcurrent(reqopts, opts.nice, opts.concurrent, opts.newsession)
-    end
+    reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent)
 
     if err ~= nil then
         print("[request] fatal", err)

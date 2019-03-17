@@ -194,8 +194,8 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
 		if o.Type == "wget" {
-			var encoding = util.GetStr(opts, "utf-8", "encoding")
-			var headers = util.GetStringMap(opts, false, "headers")
+			var encoding = util.GetStr(one, "utf-8", "encoding")
+			var headers = util.GetStringMap(one, false, "headers")
 			html, _, errget = o.simpleClient.Get(url, headers, encoding)
 		} else {
 			errget = driver.Get(url)

@@ -6,7 +6,9 @@ local thflow = require("sync.th.flow")
 local inst = thflow:new()
 
 local opts = {}
+
 opts.debug = false
+opts.loglevel = 0
 opts.browser = "firefox"
 
 opts.from = 1

@@ -2,6 +2,7 @@ package httpv
 
 import (
 	"fmt"
+	"github.com/camsiabor/qcom/qlog"
 	"github.com/camsiabor/qcom/qnet"
 	"github.com/camsiabor/qcom/util"
 	"github.com/tebeka/selenium"
@@ -163,10 +164,10 @@ func (o *HttpAgent) ReleaseDrivers(drivers []selenium.WebDriver) {
 	}
 }
 
-func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 
 	if concurrent > 1 {
-		return o.GetConcurrent(opts, nicemilli, newsession, concurrent)
+		return o.GetConcurrent(opts, nicemilli, newsession, concurrent, loglevel)
 	}
 
 	var driver, err = o.InitDriver()
@@ -179,13 +180,13 @@ func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession
 		}
 	}()
 	if newsession {
-		return o.GetByNewSession(driver, opts, nicemilli)
+		return o.GetByNewSession(driver, opts, nicemilli, loglevel)
 	} else {
-		return o.GetBySameSession(driver, opts, nicemilli)
+		return o.GetBySameSession(driver, opts, nicemilli, loglevel)
 	}
 }
 
-func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, loglevel int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 
 	for i := 0; i < n; i++ {
@@ -205,8 +206,14 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		}
 		if errget == nil {
 			one["content"] = html
+			if loglevel >= 0 {
+				qlog.Log(qlog.INFO, "httpagent", "success", url)
+			}
 		} else {
 			one["err"] = errget
+			if loglevel >= 0 {
+				qlog.Log(qlog.INFO, "httpagent", "fail", url)
+			}
 		}
 
 		if nicemilli > 0 {
@@ -218,7 +225,7 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 	return opts, nil
 }
 
-func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, loglevel int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 	for i := 0; i < n; i++ {
 		var html string
@@ -237,8 +244,14 @@ func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string
 		}
 		if errget == nil {
 			one["content"] = html
+			if loglevel >= 0 {
+				qlog.Log(qlog.INFO, "httpagent", "success", url)
+			}
 		} else {
 			one["err"] = errget
+			if loglevel >= 0 {
+				qlog.Log(qlog.INFO, "httpagent", "fail", url, errget.Error())
+			}
 		}
 		if driver != nil {
 			driver.Quit()
@@ -256,7 +269,7 @@ func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string
 	return opts, nil
 }
 
-func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 	var optscount = len(opts)
 	if concurrent > optscount {
 		concurrent = optscount
@@ -287,16 +300,31 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 	for i := 0; i < concurrent; i++ {
 		var driver = drivers[i]
 		var driveropt = driveropts[i]
-		go func(driver selenium.WebDriver, driveropt []map[string]interface{}) {
-			defer waitgroup.Done()
+		go func(driver selenium.WebDriver, driveropt []map[string]interface{}, index int) {
+			defer func() {
+				defer waitgroup.Done()
+				var pan = recover()
+				if pan == nil {
+					if loglevel >= 0 {
+						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", pan)
+					}
+				} else {
+					if loglevel >= 0 {
+						qlog.Log(qlog.INFO, "httpagent", "one concurrent done", index)
+					}
+				}
+			}()
 			if newsession {
-				o.GetByNewSession(driver, driveropt, nicemilli)
+				o.GetByNewSession(driver, driveropt, nicemilli, loglevel)
 			} else {
-				o.GetBySameSession(driver, driveropt, nicemilli)
+				o.GetBySameSession(driver, driveropt, nicemilli, loglevel)
 			}
-		}(driver, driveropt)
+		}(driver, driveropt, i)
 	}
 	waitgroup.Wait()
+	if loglevel >= 0 {
+		qlog.Log(qlog.INFO, "httpagent", "concurrent fin", concurrent)
+	}
 	return opts, err
 }
 

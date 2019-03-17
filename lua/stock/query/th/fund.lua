@@ -5,20 +5,20 @@ local cache_code = Q.cachem.Get("stock.code");
 local codes = cache_code.Get(false, "sh");
 local codes_fragment = {}
 
-
-for i = 301, 350 do
+for i = 501, #codes do
     codes_fragment[#codes_fragment + 1] = codes[i]
 end
 
 local data = {}
 local result = {}
 local opts = {}
+opts.loglevel = 0
 opts.browser = "wget"
 opts.codes = codes_fragment
 
 print(#opts.codes)
 
-opts.concurrent = 10
+opts.concurrent = 20
 opts.newsession = false
 
 opts.dofetch = true

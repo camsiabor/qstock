@@ -53,7 +53,7 @@ function M:request(opts, data, result)
 
     local err
     local browser = Q[opts.browser]
-    reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent)
+    reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
         print("[request] fatal", err)

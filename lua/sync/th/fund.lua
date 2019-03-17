@@ -17,6 +17,19 @@ function M:new()
     return inst
 end
 
+local url = "http://data.10jqka.com.cn/funds/ggzjl/"
+url = "http://stockpage.10jqka.com.cn/603178/funds"
+url = "http://data.10jqka.com.cn/funds/ggzjl/"
+
+local h, err = Q.http.Get(url, nil, "gbk")
+if h == nil then
+    print(h)
+    return
+else
+    print(h)
+    return
+end
+
 -------------------------------------------------------------------------------------------
 function M:request(opts, data, result)
 
@@ -165,6 +178,10 @@ function M:parse_html(opts, data, result, reqopt)
         
         print(tdate.."\t"..kclose.."\t"..change_rate)
         
+        local one = {}
+        
+        
+        data[#data + 1] = one
 
 
     end -- for tr end

@@ -2,6 +2,7 @@ package httpv
 
 import (
 	"fmt"
+	"github.com/camsiabor/qcom/qnet"
 	"github.com/camsiabor/qcom/util"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
@@ -24,6 +25,8 @@ type Seleni struct {
 	Output       io.Writer
 	service      *selenium.Service
 	Headless     bool
+
+	simpleClient *qnet.SimpleHttp
 }
 
 func (o *Seleni) initDefault() {
@@ -34,6 +37,11 @@ func (o *Seleni) initDefault() {
 	o.SeleniumPath = util.GetStr(opts, "selenium-server.jar", "path")
 	o.DriverPath = util.GetStr(opts, "", "driver")
 	o.Headless = util.GetBool(opts, true, "headless")
+
+	if o.Type == "wget" {
+		o.simpleClient = qnet.GetSimpleHttp()
+		return
+	}
 
 	if o.DriverPath == "" {
 		if o.Type == "chrome" {
@@ -55,6 +63,10 @@ func (o *Seleni) initDefault() {
 func (o *Seleni) InitService() (service *selenium.Service, err error) {
 
 	o.initDefault()
+
+	if o.Type == "wget" {
+		return
+	}
 
 	defer func() {
 		var pan = recover()
@@ -86,6 +98,10 @@ func (o *Seleni) InitService() (service *selenium.Service, err error) {
 }
 
 func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
+
+	if o.Type == "wget" {
+		return nil, nil
+	}
 
 	var browserName string
 	if o.Type == "chrome" {
@@ -141,53 +157,58 @@ func (o *Seleni) ReleaseDrivers(drivers []selenium.WebDriver) {
 		return
 	}
 	for i := 0; i < len(drivers); i++ {
-		if drivers[i] != nil {
-			drivers[i].Quit()
+		var driver = drivers[i]
+		if driver != nil {
+			driver.Quit()
 		}
 	}
 }
 
-func (o *Seleni) Get(opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
+func (o *Seleni) Get(opts []map[string]interface{}, nicemilli int, newsession bool) ([]map[string]interface{}, error) {
 	var driver, err = o.InitDriver()
 	if err != nil {
 		return opts, err
 	}
 	defer func() {
-		driver.Quit()
+		if driver != nil {
+			driver.Quit()
+		}
 	}()
-	return o.GetBySameSession(driver, opts, nicemilli)
-}
-
-func (o *Seleni) GetEx(opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
-	var driver, err = o.InitDriver()
-	if err != nil {
-		return opts, err
+	if newsession {
+		return o.GetByNewSession(driver, opts, nicemilli)
+	} else {
+		return o.GetBySameSession(driver, opts, nicemilli)
 	}
-	defer func() {
-		driver.Quit()
-	}()
-	return o.GetByNewSession(driver, opts, nicemilli)
 }
 
 func (o *Seleni) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
 	var n = len(opts)
+
 	for i := 0; i < n; i++ {
+		var html string
+		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		var errget = driver.Get(url)
-		if errget != nil {
-			one["err"] = errget
-			continue
+		if o.Type == "wget" {
+			var encoding = util.GetStr(opts, "utf-8", "encoding")
+			var headers = util.GetStringMap(opts, false, "headers")
+			html, _, errget = o.simpleClient.Get(url, headers, encoding)
+		} else {
+			errget = driver.Get(url)
+			if errget == nil {
+				html, errget = driver.PageSource()
+			}
 		}
-		html, errget := driver.PageSource()
 		if errget == nil {
 			one["content"] = html
 		} else {
 			one["err"] = errget
 		}
+
 		if nicemilli > 0 {
 			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
 		}
+
 	}
 
 	return opts, nil
@@ -196,27 +217,37 @@ func (o *Seleni) GetBySameSession(driver selenium.WebDriver, opts []map[string]i
 func (o *Seleni) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 	for i := 0; i < n; i++ {
+		var html string
+		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		var errget = driver.Get(url)
-		if errget != nil {
-			one["err"] = errget
-			continue
+		if o.Type == "wget" {
+			var encoding = util.GetStr(opts, "utf-8", "encoding")
+			var headers = util.GetStringMap(opts, false, "headers")
+			html, _, errget = o.simpleClient.Get(url, headers, encoding)
+		} else {
+			errget = driver.Get(url)
+			if errget == nil {
+				html, errget = driver.PageSource()
+			}
 		}
-		html, errget := driver.PageSource()
 		if errget == nil {
 			one["content"] = html
 		} else {
 			one["err"] = errget
 		}
-		driver.Quit()
+		if driver != nil {
+			driver.Quit()
+		}
 		if nicemilli > 0 {
 			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
 		}
 		if i == n-1 {
 			break
 		}
-		driver.NewSession()
+		if driver != nil {
+			driver.NewSession()
+		}
 	}
 	return opts, nil
 }
@@ -261,7 +292,6 @@ func (o *Seleni) GetConcurrent(opts []map[string]interface{}, nicemilli int, for
 			}
 		}(driver, driveropt)
 	}
-
 	waitgroup.Wait()
 	return opts, err
 }

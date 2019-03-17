@@ -140,7 +140,7 @@ func initHttpClient(g *global.G) {
 
 	g.SetData("http", qnet.GetSimpleHttp())
 
-	var seleniumConfig = util.GetMap(g.Config, true, "selenium")
+	var seleniumConfig = util.GetMap(g.Config, true, "httpclient")
 
 	for driverName, driverConfig := range seleniumConfig {
 		var seleni = &httpv.Seleni{}

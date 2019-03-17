@@ -55,13 +55,22 @@ const script_file_methods = {
 
     },
 
+    script_file_tree_no_label_handler : function(node, treeselect) {
+        let label = node.id;
+        let index = label.lastIndexOf("/");
+        if (index >= 0) {
+            label = label.substring(index + 1);
+        }
+        return label
+    },
+
     script_file_select: function (noderaw, id, node) {
 
         if (!node) { /* active select */
             if (noderaw) {
                 node = this.$refs.tree_script_file.getNode(noderaw.id);
             } else {
-                node = this.$refs.tree_script_file.selectedNodes[0];
+                node = this.$refs.tree_script_file.getSelectedNodes()[0];
             }
             if (node) {
                 this.$refs.tree_script_file.select(node);
@@ -86,7 +95,7 @@ const script_file_methods = {
     },
 
     script_file_current : function() {
-        return this.$refs.tree_script_file.selectedNodes[0];
+        return this.$refs.tree_script_file.getSelectedNodes()[0];
     },
 
 
@@ -381,8 +390,8 @@ const script_file_methods = {
         let tree_script_src = this.$refs.tree_script_src;
         let tree_script_des = this.$refs.tree_script_des;
 
-        let nodes_src = tree_script_src.selectedNodes;
-        let nodes_des = tree_script_des.selectedNodes;
+        let nodes_src = tree_script_src.getSelectedNodes();
+        let nodes_des = tree_script_des.getSelectedNodes();
 
         if (nodes_src.length === 0 || nodes_des.length === 0) {
             alert("需要选择來源及目标");

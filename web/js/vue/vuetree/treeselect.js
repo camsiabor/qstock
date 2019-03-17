@@ -567,7 +567,8 @@
                     type: String, default: "ALL", validator: function (e) {
                         return P(["ALL", "BRANCH", "LEAF" ], e)
                     }
-                }
+                },
+                noLabelHandler: {type: Function, default: null },
                 // TODO insert end ------------------------------ //
             },
             data: function () {
@@ -587,6 +588,7 @@
                 }
             },
             computed: {
+
                 selectedNodes: function () {
                     return this.forest.selectedNodeIds.map(this.getNode)
                 }, internalValue: function () {
@@ -713,6 +715,17 @@
                     }), (function () {
                         return "Invalid node id: ".concat(e)
                     })), null == e ? null : e in this.forest.nodeMap ? this.forest.nodeMap[e] : this.createFallbackNode(e)
+                }, getSelectedNodes: function() {
+                    var result = [];
+                    var selectedIds = this.forest.selectedNodeIds;
+                    for (var i = 0; i < selectedIds.length; i++) {
+                        var id = selectedIds[i];
+                        var node = this.forest.nodeMap[id];
+                        if (node) {
+                            result.push(node);
+                        }
+                    }
+                    return result;
                 }, createFallbackNode: function (e) {
                     var t = this.extractNodeFromValue(e), n = {
                         id: e,
@@ -1334,11 +1347,19 @@
             methods: {
                 renderSingleValueLabel: function () {
                     // TODO insert begin ============================ //
-                    var e = this.instance, t = e.selectedNodes[0], n = e.$scopedSlots["value-label"];
+                    var e = this.instance;
+                    // var t = e.selectedNodes[0];
+                    var t = e.getSelectedNodes()[0];
+                    var n = e.$scopedSlots["value-label"];
                     var label = n ? n({node: t}) : t.label;
                     console.log("renderSingleValueLabel", e, t, n, label);
                     if (!label) {
-                        throw e;
+                        if (e.noLabelHandler) {
+                            label = e.noLabelHandler(t, e, n);
+                        }
+                    }
+                    if (!label) {
+                        label = t.id
                     }
                     return label
                     // TODO insert end ============================ //

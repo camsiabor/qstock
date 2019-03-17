@@ -19,6 +19,7 @@
                             :options="script_file_group.tree"
                             :load-options="script_file_sublist"
                             :open-on-focus="true"
+                            :no-label-handler="script_file_tree_no_label_handler"
                             select-consists-of="LEAF"
                             @select="script_file_select"
                             style="width:99%"/>

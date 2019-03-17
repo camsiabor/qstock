@@ -124,7 +124,7 @@ function M:parse_html(opts, data, result, reqopt)
     ]]--
 
     local one = {}
-    one.flow = {}
+    one.flows = {}
     one.code = reqopt["code"]
     data[#data + 1] = one
     
@@ -161,6 +161,7 @@ function M:parse_html(opts, data, result, reqopt)
         local record = {}
         record["date"] = tdate
         record["close"] = kclose
+        record["date_s"] = string.sub(tdate, 5, #tdate)
         record.flow = flow
         record.big5 = big5
         record.big = big
@@ -170,7 +171,7 @@ function M:parse_html(opts, data, result, reqopt)
         record.mid_r = mid_r
         record.tin_r = tin_r
         
-        record.change_rate = change_rate
+        record.ch = change_rate
         
     
         one.flows[#one.flows + 1] = record
@@ -178,17 +179,6 @@ function M:parse_html(opts, data, result, reqopt)
     end -- for tr end
     
 end
-
-
-
--------------------------------------------------------------------------------------------
-
-function M:keygen(opts, page)
-    local key = string.format("%s.%s.%s.%d", opts.datasrc, opts.field, opts.order, page)
-    return key
-end
-
-
 
 -------------------------------------------------------------------------------------------
 
@@ -203,15 +193,14 @@ function M:persist(opts, data)
     for i = 1, n do
         local one = data[i]
         local group = "ch."..one.code
-        pageone[#pageone + 1] = data[i]
         local jsonstr = json.encode(one)
         _, err = dao.Update(db, group, self.persist_key , jsonstr, true, 0, nil)
         if err == nil then
             if opts.debug then
-                print("[persist]", group)
+                print("[persist]", group, self.persist_key)
             end
         else
-            print("[persist] failure", err)
+            print("[persist] failure", group, self.persist_key, err)
         end
     end
     print("[persist] fin")
@@ -222,20 +211,16 @@ end
 
 function M:reload(opts, data, result)
 
-    if opts.date_offset == nil then
-        opts.date_offset = 0
-    end
-
-    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
-    local datestr = dates[1]
     local db = opts.db
     local dao = Q.daom.Get("main")
 
     local n = #opts.codes
     for i = 1, n do
+        
         local code = opts.codes[i]
         local group = "ch."..code
-        local datastr, err = dao.Get(db, group, self.persist_key, nil)
+    
+        local datastr, err = dao.Get(db, group, self.persist_key, 0, nil)
         if err ~= nil then
             print("[reload] failure", group, self.persist_key, err)
         end
@@ -245,7 +230,6 @@ function M:reload(opts, data, result)
             local one = json.decode(datastr)
             data[#data + 1] = one
         end
-
     end
 
 end
@@ -261,20 +245,26 @@ function M:filter(opts, data, result)
 end
 
 -------------------------------------------------------------------------------------------
-function M:print_data(data)
-    local n = #data
-    local count = 1
-    local print_head = "i\tcode\tname\tch\tturn\tio\tin\tbig_in\tbig_r\tbig_t\tbig_c\tcross\tcross2\tbig"
-    for i = 1, n do
-        local one = data[i]
-        if count % 10 == 1 then
-            print("")
-            print(print_head)
-        end
-        print(one.index.."\t"..one.code.."\t"..one.name.."\t"..one.change_rate.."\t"..one.turnover.."\t"..one.flow_io_rate.."\t"..one.flow_in_rate.."\t"..one.flow_big_in_rate.."\t"..one.flow_big_rate.."\t"..one.flow_big_rate_total.."\t"..one.flow_big_rate_compare.."\t"..one.flow_big_rate_cross.."\t"..one.flow_big_rate_cross_ex.."\t"..one.flow_big)
-        count = count + 1
+function M:print_data(opts, data)
+    local fields =
+    {
+        "date_s", "close", "ch", "flow",
+        "big_r", "mid_r", "tin_r", "big", "mid", "tin", "big5"
+    }
+
+    local headers = fields
+
+    if opts.print_fields ~= nil then
+        fields = opts.print_fields
     end
+
+    if opts.print_headers ~= nil then
+        headers = opts.print_headers
+    end
+
+    simple.table_array_print_with_header(data, fields, headers, 10, "\n")
 end
+
 
 
 ------------------------------------------------------------------------------------------
@@ -295,30 +285,14 @@ function M:go(opts)
         opts.filter(opts, data, result)
     end
 
-    simple.table_sort(result, opts.sort_field)
+    --simple.table_sort(result, opts.sort_field)
 
-    self:print_data(result)
+    for i = 1, #result do
+        local flows = result[i].flows
+        self:print_data(opts, flows)
+    end
+
     return data, result
 end
 
-
-
-
-local data = {}
-local result = {}
-
-local opts = {}
-opts.browser = "wget"
-opts.codes = { "603178", "000001", "000009" }
-
-opts.concurrent = 1
-opts.newsession = false
-
-opts.dofetch = true
-
-opts.db = "flow"
-opts.persist = true
-
-M:go(opts, data, result)
-
---return M
+return M

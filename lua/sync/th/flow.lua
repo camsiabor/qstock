@@ -294,7 +294,7 @@ function M:filter(opts, data, result)
 end
 
 -------------------------------------------------------------------------------------------
-function M:print_data(data)
+function M:print_data(opts, data)
 
     local fields =
         {
@@ -311,6 +311,14 @@ function M:print_data(data)
             "big_in", "big_r", "big_t", "big_c",
             "cross", "crossex", "big"
         }
+
+    if opts.print_fields ~= nil then
+        fields = opts.print_fields
+    end
+
+    if opts.print_headers ~= nil then
+        headers = opts.print_headers
+    end
 
     simple.table_array_print_with_header(data, fields, headers, 10, "\n")
 end
@@ -336,7 +344,7 @@ function M:go(opts)
 
     simple.table_sort(result, opts.sort_field)
 
-    self:print_data(result)
+    self:print_data(opts, result)
     return data, result
 end
 

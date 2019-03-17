@@ -55,9 +55,18 @@
     }
   },
 
-  "selenium" : {
-    "port" : 60000,
-    "type" : "gecko"
+  "httpclient" : {
+    "chrome" : {
+      "type" : "chrome",
+      "port" : 60000
+    },
+    "firefox" : {
+      "type" : "firefox",
+      "port" : 60001
+    },
+    "wget" : {
+      "type" : "wget"
+    }
   },
 
   "agenda" : {

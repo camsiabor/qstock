@@ -31,7 +31,6 @@ function M:request(opts, data, result)
     
     for i = 1, count do
         local code = codes[i]
-        code = string.gsub(code, "ch", "")
 
         local url = url_prefix..code..url_suffix
         local reqopt = {}
@@ -280,6 +279,14 @@ end
 function M:go(opts)
     local data = {}
     local result = {}
+
+    local codes = opts.codes
+    for i = 1, #codes do
+        local code = codes[i]
+        codes[i] = string.gsub(code, "ch", "")
+    end
+
+
     if opts.dofetch then
         self:request(opts, data, result)
         self:persist(opts, data)

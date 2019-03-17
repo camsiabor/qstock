@@ -2,8 +2,8 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
 
-local thflow = require("sync.th.flow")
-local inst = thflow:new()
+local mod_th_flow = require("sync.th.flow")
+local today = mod_th_flow:new()
 
 local opts = {}
 
@@ -31,8 +31,12 @@ opts.order = "desc"
 
 opts.sort_field = "flow_big_rate_cross_ex"
 
---inst:go(opts)
-
-for k, v in pairs(inst) do
-    print(k)
+--[[
+today.filter = function(opts, data, result)
+    result[1] = data[1]
+    print("my filter")
+    print(#data)
 end
+]]--
+
+today:go(opts)

@@ -250,7 +250,12 @@ end
 -------------------------------------------------------------------------------------------
 
 function M:reload(opts, data, result)
-    local dates = Q.calendar.List(0, 0, 0, true)
+
+    if opts.date_offset == nil then
+        opts.date_offset = 0
+    end
+
+    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
     local datestr = dates[1]
     local db = opts.db
     local dao = Q.daom.Get("main")

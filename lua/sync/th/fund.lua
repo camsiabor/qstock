@@ -20,21 +20,26 @@ end
 -------------------------------------------------------------------------------------------
 function M:request(opts, data, result)
 
-    local url_prefix = "http://stockpage.10jqka.com.cn/000803/"
+    local url_prefix = "http://stockpage.10jqka.com.cn/"
     local url_suffix = "/funds"
 
     local count = 1
     local reqopts = {}
-    for page = opts.from, opts.to do
-        local url = url_prefix..page..url_suffix
+    
+    
+    local codes = opts.codes
+    local count = #codes
+    
+    for i = 1, count do
+        local code = codes[i]
+        local url = url_prefix..code..url_suffix
         local reqopt = {}
+        reqopt["code"] = code
         reqopt["url"] = url
-        reqopts[count] = reqopt
-        count = count + 1
+        reqopts[i] = reqopt
     end
-
-    count = count - 1
-
+    
+    
     local err
     local browser = Q[opts.browser]
     if browser == nil then
@@ -54,16 +59,19 @@ function M:request(opts, data, result)
         print("[request] fatal", err)
     end
 
+    reqopt = reqopts[1]
+    
+    
     for i = 1, count do
-        local reqopt = reqopts[i]
-        self:parse_html(opts, data, result, reqopt)
+        local reqopt = reqopts[1]
+        M:parse_html(opts, data, result, reqopt)
     end
-
-
+    
 
     return result
 
 end
+
 
 -------------------------------------------------------------------------------------------
 function M:parse_html(opts, data, result, reqopt)
@@ -76,6 +84,12 @@ function M:parse_html(opts, data, result, reqopt)
         print(reqopt["err"])
         return
     end
+    
+    if html ~= nil then
+        html = string.gsub(html, "<!DOCTYPE html>", "")
+        --print(html)
+        --return
+    end
 
     if xml == nil then
         xml = require("common.xml2lua.xml2lua")
@@ -87,7 +101,9 @@ function M:parse_html(opts, data, result, reqopt)
     parser:parse(html)
 
 
-    local htable = tree.root.html.body.table
+    -- /html/body/div[11]/div[6]/table
+    local div = tree.root.html.body.div[11].div[6]
+    local htable = div.table
     if htable == nil then
         print("[error] response content invalid "..#html)
         print(url)
@@ -100,94 +116,73 @@ function M:parse_html(opts, data, result, reqopt)
 
     local tr_count = #tbody.tr
 
-    for i = 1, tr_count do
+
+    --[[
+        1. 日期	
+        2. 收盘价	
+        3. 涨跌幅	
+        4. 资金净流入	
+        5. 5日主力净额	
+        6. 大单净额
+        7. 大单净占比
+        8. 中单净额
+        9. 中单净占比
+        10. 小单净额
+        11 小单净占比
+    ]]--
+
+    local code = reqopt["code"]
+    for i = 3, tr_count do
 
         local tr = tbody.tr[i]
-        local index = tr.td[1][1]
-        local code = tr.td[2].a[1]
-        local name = tr.td[3].a[1]
-        local change_rate = tr.td[5][1]
-        local turnover = tr.td[6][1]
-        local flow_in = tr.td[7][1]
-        local flow_out = tr.td[8][1]
-        local flow = tr.td[9][1]
-        local amount = tr.td[10][1]
-        local flow_big = tr.td[11][1]
-
-        turnover = string.gsub(turnover, "%%", "") + 0
-        change_rate = string.gsub(change_rate, "%%", "") + 0
-
-        flow = simple.str2num(flow)
-        flow_in = simple.str2num(flow_in)
-        flow_out = simple.str2num(flow_out)
-        flow_big = simple.str2num(flow_big)
-
-        flow_in = simple.nozero(flow_in)
-        flow_out = simple.nozero(flow_out)
-        flow_big = simple.nozero(flow_big)
-
-        amount = simple.str2num(amount)
-
-        local flow_big_rate = flow_big / amount * 100
-        local flow_big_rate_compare = flow / flow_big
-        local flow_big_rate_total = turnover * flow_big_rate / 100
-
-        local flow_in_rate = flow_in / amount * 100
-        local flow_out_rate = flow_out / amount * 100
-        local flow_io_rate = flow_in / flow_out
-
-        local flow_big_in_rate = flow_big / flow_in * 100
-
-        --local flow_big_rate_cross = (turnover * amount * flow_big_rate / 100) * flow_io_rate * flow_big_in_rate
-        local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
-        local change_rate_ex = change_rate
-        if change_rate_ex < 0 then
-            change_rate_ex = 0.1
-        end
-        local flow_big_rate_cross_ex = flow_big_rate_cross / (change_rate_ex + 2.5)
-
-        flow_big_rate = simple.numcon(flow_big_rate)
-        flow_big_rate_compare = simple.numcon(flow_big_rate_compare)
-        flow_big_rate_total = simple.numcon(flow_big_rate_total)
-        flow_big_rate_cross = simple.numcon(flow_big_rate_cross)
-        flow_big_rate_cross_ex = simple.numcon(flow_big_rate_cross_ex)
-
-        flow_in_rate = simple.numcon(flow_in_rate)
-        flow_out_rate = simple.numcon(flow_out_rate)
-        flow_io_rate = simple.numcon(flow_io_rate)
-
-        flow_big_in_rate = simple.numcon(flow_big_in_rate)
-
-        local one = {}
-        one.index = index
-        one.code = code
-        one.name = name
-        one.flow = flow
-        one.flow_in = flow_in
-        one.flow_out = flow_out
-        one.amount = amount
-        one.turnover = turnover
-        one.flow_big = flow_big
-        one.change_rate = change_rate
-
-        one.flow_big_rate = flow_big_rate
-        one.flow_big_rate_total = flow_big_rate_total
-        one.flow_big_rate_compare = flow_big_rate_compare
-        one.flow_big_rate_cross = flow_big_rate_cross
-        one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
-
-        one.flow_in_rate = flow_in_rate
-        one.flow_out_rate = flow_out_rate
-        one.flow_io_rate = flow_io_rate
-
-        one.flow_big_in_rate = flow_big_in_rate
-
-        data[#data + 1] = one
+        local v = tr.td[1][1]
+        
+        
+        local tdate = tr.td[1][1]
+        local kclose = tr.td[2][1]
+        local change_rate = tr.td[3][1]
+        local flow = tr.td[4][1]
+        local big5 = tr.td[5][1]
+        local big = tr.td[6][1]
+        local big_r = tr.td[7][1]
+        local mid = tr.td[8][1]
+        local mid_r = tr.td[9][1]
+        local tin = tr.td[10][1]
+        local tin_r = tr.td[11][1]
+        
+        kclose = kclose + 0
+        
+        flow = simple.numcon((flow + 0) / 10000)
+        big5 = simple.numcon((big5 + 0) / 10000)
+        bin = simple.numcon((big + 0) / 10000)
+        mid = simple.numcon((mid + 0) / 10000)
+        tin = simple.numcon((tin + 0) / 10000)
+        
+        change_rate = simple.percent2num(change_rate)
+        big_r = simple.percent2num(big_r)
+        mid_r = simple.percent2num(mid_r)
+        tin_r = simple.percent2num(tin_r)
+        
+        print(tdate.."\t"..kclose.."\t"..change_rate)
+        
 
 
     end -- for tr end
 end
 
+
+
+local data = {}
+local result = {}
+
+local opts = {}
+opts.browser = "chrome"
+opts.codes = { "603178" }
+
+opts.concurrent = 1
+opts.newsession = false
+
+M:request(opts, data, result)
 
 -------------------------------------------------------------------------------------------
 
@@ -329,4 +324,4 @@ function M:go(opts)
     return data, result
 end
 
-return M
+--return M

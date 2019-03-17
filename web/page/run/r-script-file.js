@@ -323,8 +323,6 @@ const script_file_methods = {
                     layout.push("\n");
                 }
 
-
-
                 this.console.text = layout.join("\n");
                 return data;
             } else {

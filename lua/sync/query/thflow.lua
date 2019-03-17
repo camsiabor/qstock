@@ -6,17 +6,17 @@ local thflow = require("sync.th.flow")
 local inst = thflow:new()
 
 local opts = {}
-
 opts.debug = false
+opts.browser = "firefox"
 
 opts.from = 1
-opts.to = 50
+opts.to = 10
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = false
+opts.dofetch = true
 opts.date_offset = 0
 
 opts.pagesize = 50
@@ -48,6 +48,6 @@ opts.filter_balance_io_rate = function(opts, data, result)
     end
 end
 
-opts.filter = opts.filter_balance_io_rate
+--opts.filter = opts.filter_balance_io_rate
 
 inst:go(opts)

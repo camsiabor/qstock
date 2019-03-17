@@ -16,8 +16,11 @@ function simple.str2num(str, keep)
     return string.sub(str, 1, keep) + 0
 end
 
-function simple.numcon(num)
-    return string.sub(num.."", 1, 5) + 0
+function simple.numcon(num, limit)
+    if limit == nil then
+        limit = 5
+    end
+    return string.sub(num.."", 1, limit) + 0
 end
 
 function simple.nozero(num)
@@ -25,6 +28,10 @@ function simple.nozero(num)
         num = 0.0001
     end
     return num
+end
+
+function simple.percent2num(pencentstr)
+    return string.gsub(pencentstr, "%%", "") + 0
 end
 
 function simple.table_sort(t, field)

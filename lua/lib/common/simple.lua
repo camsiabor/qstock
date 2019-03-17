@@ -18,7 +18,12 @@ function simple.numcon(num, limit)
     if limit == nil then
         limit = 5
     end
-    return string.sub(num .. "", 1, limit) + 0
+    if num < 0.0001 then
+        num = 0
+    end
+    num = num .. ""
+    num = string.sub(num, 1, limit)
+    return num + 0
 end
 
 function simple.nozero(num)
@@ -78,7 +83,7 @@ function simple.table_array_print(array, fields, delimiter, suffix)
     end
 end
 
-function simple.table_array_print_with_header(array, fields, headers, header_interval, delimiter, suffix)
+function simple.table_array_print_with_header(array, from, to, fields, headers, header_interval, delimiter, suffix)
     if delimiter == nil then
         delimiter = "\n"
     end
@@ -88,10 +93,9 @@ function simple.table_array_print_with_header(array, fields, headers, header_int
         headstr = headstr .. headers[i] .. "\t"
     end
 
-    local narray = #array
     local nfields = #fields
     local header_interval_original = header_interval
-    for a = 1, narray do
+    for a = from, to do
 
         if header_interval > 0 then
             if a % header_interval == 1 then

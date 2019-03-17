@@ -24,22 +24,21 @@ function M:request(opts, data, result)
     local url_prefix = "http://stockpage.10jqka.com.cn/"
     local url_suffix = "/funds"
 
-    local count = 1
     local reqopts = {}
-    
-    
+
     local codes = opts.codes
     local count = #codes
     
     for i = 1, count do
         local code = codes[i]
+        code = string.gsub(code, "ch", "")
+
         local url = url_prefix..code..url_suffix
         local reqopt = {}
         reqopt["code"] = code
         reqopt["url"] = url
         reqopts[i] = reqopt
     end
-
 
     local err
     local browser = Q[opts.browser]
@@ -262,7 +261,16 @@ function M:print_data(opts, data)
         headers = opts.print_headers
     end
 
-    simple.table_array_print_with_header(data, fields, headers, 10, "\n")
+    local from = opts.print_from
+    local to = opts.print_to
+    if from == nil then
+        from = 1
+    end
+    if to == nil then
+        to = 7
+    end
+
+    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n")
 end
 
 
@@ -287,9 +295,18 @@ function M:go(opts)
 
     --simple.table_sort(result, opts.sort_field)
 
+    print("")
+
     for i = 1, #result do
-        local flows = result[i].flows
-        self:print_data(opts, flows)
+        local one = result[i]
+        local flows = one.flows
+        printex("\n")
+        printex(one.code, "----------------------------------------------------------------------------------------")
+        if opts.print_data == nil then
+            self:print_data(opts, flows)
+        else
+            opts.print_data(opts, flows)
+        end
     end
 
     return data, result

@@ -320,7 +320,16 @@ function M:print_data(opts, data)
         headers = opts.print_headers
     end
 
-    simple.table_array_print_with_header(data, fields, headers, 10, "\n")
+    local from = opts.print_from
+    local to = opts.print_to
+    if from == nil then
+        from = 1
+    end
+    if to == nil then
+        to = #data
+    end
+
+    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n")
 end
 
 

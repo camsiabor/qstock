@@ -59,11 +59,7 @@ func master(g *global.G) {
 
 	initSyncer(g)
 
-	g.SetData("http", qnet.GetSimpleHttp())
-
-	var seleni = &httpv.Seleni{}
-	g.RegisterModule("selenium", seleni)
-	g.SetData("selenium", seleni)
+	initHttpClient(g)
 }
 func initAgenda(g *global.G) {
 	var agendaConfig = util.GetMap(g.Config, true, "agenda")
@@ -138,4 +134,20 @@ func initSyncer(g *global.G) {
 		syncer.Run(apiname)
 		g.RegisterModule("syncer."+apiname, syncer)
 	}
+}
+
+func initHttpClient(g *global.G) {
+
+	g.SetData("http", qnet.GetSimpleHttp())
+
+	var seleniumConfig = util.GetMap(g.Config, true, "selenium")
+
+	for driverName, driverConfig := range seleniumConfig {
+		var seleni = &httpv.Seleni{}
+		seleni.Name = driverName
+		seleni.Config = util.AsMap(driverConfig, true)
+		g.RegisterModule(driverName, seleni)
+		g.SetData(driverName, seleni)
+	}
+
 }

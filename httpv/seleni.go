@@ -2,7 +2,6 @@ package httpv
 
 import (
 	"fmt"
-	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/util"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
@@ -16,24 +15,25 @@ import (
 )
 
 type Seleni struct {
+	Name         string
+	Config       map[string]interface{}
 	Type         string
 	DriverPath   string
 	SeleniumPath string
 	Port         int
 	Output       io.Writer
 	service      *selenium.Service
+	Headless     bool
 }
 
 func (o *Seleni) initDefault() {
-	var g = global.GetInstance()
-	var config = g.Config
-	var opts = util.GetMap(config, true, "selenium")
-	o.Type = util.GetStr(opts, "chrome", "type")
-	o.Port = util.GetInt(opts, 60000, "port")
+
+	var opts = o.Config
+	o.Type = util.GetStr(opts, "firefox", "type")
+	o.Port = util.GetInt(opts, 60001, "port")
 	o.SeleniumPath = util.GetStr(opts, "selenium-server.jar", "path")
 	o.DriverPath = util.GetStr(opts, "", "driver")
-
-	// TODO port check
+	o.Headless = util.GetBool(opts, true, "headless")
 
 	if o.DriverPath == "" {
 		if o.Type == "chrome" {
@@ -94,14 +94,16 @@ func (o *Seleni) InitDriver() (driver selenium.WebDriver, err error) {
 		browserName = "firefox"
 	}
 	caps := selenium.Capabilities{"browserName": browserName}
-	if o.Type == "chrome" {
-		caps.AddChrome(chrome.Capabilities{
-			Args: []string{"headless"},
-		})
-	} else {
-		caps.AddFirefox(firefox.Capabilities{
-			Args: []string{"-headless"},
-		})
+	if o.Headless {
+		if o.Type == "chrome" {
+			caps.AddChrome(chrome.Capabilities{
+				Args: []string{"headless"},
+			})
+		} else {
+			caps.AddFirefox(firefox.Capabilities{
+				Args: []string{"-headless"},
+			})
+		}
 	}
 	var url = fmt.Sprintf("http://localhost:%d/wd/hub", o.Port)
 	driver, err = selenium.NewRemote(caps, url)

@@ -25,12 +25,15 @@ function M:request(opts, data, result)
 
     local count = 1
     local reqopts = {}
-    
-    local url = url_prefix..opts.code..url_suffix
-    local reqopt = {}
-    reqopt["url"] = url
-    reqopts[1] = reqopt
-    
+    for page = opts.from, opts.to do
+        local url = url_prefix..page..url_suffix
+        local reqopt = {}
+        reqopt["url"] = url
+        reqopts[count] = reqopt
+        count = count + 1
+    end
+
+    count = count - 1
 
     local err
     local browser = Q[opts.browser]
@@ -51,20 +54,16 @@ function M:request(opts, data, result)
         print("[request] fatal", err)
     end
 
-    reqopt = reqopts[1]
-    print(reqopt["content"])
-    
+    for i = 1, count do
+        local reqopt = reqopts[i]
+        self:parse_html(opts, data, result, reqopt)
+    end
+
+
+
     return result
+
 end
-
-local opts = {}
-opts.browser = "chrome"
-opts.concurrent = 1
-opts.newsession = false
-
-opts.code = "000001"
-
-M:request(opts)
 
 -------------------------------------------------------------------------------------------
 function M:parse_html(opts, data, result, reqopt)
@@ -330,4 +329,4 @@ function M:go(opts)
     return data, result
 end
 
---return M
+return M

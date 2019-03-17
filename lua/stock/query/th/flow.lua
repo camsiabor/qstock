@@ -10,14 +10,14 @@ opts.debug = false
 opts.browser = "firefox"
 
 opts.from = 1
-opts.to = 1
+opts.to = 50
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = false
 opts.persist = true
 
 opts.dofetch = false
-opts.date_offset = 0
+opts.date_offset = -1
 
 opts.pagesize = 50
 opts.ch_lower = -2.5

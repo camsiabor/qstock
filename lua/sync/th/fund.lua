@@ -31,12 +31,13 @@ function M:request(opts, data, result)
     
     for i = 1, count do
         local code = codes[i]
-
-        local url = url_prefix..code..url_suffix
-        local reqopt = {}
-        reqopt["code"] = code
-        reqopt["url"] = url
-        reqopts[i] = reqopt
+        if code ~= nil then
+            local url = url_prefix..code..url_suffix
+            local reqopt = {}
+            reqopt["code"] = code
+            reqopt["url"] = url
+            reqopts[i] = reqopt
+        end
     end
 
     local err
@@ -51,7 +52,9 @@ function M:request(opts, data, result)
 
     for i = 1, count do
         local reqopt = reqopts[i]
-        M:parse_html(opts, data, result, reqopt)
+        if reqopt ~= nil then
+            M:parse_html(opts, data, result, reqopt)
+        end
     end
 
     return result
@@ -283,7 +286,9 @@ function M:go(opts)
     local codes = opts.codes
     for i = 1, #codes do
         local code = codes[i]
-        codes[i] = string.gsub(code, "ch", "")
+        if code ~= nil then
+            codes[i] = string.gsub(code, "ch", "")
+        end
     end
 
 

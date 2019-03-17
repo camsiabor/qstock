@@ -272,6 +272,11 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	o.RespJson(code, data, c)
 }
 
+func wcall(L *lua.State) int {
+
+	return 0
+}
+
 func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *gin.Context) {
 
 	var scriptname = util.GetStr(m, "", "path")

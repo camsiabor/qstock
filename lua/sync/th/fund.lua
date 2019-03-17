@@ -128,7 +128,7 @@ function M:parse_html(opts, data, result, reqopt)
     one.flows = {}
     one.code = reqopt["code"]
     data[#data + 1] = one
-    
+    Qrace(one.code)
     for i = 3, tr_count do
 
         local tr = htable.tr[i]
@@ -153,8 +153,10 @@ function M:parse_html(opts, data, result, reqopt)
         big = simple.numcon((big + 0) / 10000)
         mid = simple.numcon((mid + 0) / 10000)
         tin = simple.numcon((tin + 0) / 10000)
-        
+
+
         change_rate = simple.percent2num(change_rate)
+
         big_r = simple.percent2num(big_r)
         mid_r = simple.percent2num(mid_r)
         tin_r = simple.percent2num(tin_r)

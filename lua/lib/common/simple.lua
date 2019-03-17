@@ -33,8 +33,15 @@ function simple.nozero(num)
     return num
 end
 
-function simple.percent2num(pencentstr)
-    return string.gsub(pencentstr, "%%", "") + 0
+function simple.percent2num(percentstr)
+    percentstr = string.gsub(percentstr, "%%", "")
+    if percentstr == "" then
+        return 0
+    end
+    if percentstr == "-" or percentstr == "+"  then
+        return 0
+    end
+    return percentstr + 0
 end
 
 function simple.table_sort(t, field)

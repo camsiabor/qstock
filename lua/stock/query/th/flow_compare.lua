@@ -56,28 +56,30 @@ end
 
 local results = {}
 local results_map_array = {}
-local date_offset = 0
+local date_offset = -daycount + 1
 for _ = 1, daycount do
+    opts.data = {}
+    opts.result = {}
     opts.date_offset = date_offset
     mod_th_flow_inst:go(opts)
     results[#results + 1] = opts.result
     results_map_array[#results_map_array + 1] = simple.array_to_map(opts.result, "code")
     print("date_offset", date_offset, "result count", #opts.result)
-    date_offset = date_offset - 1
+    date_offset = date_offset + 1
 end
 
 ---------------------------------------------------------------------------------------------------
 
 
 local complex = {}
-simple.maps_intersect(results_map_array, function (result_maps, key)
-    for i = #result_maps, 1, -1 do
-        local result_map = result_maps[i]
-        local v = result_map[key]
+simple.maps_intersect(results_map_array, function (maps, key)
+    for i = 1, #maps do
+        local map = maps[i]
+        local v = map[key]
         complex[#complex + 1] = v
     end
 end)
-print("complex", #complex)
+print("complex", #complex / 2)
 
 mod_th_flow_inst:print_data(opts, complex)
 

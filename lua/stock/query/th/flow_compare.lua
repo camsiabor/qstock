@@ -7,6 +7,7 @@ local mod_th_flow_inst = mod_th_flow:new()
 
 
 local daycount = 2
+local dofetchcurr = false
 
 local opts = {}
 opts.data = {}
@@ -54,17 +55,28 @@ opts.filter = function(opts, data, result)
     end
 end
 
+-----------------------------------------------------------------------------------------
+
 local results = {}
 local results_map_array = {}
 local date_offset = -daycount + 1
-for _ = 1, daycount do
+for i = 1, daycount do
     opts.data = {}
     opts.result = {}
+    opts.dofetch = false
     opts.date_offset = date_offset
+    
+    if dofetchcurr and i == 1 then
+        opts.dofetch = true
+    end
+    
     mod_th_flow_inst:go(opts)
+    
     results[#results + 1] = opts.result
     results_map_array[#results_map_array + 1] = simple.array_to_map(opts.result, "code")
+    
     print("date_offset", date_offset, "result count", #opts.result)
+    
     date_offset = date_offset + 1
 end
 
@@ -79,8 +91,7 @@ simple.maps_intersect(results_map_array, function (maps, key)
         complex[#complex + 1] = v
     end
 end)
-print("complex", #complex / 2)
+
+print("intersect", #complex / 2)
 
 mod_th_flow_inst:print_data(opts, complex)
-
---simple.table_print_all(complex)

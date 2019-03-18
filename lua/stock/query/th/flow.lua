@@ -12,14 +12,14 @@ opts.loglevel = 0
 opts.browser = "firefox"
 
 opts.from = 1
-opts.to = 50
+opts.to = 71
 opts.nice = 0
 opts.concurrent = 1
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = true
-opts.date_offset = 0
+opts.dofetch = false
+opts.date_offset = -1
 
 opts.pagesize = 71
 opts.ch_lower = -2.5
@@ -40,9 +40,9 @@ opts.filter_balance_io_rate = function(opts, data, result)
     for i = 1, n do
         local one = data[i]
         local critical = 
-            one.flow_io_rate >= 0.9 and one.flow_io_rate <= 1.1 
-            and one.flow_big_in_rate >= 10
-            and one.change_rate >= -1.5 and one.change_rate <= 1.5
+            one.flow_io_rate >= 1 
+            and one.flow_big_in_rate >= 30
+            and one.change_rate >= -1.5 and one.change_rate <= 5
         
         if critical then
             result[#result + 1] = one
@@ -50,6 +50,6 @@ opts.filter_balance_io_rate = function(opts, data, result)
     end
 end
 
---opts.filter = opts.filter_balance_io_rate
+opts.filter = opts.filter_balance_io_rate
 
 inst:go(opts)

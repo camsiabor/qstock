@@ -44,6 +44,17 @@ function simple.percent2num(percentstr)
     return percentstr + 0
 end
 
+function simple.table_clone(t)
+    if t == nil then
+        return nil
+    end
+    local clone = {}
+    for k, v in pairs(t) do
+        clone[k] = v
+    end
+    return clone
+end
+
 function simple.table_sort(t, field)
     local n = #t
     for i = 1, n do

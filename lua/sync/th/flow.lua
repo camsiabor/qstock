@@ -340,8 +340,14 @@ end
 ------------------------------------------------------------------------------------------
 
 function M:go(opts)
-    local data = {}
-    local result = {}
+    local data = opts.data
+    local result = opts.result
+    if data == nil then
+        data = {}
+    end
+    if result == nil then
+        result = {}
+    end
     if opts.dofetch then
         self:request(opts, data, result)
         self:persist(opts, data)

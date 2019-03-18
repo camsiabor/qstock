@@ -306,11 +306,11 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 				var pan = recover()
 				if pan == nil {
 					if loglevel >= 0 {
-						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", pan)
+						qlog.Log(qlog.INFO, "httpagent", "one concurrent error", pan)
 					}
 				} else {
 					if loglevel >= 0 {
-						qlog.Log(qlog.INFO, "httpagent", "one concurrent done", index)
+						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", index)
 					}
 				}
 			}()

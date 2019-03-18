@@ -14,11 +14,11 @@ opts.browser = "firefox"
 opts.from = 1
 opts.to = 71
 opts.nice = 0
-opts.concurrent = 1
+opts.concurrent = 5
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = false
+opts.dofetch = true
 opts.date_offset = -1
 
 opts.pagesize = 71

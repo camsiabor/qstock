@@ -133,6 +133,10 @@ function M:parse_html(opts, data, result, reqopt)
 
         amount = simple.str2num(amount)
 
+        if amount <= 0 then
+            amount = 0.0001
+        end
+
         local flow_big_rate = flow_big / amount * 100
         local flow_big_rate_compare = flow / flow_big
         local flow_big_rate_total = turnover * flow_big_rate / 100
@@ -218,14 +222,14 @@ function M:persist(opts, data)
     local pagesize = 50
 
     local n = #data
-    print("[persist] data count", n)
+    print("[persist]", datestr , "data count", n)
     for i = 1, n do
         pageone[#pageone + 1] = data[i]
         if (i % 50 == 0) or (i == n) then
             local jsonstr = json.encode(pageone)
             --print(jsonstr)
             local key = self:keygen(opts, page)
-            _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
+            local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
             if err == nil then
                 if opts.debug then
                     print("[persist]", datestr, key, #pageone)

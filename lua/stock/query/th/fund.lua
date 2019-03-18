@@ -5,7 +5,7 @@ local cache_code = Q.cachem.Get("stock.code");
 local codes = cache_code.Get(false, "sh");
 local codes_fragment = {}
 
-for i = 501, #codes do
+for i = 1, #codes do
     codes_fragment[#codes_fragment + 1] = codes[i]
 end
 
@@ -21,7 +21,7 @@ print(#opts.codes)
 opts.concurrent = 20
 opts.newsession = false
 
-opts.dofetch = true
+opts.dofetch = false
 
 opts.db = "flow"
 opts.persist = true

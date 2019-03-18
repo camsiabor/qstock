@@ -18,10 +18,10 @@ opts.concurrent = 1
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = false
-opts.date_offset = -1
+opts.dofetch = true
+opts.date_offset = 0
 
-opts.pagesize = 50
+opts.pagesize = 71
 opts.ch_lower = -2.5
 opts.ch_upper = 6
 opts.big_c_lower = 0.2

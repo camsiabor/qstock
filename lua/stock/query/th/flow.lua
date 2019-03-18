@@ -2,8 +2,8 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
 
-local thflow = require("sync.th.flow")
-local inst = thflow:new()
+local th_mod_flow = require("sync.th.mod_flow")
+local th_mod_flow_inst = th_mod_flow:new()
 
 local opts = {}
 
@@ -52,4 +52,4 @@ end
 
 opts.filter = opts.filter_balance_io_rate
 
-inst:go(opts)
+th_mod_flow_inst:go(opts)

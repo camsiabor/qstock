@@ -358,12 +358,18 @@ function M:go(opts)
     if opts.filter == nil then
         self:filter(opts, data, result)
     else
-        opts.filter(opts, data, result)
+        simple.func_call(opts.filter, opts, data, result)
     end
 
     simple.table_sort(result, opts.sort_field)
 
-    self:print_data(opts, result)
+
+    if opts.print_data == nil then
+        self:print_data(opts, result)
+    else
+        simple.func_call(opts.print_data, opts, result)
+    end
+
     return data, result
 end
 

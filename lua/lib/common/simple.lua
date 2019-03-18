@@ -69,6 +69,13 @@ function simple.table_sort(t, field)
     end
 end
 
+
+function simple.table_print_all(obj)
+    for k, v in pairs(obj) do
+        print(k, v)
+    end
+end
+
 function simple.table_print(obj, fields, suffix)
     local n = #fields
     for i = 1, n do
@@ -79,6 +86,17 @@ function simple.table_print(obj, fields, suffix)
     if suffix ~= nil then
         printex(suffix)
     end
+end
+
+
+function simple.func_call(func, ...)
+    if func == nil then
+        return nil
+    end
+    if type(func) == "function" then
+        return func(...)
+    end
+    return nil
 end
 
 function simple.table_array_print(array, fields, delimiter, suffix)
@@ -137,6 +155,58 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
         printex(suffix)
     end
 
+end
+
+function simple.map_to_array(map)
+    local i = 1
+    local array = {}
+    for _, v in pairs(map) do
+        if v ~= nil then
+            array[i] = v
+            i = i + 1
+        end
+    end
+    return array
+end
+
+
+function simple.array_to_map(array, field)
+    local map = {}
+    local n = #array
+    for i = 1, n do
+        local one = array[i]
+        if one ~= nil then
+            local key = one[field]
+            if key ~= nil then
+                map[key] = one
+            end
+        end
+    end
+    return map
+end
+
+function simple.maps_intersect(maps, callback, ...)
+    local n = 0
+    local m1 = maps[1]
+    local mcount = #maps
+    for k, v1 in pairs(m1) do
+
+        local intersect = true
+        for i = 2, mcount do
+            local m = maps[i]
+            local vn = m[k]
+            if vn == nil then
+                intersect = false
+                break
+            end
+        end
+
+        if intersect then
+            n = n + 1
+            callback(maps, k, n)
+        end
+    end
+    return n
 end
 
 return simple

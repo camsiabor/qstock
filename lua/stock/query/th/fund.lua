@@ -1,5 +1,5 @@
-local mod_th_fund = require("sync.th.fund")
-local inst = mod_th_fund:new()
+local th_mod_fund = require("sync.th.mod_fund")
+local th_mod_fund_inst = th_mod_fund:new()
 
 local cache_code = Q.cachem.Get("stock.code");
 local codes = cache_code.Get(false, "sh");
@@ -40,4 +40,4 @@ opts.print_data2 = function()
 end
 
 
-inst:go(opts, data, result)
+th_mod_fund_inst:go(opts, data, result)

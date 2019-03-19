@@ -257,6 +257,7 @@ function M:reload(opts, data, result)
     local db = opts.db
     local dao = Q.daom.Get("main")
 
+    print("[reload]", datestr)
     for page = opts.from, opts.to do
         local key = self:keygen(opts, page)
         local datastr, err = dao.Get(db, datestr, key, 0, nil)
@@ -324,8 +325,8 @@ function M:print_data(opts, data)
         headers = opts.print_headers
     end
 
-    local from = opts.print_from
-    local to = opts.print_to
+    local from = opts.print_data_from
+    local to = opts.print_data_to
     if from == nil then
         from = 1
     end

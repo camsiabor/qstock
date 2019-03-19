@@ -24,7 +24,7 @@ opts.concurr = 1
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = false
+opts.dofetch = true
 opts.date_offset = 0
 
 opts.pagesize = 71
@@ -46,9 +46,15 @@ opts.filter = function(opts, data, result)
     for i = 1, n do
         local one = data[i]
         local critical =
-        one.flow_io_rate >= 1.25
-                and one.flow_big_in_rate >= 30
-                and one.change_rate >= -1.5 and one.change_rate <= 5
+                (
+                    one.flow_io_rate >= 1.25
+                    and one.flow_big_in_rate >= 35
+                    and one.change_rate >= -1.5 and one.change_rate <= 6.5
+                )
+                or
+                (
+                    one.flow_io_rate >= 1.75
+                )
         if critical then
             result[#result + 1] = one
         end
@@ -81,7 +87,8 @@ for i = 1, daycount do
 end
 
 ---------------------------------------------------------------------------------------------------
-
+print(results_map_array[1]["002659"])
+print(results_map_array[2]["002659"])
 
 local complex = {}
 simple.maps_intersect(results_map_array, function (maps, key)

@@ -74,7 +74,7 @@ function M:parse_html(opts, data, result, reqopt)
         return
     end
     
-    
+    Qrace({ reqopt["code"], opts["i"] })
     -- html = string.gsub(html, "<!DOCTYPE html>", "")
 
     local tag_start = '<table class="m_table_3">'
@@ -128,7 +128,7 @@ function M:parse_html(opts, data, result, reqopt)
     one.flows = {}
     one.code = reqopt["code"]
     data[#data + 1] = one
-    Qrace(one.code)
+    --Qrace(one.code)
     for i = 3, tr_count do
 
         local tr = htable.tr[i]
@@ -265,8 +265,8 @@ function M:print_data(opts, data)
         headers = opts.print_headers
     end
 
-    local from = opts.print_from
-    local to = opts.print_to
+    local from = opts.print_data_from
+    local to = opts.print_data_to
     if from == nil then
         from = 1
     end
@@ -304,7 +304,7 @@ function M:go(opts)
     if opts.filter == nil then
         self:filter(opts, data, result)
     else
-        opts.filter(opts, data, result)
+        simple.func_call(opts.filter, opts, data, result)
     end
 
     --simple.table_sort(result, opts.sort_field)
@@ -319,7 +319,7 @@ function M:go(opts)
         if opts.print_data == nil then
             self:print_data(opts, flows)
         else
-            opts.print_data(opts, flows)
+            simple.func_call(opts.print_data, opts, flows)
         end
     end
 

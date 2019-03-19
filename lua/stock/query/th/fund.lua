@@ -1,43 +1,49 @@
 local th_mod_fund = require("sync.th.mod_fund")
 local th_mod_fund_inst = th_mod_fund:new()
 
-local cache_code = Q.cachem.Get("stock.code");
-local codes = cache_code.Get(false, "sh");
-local codes_fragment = {}
 
-for i = 1, #codes do
-    codes_fragment[#codes_fragment + 1] = codes[i]
-end
+local cache_code = Q.cachem.Get("stock.code");
+local codes = cache_code.Get(false, "sz");
+
+-------------------------------------------------------------------------------------
+
+local fetch_from = 1
+local fetch_to = 0
+local fetch_each = 50
 
 local data = {}
 local result = {}
 local opts = {}
 opts.loglevel = 0
 opts.browser = "wget"
-opts.codes = codes_fragment
 
-print(#opts.codes)
-
-opts.concurrent = 20
+opts.concurrent = 5
 opts.newsession = false
 
-opts.dofetch = false
+opts.dofetch = true
 
 opts.db = "flow"
 opts.persist = true
-opts.print_from = 1
-opts.print_to = 1
+opts.print_data_from = 1
+opts.print_data_to = 1
 
-opts.filter2 = function(opts, data, result)
-    local n = #data
-    for i = 1, n do
-        local one = data[i]
+---------------------------------------------------------------------------------------------
+
+
+
+local fragment = {}
+if fetch_to <= 0 then
+    fetch_to = #codes
+end
+for i = fetch_from, fetch_to do
+    local code = codes[i]
+    fragment[#fragment + 1] = code
+    if i == fetch_to or i % fetch_each == 0 then
+        opts.i = i
+        opts.codes = fragment
+        th_mod_fund_inst:go(opts, data, result)
+        fragment = {}
     end
 end
 
-opts.print_data2 = function()
-
-end
-
-
-th_mod_fund_inst:go(opts, data, result)
+print("[fetch] from " .. fetch_from .. " to " .. fetch_to)

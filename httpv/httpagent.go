@@ -138,17 +138,24 @@ func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err er
 	drivers = make([]selenium.WebDriver, count)
 
 	defer func() {
-		var pan = recover()
-		if pan != nil {
+		if err != nil {
 			o.ReleaseDrivers(drivers)
 		}
 	}()
+
+	var waitgroup = sync.WaitGroup{}
 	for i := 0; i < count; i++ {
-		drivers[i], err = o.InitDriver()
-		if err != nil {
-			panic(err)
-		}
+		go func() {
+			defer waitgroup.Done()
+			var errone error
+			drivers[i], errone = o.InitDriver()
+			if errone != nil && err == nil {
+				err = errone
+			}
+		}()
 	}
+	waitgroup.Wait()
+
 	return drivers, err
 }
 
@@ -306,11 +313,11 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 				var pan = recover()
 				if pan == nil {
 					if loglevel >= 0 {
-						qlog.Log(qlog.INFO, "httpagent", "one concurrent error", pan)
+						qlog.Log(qlog.INFO, "httpagent", "one concurrent done", index)
 					}
 				} else {
 					if loglevel >= 0 {
-						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", index)
+						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", pan)
 					}
 				}
 			}()

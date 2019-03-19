@@ -40,13 +40,14 @@ opts.sort_field = "flow_big_rate_cross_ex"
 local filter_as_single = false
 
 opts.filter_high_io = function(opts, data, result)
-    
+    print("[filter] high io")
     
     local n = #data
     for i = 1, n do
         local one = data[i]
         local critical = 
-            one.flow_io_rate >= 2 and one.turnover >= 1
+            --one.flow_io_rate >= 1 and one.flow_big_in_rate >= 60
+            one.flow_io_rate >= 1.75 and one.turnover >= 1
         if critical then
             result[#result + 1] = one
         end
@@ -55,6 +56,7 @@ end
 
 
 opts.filter_single_force = function(opts, data, result)
+    print("[filter] single force")
     local n = #data
     for i = 1, n do
         local one = data[i]
@@ -73,7 +75,8 @@ opts.filter_single_force = function(opts, data, result)
     end
 end
 
-opts.filter_single_force = function(opts, data, result)
+opts.filter_multi_force = function(opts, data, result)
+    print("[filter] multi force")
     local n = #data
     for i = 1, n do
         local one = data[i]
@@ -92,6 +95,26 @@ opts.filter_single_force = function(opts, data, result)
     end
 end
 
+opts.filter_moderate = function(opts, data, result)
+    print("[filter] moderate")
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local critical = 
+            ( one.change_rate >= 1.5 and one.change_rate <= 6.5 )
+            and
+            (
+                one.flow_io_rate >= 1.25
+                and one.flow_big_in_rate >= 25
+            )
+        
+        if critical then
+            result[#result + 1] = one
+        end
+    end
+end
+
+--opts.filter = opts.filter_moderate
 opts.filter = opts.filter_high_io
 --opts.filter = opts.fitler_single_force
 --opts.filter = opts.fitler_multi_force

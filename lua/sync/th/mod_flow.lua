@@ -246,10 +246,14 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function M:reload(opts, data)
+function M:reload(opts, data, as_array)
 
     if opts.date_offset == nil then
         opts.date_offset = 0
+    end
+
+    if as_array == nil then
+        as_array = true
     end
 
     local dates = Q.calendar.List(0, opts.date_offset, 0, true)
@@ -272,16 +276,23 @@ function M:reload(opts, data)
 
             local include_all = opts.reload_keys == nil
             local reload_keys = opts.reload_keys
+
             for i = 1, n do
                 local one = fragment[i]
-                if include_all then
-                    data[#data + 1] = one
-                else
-                    local code = one.code
-                    if reload_keys[code] ~= nil then
+                local code = one.code
+                local include = include_all
+                if not include then
+                    include = reload_keys[code] ~= nil
+                end
+
+                if include then
+                    if as_array then
                         data[#data + 1] = one
+                    else
+                        data[code] = one
                     end
                 end
+
             end
         end
 
@@ -299,13 +310,13 @@ function M:reload_thereafter(opts, result)
     local reload_keys = {}
 
     for i = 1, #result do
-        local one = opts.result[i]
+        local one = result[i]
         reload_keys[#reload_keys + 1] = one.code
     end
 
     local opts_clone = opts
-    local thereafter_result = { opts.result }
-    for c = 1, opts.thereafter do
+    local thereafter_result_maps = {  }
+    for c = 1, opts.reload_thereafter do
         opts_clone = simple.table_clone(opts_clone)
         opts_clone.date_offset = opts_clone.date_offset + 1
         if opts_clone.date_offset > 0 then
@@ -313,12 +324,25 @@ function M:reload_thereafter(opts, result)
         end
         opts_clone.data = {}
         opts.reload_keys = reload_keys
-        self:reload(opts_clone, opts_clone.data)
-        thereafter_result[#thereafter_result + 1] = opts_clone.data
+        self:reload(opts_clone, opts_clone.data, false)
+        thereafter_result_maps[#thereafter_result_maps + 1] = opts_clone.data
     end
 
 
-    local result_intermix = simple.array_intermix(thereafter_result)
+    local result_intermix = { }
+
+    for i = 1, #result do
+        local one = result[i]
+        local code = one.code
+        result_intermix[#result_intermix + 1] = one
+        for n = 1, #thereafter_result_maps do
+            local thereafter_result_map = thereafter_result_maps[n]
+            local thereafter_one = thereafter_result_map[code]
+            if thereafter_one ~= nil then
+                result_intermix[#result_intermix + 1] = thereafter_one
+            end
+        end
+    end
 
     return result_intermix
 end
@@ -397,7 +421,7 @@ function M:go(opts)
         self:request(opts, data, result)
         self:persist(opts, data)
     else
-        self:reload(opts, data, result)
+        self:reload(opts, data)
     end
 
     if opts.filter == nil then

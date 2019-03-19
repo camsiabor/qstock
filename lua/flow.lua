@@ -21,7 +21,7 @@ opts.browser = "wget"
 opts.concurrent = 10
 opts.newsession = false
 
-opts.dofetch = true
+opts.dofetch = false
 
 opts.db = "flow"
 opts.persist = true

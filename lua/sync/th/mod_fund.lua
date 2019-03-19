@@ -226,6 +226,10 @@ function M:reload(opts, data, result)
 
     local db = opts.db
     local dao = Q.daom.Get("main")
+    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
+    local datestr = dates[1]
+
+    local find_not_curr = opts.find_not_curr
 
     local n = #opts.codes
     for i = 1, n do
@@ -242,6 +246,17 @@ function M:reload(opts, data, result)
         else
             local one = json.decode(datastr)
             data[#data + 1] = one
+
+            if find_not_curr then
+                local tdate = one.flows[1]["date"]
+                if tdate ~= datestr then
+                    if opts.codes_not_curr == nil then
+                        opts.codes_not_curr = {}
+                    end
+                    opts.codes_not_curr[#opts.codes_not_curr + 1] = one.code
+                end
+            end
+
         end
     end
 
@@ -309,6 +324,9 @@ function M:go(opts)
         self:persist(opts, data)
     else
         self:reload(opts, data, result)
+        if opts.find_not_curr then
+            return
+        end
     end
 
     if opts.filter == nil then

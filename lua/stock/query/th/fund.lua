@@ -28,9 +28,29 @@ opts.persist = true
 opts.print_data_from = 1
 opts.print_data_to = 1
 
+opts.find_not_curr = true
+opts.codes_not_curr = {}
+
 ---------------------------------------------------------------------------------------------
 
-
+if opts.find_not_curr then
+    opts.codes = codes
+    opts.dofetch = false
+    th_mod_fund_inst:go(opts, data, result)
+    
+    opts.fid_not_curr = false
+    local n = #opts.codes_not_curr
+    print("codes not current count", n)
+    if n > 0 then
+        -- refetch not current data
+        for i = 1, n do
+            codes = opts.codes_not_curr
+        end
+        opts.data = {}
+        opts.result = {}
+        opts.dofetch = true
+    end
+end
 
 local fragment = {}
 if fetch_to <= 0 then

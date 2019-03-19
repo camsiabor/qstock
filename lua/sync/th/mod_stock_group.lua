@@ -1,21 +1,7 @@
--- http://data.10jqka.com.cn/funds/ggzjl/
--- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
+-- http://q.10jqka.com.cn/gn/detail/code/301365/
+-- http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/2/ajax/1/code/304582
 
-
---[[
-     1序号
-    2股票代码
-    3股票简称
-    4最新价
-    5涨跌幅
-    6换手率
-    7流入资金(元)
-    8流出资金(元)
-    9净额(元)
-    10成交额(元)
-    11大单流入(元)
-]]--
 
 local M = {}
 M.__index = M
@@ -246,7 +232,7 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function M:reload(opts, data)
+function M:reload(opts, data, result)
 
     if opts.date_offset == nil then
         opts.date_offset = 0
@@ -269,58 +255,13 @@ function M:reload(opts, data)
         else
             local fragment = json.decode(datastr)
             local n = #fragment
-
-            local include_all = opts.reload_keys == nil
-            local reload_keys = opts.reload_keys
             for i = 1, n do
-                local one = fragment[i]
-                if include_all then
-                    data[#data + 1] = one
-                else
-                    local code = one.code
-                    if reload_keys[code] ~= nil then
-                        data[#data + 1] = one
-                    end
-                end
+                data[#data + 1] = fragment[i]
             end
         end
 
     end
 
-end
-
-
-function M:reload_thereafter(opts, result)
-
-    if opts.reload_thereafter == nil or opts.reload_thereafter <= 0 then
-        return result
-    end
-
-    local reload_keys = {}
-
-    for i = 1, #result do
-        local one = opts.result[i]
-        reload_keys[#reload_keys + 1] = one.code
-    end
-
-    local opts_clone = opts
-    local thereafter_result = { opts.result }
-    for c = 1, opts.thereafter do
-        opts_clone = simple.table_clone(opts_clone)
-        opts_clone.date_offset = opts_clone.date_offset + 1
-        if opts_clone.date_offset > 0 then
-            break
-        end
-        opts_clone.data = {}
-        opts.reload_keys = reload_keys
-        self:reload(opts_clone, opts_clone.data)
-        thereafter_result[#thereafter_result + 1] = opts_clone.data
-    end
-
-
-    local result_intermix = simple.array_intermix(thereafter_result)
-
-    return result_intermix
 end
 
 
@@ -339,26 +280,28 @@ function M:filter(opts, data, result)
         end
     end
 
+
+
 end
 
 -------------------------------------------------------------------------------------------
 function M:print_data(opts, data)
 
     local fields =
-        {
-            "index", "code", "name", "change_rate", "turnover",
-            "flow_io_rate", "flow_in_rate",
-            "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
-            "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big"
-        }
+    {
+        "index", "code", "name", "change_rate", "turnover",
+        "flow_io_rate", "flow_in_rate",
+        "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
+        "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big"
+    }
 
     local headers =
-        {
-            "i", "code", "name", "ch", "turn",
-            "io", "in",
-            "big_in", "big_r", "big_t", "big_c",
-            "cross", "crossex", "big"
-        }
+    {
+        "i", "code", "name", "ch", "turn",
+        "io", "in",
+        "big_in", "big_r", "big_t", "big_c",
+        "cross", "crossex", "big"
+    }
 
     if opts.print_fields ~= nil then
         fields = opts.print_fields
@@ -379,7 +322,6 @@ function M:print_data(opts, data)
 
     simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n")
 end
-
 
 
 ------------------------------------------------------------------------------------------
@@ -408,7 +350,6 @@ function M:go(opts)
 
     simple.table_sort(result, opts.sort_field)
 
-    result = self:reload_thereafter(opts, result)
 
     if opts.print_data == nil then
         self:print_data(opts, result)

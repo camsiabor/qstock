@@ -6,7 +6,7 @@ local mod_th_flow = require("sync.th.mod_flow")
 local mod_th_flow_inst = mod_th_flow:new()
 
 
-local daycount = 2
+local daycount = 3
 local dofetchcurr = false
 
 local opts = {}
@@ -60,6 +60,21 @@ opts.filter = function(opts, data, result)
         end
     end
 end
+
+opts.filter_high_io = function(opts, data, result)
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local critical =
+                    one.flow_io_rate >= 1.5
+                
+        if critical then
+            result[#result + 1] = one
+        end
+    end
+end
+
+opts.filter = opts.filter_high_io
 
 -----------------------------------------------------------------------------------------
 

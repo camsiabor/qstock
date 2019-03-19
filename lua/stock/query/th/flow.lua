@@ -19,7 +19,7 @@ opts.newsession = false
 opts.persist = true
 
 opts.dofetch = false
-opts.date_offset = -1
+opts.date_offset = -2
 
 opts.pagesize = 71
 opts.ch_lower = -1
@@ -32,9 +32,24 @@ opts.datasrc = "th"
 opts.field = "zjjlr"
 opts.order = "desc"
 
+opts.reload_thereafter = 1
+
 opts.sort_field = "flow_big_rate_cross_ex"
 
 local filter_as_single = false
+
+opts.filter_high_io = function(opts, data, result)
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local critical = 
+            ( one.flow_io_rate >= 1.75)
+        if critical then
+            result[#result + 1] = one
+        end
+    end
+end
+
 
 opts.filter_single_force = function(opts, data, result)
     local n = #data
@@ -74,9 +89,8 @@ opts.filter_single_force = function(opts, data, result)
     end
 end
 
-if filter_as_single then
-    opts.filter = opts.filter_single_force
-else
-    opts.filter = opts.filter_multi_force
-end
+opts.filter = opts.fitler_high_io
+--opts.filter = opts.fitler_single_force
+--opts.filter = opts.fitler_multi_force
+
 th_mod_flow_inst:go(opts)

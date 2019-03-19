@@ -185,6 +185,22 @@ function simple.array_to_map(array, field)
     return map
 end
 
+function simple.array_intermix(arrays)
+    local n = #arrays[1]
+    local arraycount = #arrays
+    local result = {}
+    for i = 1, n do
+        for a = 1, arraycount do
+            local array = arrays[a]
+            local one = array[i]
+            if one ~= nil then
+                result[#result + 1] = one
+            end
+        end
+    end
+    return result
+end
+
 function simple.maps_intersect(maps, callback, ...)
     local n = 0
     local m1 = maps[1]

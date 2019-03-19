@@ -138,7 +138,9 @@ func initSyncer(g *global.G) {
 
 func initHttpClient(g *global.G) {
 
-	g.SetData("http", qnet.GetSimpleHttp())
+	var simpleHttp = qnet.GetSimpleHttp()
+	simpleHttp.InitClients(12, 15)
+	g.SetData("http", simpleHttp)
 
 	var seleniumConfig = util.GetMap(g.Config, true, "httpclient")
 

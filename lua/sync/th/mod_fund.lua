@@ -28,7 +28,7 @@ function M:request(opts, data, result)
 
     local codes = opts.codes
     local count = #codes
-    
+
     for i = 1, count do
         local code = codes[i]
         if code ~= nil then
@@ -42,8 +42,6 @@ function M:request(opts, data, result)
 
     local err
     local browser = Q[opts.browser]
-    
-    
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
@@ -74,12 +72,24 @@ function M:parse_html(opts, data, result, reqopt)
         return
     end
     
-    Qrace({ reqopt["code"], opts["i"] })
-    -- html = string.gsub(html, "<!DOCTYPE html>", "")
 
+    -- html = string.gsub(html, "<!DOCTYPE html>", "")
+    local code = reqopt["code"]
+    local code_index = opts["i"]
     local tag_start = '<table class="m_table_3">'
     local tag_end = '</table>'
-    local index = string.find(html, tag_start)   
+
+    Qrace({ code, code_index, html })
+
+    local index = string.find(html, tag_start)
+    if index == nil then
+        if opts.failure == nil then
+            opts.failure = {}
+        end
+        opts.failure[#opts.failure + 1] = code
+        return
+    end
+
     html = string.sub(html, index, #html)
     index = string.find(html, tag_end)
     html = string.sub(html, 1, index + #tag_end)

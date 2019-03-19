@@ -38,7 +38,7 @@ func (o *HttpAgent) initDefault() {
 	o.DriverPath = util.GetStr(opts, "", "driver")
 	o.Headless = util.GetBool(opts, true, "headless")
 
-	if o.Type == "wget" {
+	if o.Type == "" || o.Type == "wget" {
 		o.simpleClient = qnet.GetSimpleHttp()
 		return
 	}
@@ -64,7 +64,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 	o.initDefault()
 
-	if o.Type == "wget" {
+	if o.Type == "" || o.Type == "wget" {
 		return
 	}
 
@@ -99,7 +99,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 
-	if o.Type == "wget" {
+	if o.Type == "" || o.Type == "wget" {
 		return nil, nil
 	}
 
@@ -137,6 +137,10 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err error) {
 	drivers = make([]selenium.WebDriver, count)
 
+	if o.Type == "" || o.Type == "wget" {
+		return drivers, nil
+	}
+
 	defer func() {
 		if err != nil {
 			o.ReleaseDrivers(drivers)
@@ -144,15 +148,16 @@ func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err er
 	}()
 
 	var waitgroup = sync.WaitGroup{}
+	waitgroup.Add(count)
 	for i := 0; i < count; i++ {
-		go func() {
+		go func(i int) {
 			defer waitgroup.Done()
 			var errone error
 			drivers[i], errone = o.InitDriver()
 			if errone != nil && err == nil {
 				err = errone
 			}
-		}()
+		}(i)
 	}
 	waitgroup.Wait()
 
@@ -201,9 +206,12 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		if o.Type == "wget" {
+		if o.Type == "" || o.Type == "wget" {
 			var encoding = util.GetStr(one, "utf-8", "encoding")
 			var headers = util.GetStringMap(one, false, "headers")
+			if o.simpleClient == nil {
+				o.simpleClient = qnet.GetSimpleHttp()
+			}
 			html, _, errget = o.simpleClient.Get(url, headers, encoding)
 		} else {
 			errget = driver.Get(url)
@@ -219,7 +227,7 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		} else {
 			one["err"] = errget
 			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "fail", url)
+				qlog.Log(qlog.INFO, "httpagent", "fail", url, errget.Error())
 			}
 		}
 
@@ -239,9 +247,12 @@ func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string
 		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		if o.Type == "wget" {
+		if o.Type == "" || o.Type == "wget" {
 			var encoding = util.GetStr(opts, "utf-8", "encoding")
 			var headers = util.GetStringMap(opts, false, "headers")
+			if o.simpleClient == nil {
+				o.simpleClient = qnet.GetSimpleHttp()
+			}
 			html, _, errget = o.simpleClient.Get(url, headers, encoding)
 		} else {
 			errget = driver.Get(url)
@@ -317,6 +328,10 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 					}
 				} else {
 					if loglevel >= 0 {
+						var panerr, ok = pan.(error)
+						if ok {
+							pan = panerr.Error()
+						}
 						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", pan)
 					}
 				}

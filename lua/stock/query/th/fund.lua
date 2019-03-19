@@ -9,15 +9,16 @@ local codes = cache_code.Get(false, "sz");
 
 local fetch_from = 1
 local fetch_to = 0
-local fetch_each = 50
+local fetch_each = 10
 
 local data = {}
 local result = {}
 local opts = {}
 opts.loglevel = 0
-opts.browser = "wget"
+--opts.browser = "wget"
+opts.browser = "chrome"
 
-opts.concurrent = 5
+opts.concurrent = 1
 opts.newsession = false
 
 opts.dofetch = true

@@ -1,88 +1,50 @@
-print(" --------------------- what am i --------------------- ")
-local profile = Q.work.Profile
-local jsonlib = require("common.json")
+local th_mod_fund = require("sync.th.mod_fund")
+local th_mod_fund_inst = th_mod_fund:new()
 
 
-local api = profile["api"]
-print(api)
+local cache_code = Q.cachem.Get("stock.code");
+local codes = cache_code.Get(false, "sz");
 
-local data, err = Q.http.Post("http://www.baidu.com", nil, "", "")
+-------------------------------------------------------------------------------------
 
-if data ~= nil then
-    print(data)
+local fetch_from = 1
+local fetch_to = 0
+local fetch_each = 50
+
+local data = {}
+local result = {}
+local opts = {}
+opts.loglevel = 0
+opts.browser = "wget"
+--opts.browser = "chrome"
+
+opts.concurrent = 10
+opts.newsession = false
+
+opts.dofetch = true
+
+opts.db = "flow"
+opts.persist = true
+opts.print_data_from = 1
+opts.print_data_to = 1
+
+---------------------------------------------------------------------------------------------
+
+
+
+local fragment = {}
+if fetch_to <= 0 then
+    fetch_to = #codes
+end
+for i = fetch_from, fetch_to do
+    local code = codes[i]
+    fragment[#fragment + 1] = code
+    if i == fetch_to or i % fetch_each == 0 then
+        opts.i = i
+        opts.codes = fragment
+        th_mod_fund_inst:go(opts, data, result)
+        fragment = {}
+    end
 end
 
-if err ~= nil then
-    print(err)
-end
-
-
---[[
-if !o.doContinue {
-		return
-	}
-	var profile = work.Profile
-	var req = httplib.Post(o.domain)
-	var reqm = make(map[string]interface{})
-	var api = util.GetStr(profile, "", "api")
-
-	reqm["token"] = o.appsecret
-	reqm["api_name"] = api
-	if fields != nil && len(fields) > 0 {
-		reqm["fields"] = fields
-	}
-	reqm["params"] = requestargs
-	reqbody, err := json.Marshal(reqm)
-	if err != nil {
-		return
-	}
-	req.Body(reqbody)
-	var timeout = util.GetInt64(profile, 20, "timeout")
-	var nice = util.GetInt64(profile, 250, "nice")
-	req.SetTimeout(time.Duration(10)*time.Second, time.Duration(timeout)*time.Second)
-	if nice > 0 {
-		time.Sleep(time.Millisecond * time.Duration(nice))
-	}
-	httpresp, err := req.DoRequest()
-	if err != nil {
-		return
-	}
-	var m map[string]interface{}
-	var buffer = new(bytes.Buffer)
-	buffer.ReadFrom(httpresp.Body)
-	err = json.Unmarshal(buffer.Bytes(), &m)
-	if err != nil {
-		return nil, err
-	}
-
-	var retcode = util.GetInt(m, 0, "code")
-	if retcode != 0 {
-		var retmsg = util.GetStr(m, "", "msg")
-		return nil, errors.New(retmsg)
-	}
-
-	var data = util.GetMap(m, false, "data")
-	var cols = util.GetStringSlice(data, "fields")
-	var rows = util.GetSlice(data, "items")
-	var datalen = len(rows)
-	if datalen <= 0 {
-		return nil, nil
-	}
-	maps, err := util.ColRowToMaps(cols, rows)
-	if err != nil {
-		return nil, err
-	}
-	_, _, err = o.PersistAndCache(work, maps)
-	return maps, err
-]]--
-
-
-for k, v in pairs(profile) do
-    -- print(k, type(v))
-end
-
-local r = jsonlib.encode({ 1, 2, 3, { x = 10 } })
-
-print(" --------------------- what am i --------------------- ")
-
-return r
+print("[fetch] from " .. fetch_from .. " to " .. fetch_to)

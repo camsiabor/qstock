@@ -47,8 +47,8 @@ opts.filter = function(opts, data, result)
         local one = data[i]
         local critical =
                 (
-                    one.flow_io_rate >= 1.25
-                    and one.flow_big_in_rate >= 35
+                    one.flow_io_rate >= 1.1
+                    and one.flow_big_in_rate >= 20
                     and one.change_rate >= -1.5 and one.change_rate <= 6.5
                 )
                 or
@@ -87,18 +87,25 @@ for i = 1, daycount do
 end
 
 ---------------------------------------------------------------------------------------------------
-print(results_map_array[1]["002659"])
-print(results_map_array[2]["002659"])
 
 local complex = {}
 simple.maps_intersect(results_map_array, function (maps, key)
+    local cross_sum = 0
     for i = 1, #maps do
         local map = maps[i]
         local v = map[key]
+        cross_sum = cross_sum + v.flow_big_rate_cross
+    end
+    for i = 1, #maps do
+        local map = maps[i]
+        local v = map[key]
+        v.cross_sum = cross_sum
         complex[#complex + 1] = v
     end
 end)
 
 print("intersect", #complex / 2)
+
+simple.table_sort(complex, "cross_sum")
 
 mod_th_flow_inst:print_data(opts, complex)

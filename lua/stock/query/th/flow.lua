@@ -19,7 +19,7 @@ opts.newsession = false
 opts.persist = true
 
 opts.dofetch = false
-opts.date_offset = 0
+opts.date_offset = -1
 
 opts.pagesize = 71
 opts.ch_lower = -1

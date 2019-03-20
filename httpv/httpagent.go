@@ -29,9 +29,9 @@ type HttpAgent struct {
 	Config       map[string]interface{}
 }
 
-func (o *HttpAgent) initDefault() {
+func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 
-	var opts = o.Config
+	var opts = config
 	o.Type = util.GetStr(opts, "firefox", "type")
 	o.RemotePort = util.GetInt(opts, 60001, "port")
 	o.RemotePath = util.GetStr(opts, "selenium-server.jar", "path")
@@ -62,7 +62,7 @@ func (o *HttpAgent) initDefault() {
 
 func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
-	o.initDefault()
+	o.InitParameters(o.Config)
 
 	if o.Type == "" || o.Type == "wget" {
 		return

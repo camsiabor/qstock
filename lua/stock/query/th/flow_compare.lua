@@ -6,7 +6,7 @@ local mod_th_flow = require("sync.th.mod_flow")
 local mod_th_flow_inst = mod_th_flow:new()
 
 
-local daycount = 3
+local daycount = 2
 local dofetchcurr = false
 
 local opts = {}
@@ -20,7 +20,7 @@ opts.browser = "firefox"
 opts.from = 1
 opts.to = 71
 opts.nice = 0
-opts.concurr = 1
+opts.concurr = 2
 opts.newsession = false
 opts.persist = true
 

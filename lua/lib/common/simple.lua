@@ -201,6 +201,20 @@ function simple.array_intermix(arrays)
     return result
 end
 
+function simple.array_append(array, subarray)
+    if subarray == nil then
+        return array
+    end
+    local n = #subarray
+    for i = 1, n do
+        local one = subarray[i]
+        if one ~= nil then
+            array[#array + 1] = one
+        end
+    end
+    return array
+end
+
 function simple.maps_intersect(maps, callback, ...)
     local n = 0
     local m1 = maps[1]

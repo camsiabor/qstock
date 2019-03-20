@@ -307,7 +307,7 @@ function M:reloads(opts)
 
     local from = opts.date_offset + date_offset_to
     local to = opts.date_offset + date_offset_from
-    local currindex = (to - from) - date_offset_from + 1
+    local currindex = -date_offset_from + 1
 
     if to > 0 then
         to = 0
@@ -326,12 +326,12 @@ function M:reloads(opts)
     local data_curr = data_maps[currindex]
 
     local data_curr_count = #data_curr
-    local data_series_num = #data_maps
+    local data_maps_count = #data_maps
 
 
     local code_mapping
 
-    if data_series_num > 1 then
+    if data_maps_count > 1 then
 
         code_mapping = { }
 
@@ -342,12 +342,14 @@ function M:reloads(opts)
             local mapping_array = { }
             code_mapping[code] = mapping_array
 
-            for n = 1, data_series_num do
-                if n ~= currindex then
+            for n = 1, data_maps_count do
+                if n == currindex then
+                    mapping_array[#mapping_array] = one_curr
+                else
                     local map = data_maps[n]
-                    local one_in_map = map[code]
-                    if one_in_map ~= nil then
-                        mapping_array[#mapping_array + 1] = one_in_map
+                    local one_near = map[code]
+                    if one_near ~= nil then
+                        mapping_array[#mapping_array + 1] = one_near
                     end
                 end
             end
@@ -391,26 +393,26 @@ end
 -------------------------------------------------------------------------------------------
 
 
-function M:merge_series(opts, result_curr, code_mapping)
+function M:data_merge(opts, result_curr, code_mapping)
 
     if code_mapping == nil then
         return result_curr
     end
 
+    local currindex = -opts.date_offset_from + 1
+
+    local result_merge = { }
     local result_curr_count = #result_curr
     for i = 1, result_curr_count do
         local one_curr = result_curr[i]
         local code = one_curr
+        local series = code_mapping[code]
+        simple.array_append(result_merge, series)
     end
 
-    if series ~= nil then
-        for n = 1, #series do
-            local one_serie = series[n]
-            if one_serie ~= nil then
-                result[#result + 1] = one_serie
-            end
-        end
-    end
+
+
+    return result_merge
 
 end
 
@@ -474,7 +476,7 @@ function M:go(opts)
 
     simple.table_sort(result_curr, opts.sort_field)
 
-    local result = self:merge_series(opts, result_curr, code_mapping)
+    local result = self:data_merge(opts, result_curr, code_mapping)
 
     if opts.print_data == nil then
         self:print_data(opts, result)

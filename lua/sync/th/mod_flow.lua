@@ -34,7 +34,7 @@ function M:new()
 end
 
 -------------------------------------------------------------------------------------------
-function M:request(opts, data, result)
+function M:request(opts)
 
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
@@ -59,19 +59,17 @@ function M:request(opts, data, result)
         print("[request] fatal", err)
     end
 
+    local data = { }
     for i = 1, count do
         local reqopt = reqopts[i]
-        self:parse_html(opts, data, result, reqopt)
+        self:parse_html(opts, data, reqopt)
     end
-
-
-
-    return result
+    return data
 
 end
 
 -------------------------------------------------------------------------------------------
-function M:parse_html(opts, data, result, reqopt)
+function M:parse_html(opts, data, reqopt)
     local url = reqopt["url"]
     local html = reqopt["content"]
 
@@ -248,6 +246,10 @@ end
 
 function M:reload(opts, data, as_array)
 
+    if data == nil then
+        data = { }
+    end
+
     if opts.date_offset == nil then
         opts.date_offset = 0
     end
@@ -274,96 +276,144 @@ function M:reload(opts, data, as_array)
             local fragment = json.decode(datastr)
             local n = #fragment
 
-            local include_all = opts.reload_keys == nil
-            local reload_keys = opts.reload_keys
-
             for i = 1, n do
                 local one = fragment[i]
-                local code = one.code
-                local include = include_all
-                if not include then
-                    include = reload_keys[code] ~= nil
+                if as_array then
+                    data[#data + 1] = one
+                else
+                    local code = one.code
+                    data[code] = one
                 end
-
-                if include then
-                    if as_array then
-                        data[#data + 1] = one
-                    else
-                        data[code] = one
-                    end
-                end
-
             end
         end
 
     end
+
+    return data
 
 end
 
 
-function M:reload_thereafter(opts, result)
+function M:reloads(opts)
 
-    if opts.reload_thereafter == nil or opts.reload_thereafter <= 0 then
-        return result
+    local date_offset_from = opts.date_offset_from
+    local date_offset_to = opts.date_offset_to
+    if (date_offset_from == nil or date_offset_from <= 0) then
+        date_offset_from = 0
+    end
+    if (date_offset_to == nil or date_offset_to <= 0) then
+        date_offset_to = 0
     end
 
-    local reload_keys = {}
+    local from = opts.date_offset + date_offset_to
+    local to = opts.date_offset + date_offset_from
+    local currindex = (to - from) - date_offset_from + 1
 
-    for i = 1, #result do
-        local one = result[i]
-        reload_keys[#reload_keys + 1] = one.code
+    if to > 0 then
+        to = 0
     end
 
     local opts_clone = opts
-    local thereafter_result_maps = {  }
-    for c = 1, opts.reload_thereafter do
+    local data_maps = { }
+    for date_offset = from, to do
         opts_clone = simple.table_clone(opts_clone)
-        opts_clone.date_offset = opts_clone.date_offset + 1
-        if opts_clone.date_offset > 0 then
-            break
-        end
-        opts_clone.data = {}
-        opts.reload_keys = reload_keys
-        self:reload(opts_clone, opts_clone.data, false)
-        thereafter_result_maps[#thereafter_result_maps + 1] = opts_clone.data
+        opts_clone.date_offset = date_offset
+        local as_array = date_offset == opts.date_offset
+        local data = self:reload(opts_clone, nil, as_array)
+        data_maps[#data_maps + 1] = data
     end
 
+    local data_curr = data_maps[currindex]
 
-    local result_intermix = { }
+    local data_curr_count = #data_curr
+    local data_series_num = #data_maps
 
-    for i = 1, #result do
-        local one = result[i]
-        local code = one.code
-        result_intermix[#result_intermix + 1] = one
-        for n = 1, #thereafter_result_maps do
-            local thereafter_result_map = thereafter_result_maps[n]
-            local thereafter_one = thereafter_result_map[code]
-            if thereafter_one ~= nil then
-                result_intermix[#result_intermix + 1] = thereafter_one
+
+    local code_mapping
+
+    if data_series_num > 1 then
+
+        code_mapping = { }
+
+        for i = 1, data_curr_count do
+            local one_curr = data_curr[i]
+            local code = one_curr.code
+
+            local mapping_array = { }
+            code_mapping[code] = mapping_array
+
+            for n = 1, data_series_num do
+                if n ~= currindex then
+                    local map = data_maps[n]
+                    local one_in_map = map[code]
+                    if one_in_map ~= nil then
+                        mapping_array[#mapping_array + 1] = one_in_map
+                    end
+                end
             end
         end
+
     end
 
-    return result_intermix
+
+    return data_curr, code_mapping
 end
 
 
 -------------------------------------------------------------------------------------------
-function M:filter(opts, data, result)
 
-    local n = #data
-    for i = 1, n do
-        local one = data[i]
-        local critical = one.change_rate >= opts.ch_lower and one.change_rate <= opts.ch_upper
-        if critical then
-            critical = one.flow_big_rate_compare >= opts.big_c_lower and one.flow_big_rate_compare <= opts.big_c_upper
-            if critical then
-                result[#result + 1] = one
+function M:filter(opts, data_curr, code_mapping, result)
+
+    if result == nil then
+        result = { }
+    end
+
+    local filter = opts.filter
+    local data_curr_count = #data_curr
+    for i = 1, data_curr_count do
+        local one_curr = data_curr[i]
+        local code = one_curr.code
+        local series
+        if code_mapping ~= nil then
+            series = code_mapping[code]
+        end
+
+        local include = filter(one_curr, series, code, opts)
+        if include then
+            result[#result + 1] = one_curr
+        end
+    end
+
+    return result
+
+end
+
+-------------------------------------------------------------------------------------------
+
+
+function M:merge_series(opts, result_curr, code_mapping)
+
+    if code_mapping == nil then
+        return result_curr
+    end
+
+    local result_curr_count = #result_curr
+    for i = 1, result_curr_count do
+        local one_curr = result_curr[i]
+        local code = one_curr
+    end
+
+    if series ~= nil then
+        for n = 1, #series do
+            local one_serie = series[n]
+            if one_serie ~= nil then
+                result[#result + 1] = one_serie
             end
         end
     end
 
 end
+
 
 -------------------------------------------------------------------------------------------
 function M:print_data(opts, data)
@@ -409,30 +459,22 @@ end
 ------------------------------------------------------------------------------------------
 
 function M:go(opts)
-    local data = opts.data
-    local result = opts.result
-    if data == nil then
-        data = {}
-    end
-    if result == nil then
-        result = {}
-    end
+
+    local data_curr, code_mapping
     if opts.dofetch then
-        self:request(opts, data, result)
-        self:persist(opts, data)
+        data_curr = self:request(opts)
+        if opts.persist then
+            self:persist(opts, data_curr)
+        end
     else
-        self:reload(opts, data)
+        data_curr, code_mapping = self:reloads(opts)
     end
 
-    if opts.filter == nil then
-        self:filter(opts, data, result)
-    else
-        simple.func_call(opts.filter, opts, data, result)
-    end
+    local result_curr = self:filter(opts, data_curr, code_mapping)
 
-    simple.table_sort(result, opts.sort_field)
+    simple.table_sort(result_curr, opts.sort_field)
 
-    result = self:reload_thereafter(opts, result)
+    local result = self:merge_series(opts, result_curr, code_mapping)
 
     if opts.print_data == nil then
         self:print_data(opts, result)
@@ -440,7 +482,10 @@ function M:go(opts)
         simple.func_call(opts.print_data, opts, result)
     end
 
-    return data, result
+    opts.data = data_curr
+    opts.result = result
+
+    return opts.data, opts.result
 end
 
 return M

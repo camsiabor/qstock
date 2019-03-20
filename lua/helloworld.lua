@@ -1,3 +1,3 @@
-printex(1)
-printex(1)
-printex(1)
+for i = -3, 3 do
+    print(i)
+end

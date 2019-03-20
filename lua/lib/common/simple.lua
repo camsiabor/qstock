@@ -239,4 +239,14 @@ function simple.maps_intersect(maps, callback, ...)
     return n
 end
 
+
+function simple.def(t, field, defvalue)
+    local currvalue = t[field]
+    if currvalue == nil then
+        t[field] = defvalue
+        return defvalue
+    end
+    return currvalue
+end
+
 return simple

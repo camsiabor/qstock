@@ -217,7 +217,6 @@ function M:persist(opts, data)
 
     local page = 1
     local pageone = {}
-    local pagesize = 50
 
     local n = #data
     print("[persist]", datestr , "data count", n)
@@ -225,7 +224,7 @@ function M:persist(opts, data)
         pageone[#pageone + 1] = data[i]
         if (i % 50 == 0) or (i == n) then
             local jsonstr = json.encode(pageone)
-            --print(jsonstr)
+
             local key = self:keygen(opts, page)
             local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
             if err == nil then
@@ -263,8 +262,10 @@ function M:reload(opts, data, as_array)
     local db = opts.db
     local dao = Q.daom.Get("main")
 
-    print("[reload]", datestr)
+
+    local total = 0
     for page = opts.from, opts.to do
+
         local key = self:keygen(opts, page)
         local datastr, err = dao.Get(db, datestr, key, 0, nil)
         if err ~= nil then
@@ -276,19 +277,24 @@ function M:reload(opts, data, as_array)
             local fragment = json.decode(datastr)
             local n = #fragment
 
-            for i = 1, n do
-                local one = fragment[i]
-                if as_array then
+            if as_array then
+                for i = 1, n do
+                    local one = fragment[i]
                     data[#data + 1] = one
-                else
+                end
+            else
+                for i = 1, n do
+                    local one = fragment[i]
                     local code = one.code
                     data[code] = one
                 end
             end
+
+            total = total + n
+
         end
-
     end
-
+    print("[reload]", datestr, total, "as array", as_array)
     return data
 
 end
@@ -305,8 +311,8 @@ function M:reloads(opts)
         date_offset_to = 0
     end
 
-    local from = opts.date_offset + date_offset_to
-    local to = opts.date_offset + date_offset_from
+    local from = opts.date_offset + date_offset_from
+    local to = opts.date_offset + date_offset_to
     local currindex = -date_offset_from + 1
 
     if to > 0 then
@@ -328,7 +334,6 @@ function M:reloads(opts)
     local data_curr_count = #data_curr
     local data_maps_count = #data_maps
 
-
     local code_mapping
 
     if data_maps_count > 1 then
@@ -344,7 +349,7 @@ function M:reloads(opts)
 
             for n = 1, data_maps_count do
                 if n == currindex then
-                    mapping_array[#mapping_array] = one_curr
+                    mapping_array[#mapping_array + 1] = one_curr
                 else
                     local map = data_maps[n]
                     local one_near = map[code]
@@ -357,6 +362,11 @@ function M:reloads(opts)
 
     end
 
+    --[[
+    for k , v in pairs(code_mapping) do
+        print(k, #v)
+    end
+    ]]--
 
     return data_curr, code_mapping
 end
@@ -370,7 +380,13 @@ function M:filter(opts, data_curr, code_mapping, result)
         result = { }
     end
 
-    local filter = opts.filter
+    local filters = opts.filters
+    if filters == nil or #filters == 0 then
+        --print("no filter?")
+        return data_curr
+    end
+    --print("filter?!", #filters)
+    local filters_count = #filters
     local data_curr_count = #data_curr
     for i = 1, data_curr_count do
         local one_curr = data_curr[i]
@@ -380,10 +396,18 @@ function M:filter(opts, data_curr, code_mapping, result)
             series = code_mapping[code]
         end
 
-        local include = filter(one_curr, series, code, opts)
+        local include = true
+        for f = 1, filters_count do
+            local filter = filters[f]
+            include = filter(one_curr, series, code, opts)
+            if not include then
+                break
+            end
+        end
         if include then
             result[#result + 1] = one_curr
         end
+
     end
 
     return result
@@ -395,22 +419,21 @@ end
 
 function M:data_merge(opts, result_curr, code_mapping)
 
+    print("[merge] result curr", #result_curr, "code mapping", code_mapping ~= nil)
+
     if code_mapping == nil then
         return result_curr
     end
 
-    local currindex = -opts.date_offset_from + 1
-
     local result_merge = { }
     local result_curr_count = #result_curr
     for i = 1, result_curr_count do
+
         local one_curr = result_curr[i]
-        local code = one_curr
+        local code = one_curr.code
         local series = code_mapping[code]
         simple.array_append(result_merge, series)
     end
-
-
 
     return result_merge
 

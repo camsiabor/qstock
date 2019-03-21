@@ -1,9 +1,18 @@
-local t = { a = 1 }
-
 local browser_type = "gorilla"
 
 local browser = Q[browser_type]
 
-local html = browser.Get("http://www.baidu.com", nil, "utf-8")
+local opts = {}
+for i = 1, 10 do 
+    local opt = {}
+    opt["url"] = "http://www.baidu.com"
+    opts[#opts + 1] = opt
+end
 
-print(html)
+opts = browser.Get(opts, 0, false, 0, 0)
+
+for i = 1, #opts do 
+    local opt = opts[i]
+    local html = opt["content"]
+    print(#html)
+end

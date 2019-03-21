@@ -3,13 +3,13 @@ local th_mod_fund_inst = th_mod_fund:new()
 
 
 local cache_code = Q.cachem.Get("stock.code");
-local codes = cache_code.Get(false, "sh");
+local codes = cache_code.Get(false, "sz");
 
 -------------------------------------------------------------------------------------
 
 local fetch_from = 1
-local fetch_to = 0
-local fetch_each = 100
+local fetch_to = 1
+local fetch_each = 20
 
 local data = {}
 local result = {}
@@ -17,11 +17,12 @@ local opts = {}
 opts.loglevel = 0
 opts.browser = "gorilla"
 --opts.browser = "chrome"
+--opts.browser = "firefox"
 
-opts.concurrent = 10
+opts.concurrent = fetch_each
 opts.newsession = false
 
-opts.dofetch = false
+opts.dofetch = true
 
 opts.db = "flow"
 opts.persist = true

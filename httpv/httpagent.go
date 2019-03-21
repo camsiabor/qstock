@@ -27,18 +27,22 @@ type HttpAgent struct {
 	service      *selenium.Service
 	simpleClient *qnet.SimpleHttp
 	Config       map[string]interface{}
+
+	basicHttp        bool
+	basicHttpChecked bool
 }
 
 func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 
 	var opts = config
+	o.basicHttpChecked = false
 	o.Type = util.GetStr(opts, "firefox", "type")
 	o.RemotePort = util.GetInt(opts, 60001, "port")
 	o.RemotePath = util.GetStr(opts, "selenium-server.jar", "path")
 	o.DriverPath = util.GetStr(opts, "", "driver")
 	o.Headless = util.GetBool(opts, true, "headless")
 
-	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
+	if o.IsBasicHttp() {
 		o.simpleClient = qnet.GetSimpleHttp()
 		return
 	}
@@ -60,11 +64,19 @@ func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 
 }
 
+func (o *HttpAgent) IsBasicHttp() bool {
+	if !o.basicHttpChecked {
+		o.basicHttp = o.Type == "" || o.Type == "std" || o.Type == "gorilla"
+		o.basicHttpChecked = true
+	}
+	return o.basicHttp
+}
+
 func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 	o.InitParameters(o.Config)
 
-	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
+	if o.IsBasicHttp() {
 		return
 	}
 
@@ -99,7 +111,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 
-	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
+	if o.IsBasicHttp() {
 		return nil, nil
 	}
 
@@ -137,7 +149,7 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err error) {
 	drivers = make([]selenium.WebDriver, count)
 
-	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
+	if o.IsBasicHttp() {
 		return drivers, nil
 	}
 
@@ -177,11 +189,14 @@ func (o *HttpAgent) ReleaseDrivers(drivers []selenium.WebDriver) {
 }
 
 func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
-
 	if concurrent > 1 {
-		return o.GetConcurrent(opts, nicemilli, newsession, concurrent, loglevel)
-	}
+		if o.IsBasicHttp() {
+			return o.GetSimpleConcurrent(opts, nicemilli, newsession, concurrent, loglevel)
+		} else {
+			return o.GetDriverConcurrent(opts, nicemilli, newsession, concurrent, loglevel)
+		}
 
+	}
 	var driver, err = o.InitDriver()
 	if err != nil {
 		return opts, err
@@ -191,103 +206,62 @@ func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession
 			driver.Quit()
 		}
 	}()
-	if newsession {
-		return o.GetByNewSession(driver, opts, nicemilli, loglevel)
+	return o.GetMany(driver, opts, nicemilli, newsession, loglevel)
+}
+
+func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}, loglevel int) (map[string]interface{}, error) {
+	var html string
+	var errget error
+	var url = util.AsStr(opt["url"], "")
+	if o.IsBasicHttp() {
+		var encoding = util.GetStr(opt, "utf-8", "encoding")
+		var headers = util.GetStringMap(opt, false, "headers")
+		if o.simpleClient == nil {
+			o.simpleClient = qnet.GetSimpleHttp()
+		}
+		html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
 	} else {
-		return o.GetBySameSession(driver, opts, nicemilli, loglevel)
-	}
-}
-
-func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, loglevel int) ([]map[string]interface{}, error) {
-	var n = len(opts)
-
-	for i := 0; i < n; i++ {
-		var html string
-		var errget error
-		var one = opts[i]
-		var url = util.AsStr(one["url"], "")
-		if o.Type == "" || o.Type == "gorilla" || o.Type == "std" {
-			var encoding = util.GetStr(one, "utf-8", "encoding")
-			var headers = util.GetStringMap(one, false, "headers")
-			if o.simpleClient == nil {
-				o.simpleClient = qnet.GetSimpleHttp()
-			}
-			html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
-		} else {
-			errget = driver.Get(url)
-			if errget == nil {
-				html, errget = driver.PageSource()
-			}
-		}
+		defer driver.Quit()
+		errget = driver.Get(url)
 		if errget == nil {
-			one["content"] = html
-			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "success", url, len(html))
-			}
-		} else {
-			one["err"] = errget
-			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "fail", url, errget.Error())
-			}
+			html, errget = driver.PageSource()
 		}
-
-		if nicemilli > 0 {
-			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
-		}
-
 	}
 
-	return opts, nil
+	if errget == nil {
+		opt["content"] = html
+		if loglevel >= 0 {
+			qlog.Log(qlog.INFO, "httpagent", o.Type, "done", url, len(html))
+		}
+	} else {
+		opt["err"] = errget
+		if loglevel >= 0 {
+			qlog.Log(qlog.INFO, "httpagent", o.Type, "fail", url, errget.Error())
+		}
+	}
+
+	return opt, nil
 }
 
-func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetMany(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, newsession bool, loglevel int) ([]map[string]interface{}, error) {
 	var n = len(opts)
 	for i := 0; i < n; i++ {
-		var html string
-		var errget error
 		var one = opts[i]
-		var url = util.AsStr(one["url"], "")
-		if o.Type == "" || o.Type == "gorilla" || o.Type == "std" {
-			var encoding = util.GetStr(opts, "utf-8", "encoding")
-			var headers = util.GetStringMap(opts, false, "headers")
-			if o.simpleClient == nil {
-				o.simpleClient = qnet.GetSimpleHttp()
-			}
-			html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
-		} else {
-			errget = driver.Get(url)
-			if errget == nil {
-				html, errget = driver.PageSource()
-			}
-		}
-		if errget == nil {
-			one["content"] = html
-			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "success", url)
-			}
-		} else {
-			one["err"] = errget
-			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "fail", url, errget.Error())
-			}
-		}
-		if driver != nil {
-			driver.Quit()
-		}
+		o.GetOne(driver, one, loglevel)
 		if nicemilli > 0 {
 			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
 		}
 		if i == n-1 {
 			break
 		}
-		if driver != nil {
+		if newsession && driver != nil {
 			driver.NewSession()
 		}
 	}
 	return opts, nil
 }
 
-func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 	var optscount = len(opts)
 	if concurrent > optscount {
 		concurrent = optscount
@@ -324,7 +298,7 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 				var pan = recover()
 				if pan == nil {
 					if loglevel >= 0 {
-						qlog.Log(qlog.INFO, "httpagent", "one concurrent done", index)
+						qlog.Log(qlog.INFO, "httpagent", o.Type, "one concurrent done", index)
 					}
 				} else {
 					if loglevel >= 0 {
@@ -332,22 +306,68 @@ func (o *HttpAgent) GetConcurrent(opts []map[string]interface{}, nicemilli int, 
 						if ok {
 							pan = panerr.Error()
 						}
-						qlog.Log(qlog.ERROR, "httpagent", "one concurrent error", pan)
+						qlog.Log(qlog.ERROR, "httpagent", o.Type, "one concurrent error", pan)
 					}
 				}
 			}()
-			if newsession {
-				o.GetByNewSession(driver, driveropt, nicemilli, loglevel)
-			} else {
-				o.GetBySameSession(driver, driveropt, nicemilli, loglevel)
-			}
+
+			o.GetMany(driver, driveropt, nicemilli, newsession, loglevel)
+
 		}(driver, driveropt, i)
 	}
 	waitgroup.Wait()
 	if loglevel >= 0 {
-		qlog.Log(qlog.INFO, "httpagent", "concurrent fin", concurrent)
+		qlog.Log(qlog.INFO, "httpagent", o.Type, "driver concurrent fin", concurrent)
 	}
 	return opts, err
+}
+
+func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+	var optscount = len(opts)
+
+	if concurrent > optscount {
+		concurrent = optscount
+	}
+
+	var erroverall error
+	var waitgroup sync.WaitGroup
+
+	var n = 0
+	for n < optscount {
+		waitgroup.Add(concurrent)
+		for i := 0; i < concurrent; i++ {
+			if n >= optscount {
+				break
+			}
+			var opt = opts[n]
+			n = n + 1
+
+			go func(opt map[string]interface{}) {
+				defer func() {
+					defer waitgroup.Done()
+					var pan = recover()
+					if pan != nil {
+						if loglevel >= 0 {
+							var panerr, ok = pan.(error)
+							if ok {
+								if erroverall != nil {
+									erroverall = panerr
+								}
+								pan = panerr.Error()
+							}
+							qlog.Log(qlog.ERROR, "httpagent", o.Type, "one concurrent error", pan)
+						}
+					}
+				}()
+				o.GetOne(nil, opt, loglevel)
+			}(opt)
+		}
+		waitgroup.Wait()
+	}
+	if loglevel >= 0 {
+		qlog.Log(qlog.INFO, "httpagent", o.Type, "simple concurrent fin", concurrent)
+	}
+	return opts, erroverall
 }
 
 func (o *HttpAgent) Terminate() error {

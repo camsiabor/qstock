@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/axgle/mahonia"
 	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
 	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qdao"
 	"github.com/camsiabor/qcom/qlog"
+	"github.com/camsiabor/qcom/qnet"
 	"github.com/camsiabor/qcom/qos"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/scache"
@@ -14,12 +16,14 @@ import (
 	"github.com/camsiabor/qstock/dict"
 	"github.com/camsiabor/qstock/httpv"
 	"github.com/camsiabor/qstock/run/rlua"
+	ghttp "github.com/gorilla/http"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"runtime/pprof"
+	"strings"
 	"testing"
 	"time"
 )
@@ -28,7 +32,46 @@ import (
 // https://github.com/camsiabor/golua
 // https://github.com/camsiabor/golua/luar/
 
+func GGet(url string, headers map[string]string, encoding string) (string, error) {
+	var status, _, reader, err = ghttp.DefaultClient.Get(url, nil)
+	if err != nil {
+		return "", err
+	}
+	if status.Code != 200 {
+		return "", fmt.Errorf("response status %v", status)
+	}
+	defer reader.Close()
+	bytes, err := ioutil.ReadAll(reader)
+	var content string
+	if err == nil {
+		content = string(bytes[:])
+		encoding = strings.ToLower(encoding)
+		if encoding != "" && encoding != "utf-8" {
+			var encoder = mahonia.NewDecoder(encoding)
+			content = encoder.ConvertString(content)
+		}
+	}
+	return content, err
+}
+
 func TestLuaBenchmark(t *testing.T) {
+	var start = time.Now().Nanosecond()
+	var url = "http://stockpage.10jqka.com.cn/000001/funds/"
+	for i := 0; i < 20; i++ {
+		//var content, err = GGet(url, nil, "utf-8")
+		var content, _, err = qnet.GetSimpleHttp().Get(url, nil, "utf-8")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(len(content))
+	}
+	var end = time.Now().Nanosecond()
+
+	fmt.Println("[consume]", end-start)
+
+}
+
+func TestLuaBenchmarkPhantom(t *testing.T) {
 
 	var luapath = rlua.GetLuaPath()
 	var jspath = luapath + "js/"
@@ -158,7 +201,7 @@ func TestLuaBenchmark_Seleni(t *testing.T) {
 	}
 
 	for n := 1; n <= 2; n++ {
-		_, err = seleni.Get(opts, 0)
+		_, err = seleni.Get(opts, 0, false, 1, 0)
 		if err != nil {
 			panic(err)
 		}

@@ -38,7 +38,7 @@ func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 	o.DriverPath = util.GetStr(opts, "", "driver")
 	o.Headless = util.GetBool(opts, true, "headless")
 
-	if o.Type == "" || o.Type == "wget" {
+	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
 		o.simpleClient = qnet.GetSimpleHttp()
 		return
 	}
@@ -64,7 +64,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 	o.InitParameters(o.Config)
 
-	if o.Type == "" || o.Type == "wget" {
+	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
 		return
 	}
 
@@ -99,7 +99,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 
 func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 
-	if o.Type == "" || o.Type == "wget" {
+	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
 		return nil, nil
 	}
 
@@ -137,7 +137,7 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 func (o *HttpAgent) InitDrivers(count int) (drivers []selenium.WebDriver, err error) {
 	drivers = make([]selenium.WebDriver, count)
 
-	if o.Type == "" || o.Type == "wget" {
+	if o.Type == "" || o.Type == "std" || o.Type == "gorilla" {
 		return drivers, nil
 	}
 
@@ -206,13 +206,13 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		if o.Type == "" || o.Type == "wget" {
+		if o.Type == "" || o.Type == "gorilla" || o.Type == "std" {
 			var encoding = util.GetStr(one, "utf-8", "encoding")
 			var headers = util.GetStringMap(one, false, "headers")
 			if o.simpleClient == nil {
 				o.simpleClient = qnet.GetSimpleHttp()
 			}
-			html, _, errget = o.simpleClient.Get(url, headers, encoding)
+			html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
 		} else {
 			errget = driver.Get(url)
 			if errget == nil {
@@ -222,7 +222,7 @@ func (o *HttpAgent) GetBySameSession(driver selenium.WebDriver, opts []map[strin
 		if errget == nil {
 			one["content"] = html
 			if loglevel >= 0 {
-				qlog.Log(qlog.INFO, "httpagent", "success", url)
+				qlog.Log(qlog.INFO, "httpagent", "success", url, len(html))
 			}
 		} else {
 			one["err"] = errget
@@ -247,13 +247,13 @@ func (o *HttpAgent) GetByNewSession(driver selenium.WebDriver, opts []map[string
 		var errget error
 		var one = opts[i]
 		var url = util.AsStr(one["url"], "")
-		if o.Type == "" || o.Type == "wget" {
+		if o.Type == "" || o.Type == "gorilla" || o.Type == "std" {
 			var encoding = util.GetStr(opts, "utf-8", "encoding")
 			var headers = util.GetStringMap(opts, false, "headers")
 			if o.simpleClient == nil {
 				o.simpleClient = qnet.GetSimpleHttp()
 			}
-			html, _, errget = o.simpleClient.Get(url, headers, encoding)
+			html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
 		} else {
 			errget = driver.Get(url)
 			if errget == nil {

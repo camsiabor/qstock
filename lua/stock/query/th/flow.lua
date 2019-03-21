@@ -41,16 +41,20 @@ local names_bought = {
 }
 
 local names_sold = {
-    "安信信托", "吉视传媒", "全筑股份", "中广天择", "黑芝麻", "瑞康医药"
+    "安信信托", "吉视传媒", "全筑股份", "中广天择", "黑芝麻", "瑞康医药", "天山股份"
 }
 
+
+local tobe_sold = {
+    "鲁信創投", "西部证券", "陝国投A"
+}
 opts.filters =  {
     
     -- codes
     --filters.codes({  codes = codes_bought })
     
     -- names
-    filters.names({  names = names_bought })
+    filters.names({  names = names_sold })
     
     --moderate
     --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1, ch_upper = 3.5, big_in_lower = 3  })

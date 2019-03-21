@@ -3,25 +3,25 @@ local th_mod_fund_inst = th_mod_fund:new()
 
 
 local cache_code = Q.cachem.Get("stock.code");
-local codes = cache_code.Get(false, "sz");
+local codes = cache_code.Get(false, "sh");
 
 -------------------------------------------------------------------------------------
 
 local fetch_from = 1
 local fetch_to = 0
-local fetch_each = 10
+local fetch_each = 100
 
 local data = {}
 local result = {}
 local opts = {}
 opts.loglevel = 0
---opts.browser = "wget"
-opts.browser = "chrome"
+opts.browser = "gorilla"
+--opts.browser = "chrome"
 
-opts.concurrent = 1
+opts.concurrent = 10
 opts.newsession = false
 
-opts.dofetch = true
+opts.dofetch = false
 
 opts.db = "flow"
 opts.persist = true
@@ -42,6 +42,7 @@ if opts.find_not_curr then
     local n = #opts.codes_not_curr
     print("codes not current count", n)
     if n > 0 then
+        
         -- refetch not current data
         for i = 1, n do
             codes = opts.codes_not_curr

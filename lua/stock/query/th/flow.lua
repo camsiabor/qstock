@@ -24,7 +24,7 @@ opts.newsession = false
 opts.persist = true
 
 opts.dofetch = false
-opts.date_offset = 0
+opts.date_offset = -1
 opts.date_offset_from = -2
 opts.date_offset_to = 1
 
@@ -35,18 +35,31 @@ opts.order = "desc"
 
 opts.sort_field = "flow_io_rate"
 
+
+local names_bought = {
+    "大名城", "生益科技", "中南传媒", "成都银行", "天龙股份", "美好置业", "科士达", "棒杰股份", "凯文教育", "三夫户外", "科力尔"
+}
+
+local names_sold = {
+    "安信信托", "吉视传媒", "全筑股份", "中广天择", "黑芝麻", "瑞康医药"
+}
+
 opts.filters =  {
-    -- codes
-    --filters.codes({  codes = { "601929" } })
     
-    -- moderate
-    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -1.5, ch_upper = 3.5, big_in_lower = 3  })
+    -- codes
+    --filters.codes({  codes = codes_bought })
+    
+    -- names
+    filters.names({  names = names_bought })
+    
+    --moderate
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1, ch_upper = 3.5, big_in_lower = 3  })
     
     -- high io
-    -- filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
+    --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
     
     -- flow in increase
-    filters.io_increase({ in_lower = 55, in_upper = 100, in_swing = 3, ch_lower = -3, ch_upper = 7 })
+    --filters.io_increase({ in_lower = 55, in_upper = 100, in_swing = 3, ch_lower = -3, ch_upper = 7 })
 }
 
 th_mod_flow_inst:go(opts)

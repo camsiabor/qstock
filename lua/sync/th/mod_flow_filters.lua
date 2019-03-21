@@ -93,11 +93,12 @@ end
 
 function M.names(fopts)
 
-    local names = fopts.codes
+    local names = fopts.names
     local names_map = simple.array_to_map(names)
 
     return function(one, series, code, currindex, opts)
-        return names_map[code] ~= nil
+        local name = one.name
+        return names_map[name] ~= nil
     end
 end
 

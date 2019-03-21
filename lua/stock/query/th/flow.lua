@@ -25,18 +25,28 @@ opts.persist = true
 
 opts.dofetch = false
 opts.date_offset = 0
-opts.date_offset_from = 0
-opts.date_offset_to = 10
+opts.date_offset_from = -2
+opts.date_offset_to = 1
 
 opts.db = "flow"
 opts.datasrc = "th"
 opts.field = "zjjlr"
 opts.order = "desc"
 
-opts.sort_field = "flow_big_rate_cross_ex"
+opts.sort_field = "flow_io_rate"
 
 opts.filters =  {
-    filters.io({  io_lower = 1.95, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
+    -- codes
+    --filters.codes({  codes = { "601929" } })
+    
+    -- moderate
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -1.5, ch_upper = 3.5, big_in_lower = 3  })
+    
+    -- high io
+    -- filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
+    
+    -- flow in increase
+    filters.io_increase({ in_lower = 55, in_upper = 100, in_swing = 3, ch_lower = -3, ch_upper = 7 })
 }
 
 th_mod_flow_inst:go(opts)

@@ -304,10 +304,10 @@ function M:reloads(opts)
 
     local date_offset_from = opts.date_offset_from
     local date_offset_to = opts.date_offset_to
-    if (date_offset_from == nil or date_offset_from <= 0) then
+    if (date_offset_from == nil or date_offset_from > 0) then
         date_offset_from = 0
     end
-    if (date_offset_to == nil or date_offset_to <= 0) then
+    if (date_offset_to == nil or date_offset_to < 0) then
         date_offset_to = 0
     end
 
@@ -386,7 +386,18 @@ function M:filter(opts, data_curr, code_mapping, result)
         return data_curr
     end
     --print("filter?!", #filters)
+
+    local data_curr_index = opts.date_offset_from
+    if data_curr_index == nil then
+        data_curr_index = 0
+    else
+        data_curr_index = -data_curr_index + 1
+    end
+
     local filters_count = #filters
+
+
+
     local data_curr_count = #data_curr
     for i = 1, data_curr_count do
         local one_curr = data_curr[i]
@@ -399,7 +410,7 @@ function M:filter(opts, data_curr, code_mapping, result)
         local include = true
         for f = 1, filters_count do
             local filter = filters[f]
-            include = filter(one_curr, series, code, opts)
+            include = filter(one_curr, series, code, data_curr_index, opts)
             if not include then
                 break
             end

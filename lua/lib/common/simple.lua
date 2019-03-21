@@ -176,9 +176,13 @@ function simple.array_to_map(array, field)
     for i = 1, n do
         local one = array[i]
         if one ~= nil then
-            local key = one[field]
-            if key ~= nil then
-                map[key] = one
+            if field == nil then
+                map[one] = one
+            else
+                local key = one[field]
+                if key ~= nil then
+                    map[key] = one
+                end
             end
         end
     end

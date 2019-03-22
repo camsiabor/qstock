@@ -1,9 +1,13 @@
 local simple = require("common.simple")
 local logger = require("common.logger")
 
-logger = logger:new()
 
-logger:log("hello?", "power", "over", "whelming")
+function try()
+    logger = logger:new()
+    logger:trace("hello?", "power", "over", "whelming")
+end
+
+try()
 
 local debuginfo = debug.getinfo(1)
 simple.table_print_all(debuginfo)

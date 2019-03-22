@@ -64,8 +64,11 @@
       "type" : "firefox",
       "port" : 60001
     },
-    "wget" : {
-      "type" : "wget"
+    "std" : {
+      "type" : "std"
+    },
+    "gorilla" : {
+      "type" : "gorilla"
     }
   },
 

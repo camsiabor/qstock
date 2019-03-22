@@ -30,6 +30,8 @@ type HttpAgent struct {
 
 	basicHttp        bool
 	basicHttpChecked bool
+
+	mutex sync.RWMutex
 }
 
 func (o *HttpAgent) InitParameters(config map[string]interface{}) {
@@ -137,7 +139,13 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 	driver, err = selenium.NewRemote(caps, url)
 	if err != nil {
 		if o.service == nil {
-			_, err = o.InitService()
+			o.mutex.Lock()
+			defer o.mutex.Unlock()
+			if o.service == nil {
+				_, err = o.InitService()
+			} else {
+				err = nil
+			}
 			if err == nil {
 				return o.InitDriver()
 			}

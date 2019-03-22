@@ -74,19 +74,23 @@ func (o *HttpAgent) IsBasicHttp() bool {
 	return o.basicHttp
 }
 
-func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
+func (o *HttpAgent) InitService() (*selenium.Service, error) {
 
 	o.InitParameters(o.Config)
 
 	if o.IsBasicHttp() {
-		return
+		return o.service, nil
+	}
+
+	if o.service != nil {
+		o.service.Stop()
 	}
 
 	defer func() {
 		var pan = recover()
 		if pan != nil {
-			if service != nil {
-				service.Stop()
+			if o.service != nil {
+				o.service.Stop()
 			}
 			panic(pan)
 		}
@@ -106,6 +110,7 @@ func (o *HttpAgent) InitService() (service *selenium.Service, err error) {
 		browserOption,
 		selenium.Output(o.Output), // Output debug information to STDERR.
 	}
+	var err error
 	selenium.SetDebug(false)
 	o.service, err = selenium.NewSeleniumService(o.RemotePath, o.RemotePort, opts...)
 	return o.service, err

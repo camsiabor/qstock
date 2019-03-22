@@ -234,18 +234,15 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 		}
 		html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
 	} else {
-		if newsession {
-			defer driver.Quit()
-		}
 		errget = driver.Get(url)
 		if errget == nil {
 			html, errget = driver.PageSource()
 		}
 		if newsession {
+			driver.Quit()
 			driver.NewSession()
 		}
 	}
-
 	if errget == nil {
 		opt["content"] = html
 		if loglevel >= 0 {
@@ -257,7 +254,6 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 			qlog.Log(qlog.INFO, "httpagent", o.Type, "fail", url, errget.Error())
 		}
 	}
-
 	return opt, nil
 }
 

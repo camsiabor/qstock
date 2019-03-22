@@ -1,20 +1,27 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
+
 local th_mod_flow = require("sync.th.mod_flow")
 local th_mod_flow_inst = th_mod_flow:new()
 
-local profile = Q.work.Profile
+local work = Q.work
+local profile
+if work == nil then
+    profile = { }
+else
+    profile = work.Profile
+end
 
 local opts = {}
 
 opts.debug = false
 opts.loglevel = 0
 opts.browser = "firefox"
+--opts.browser = "gorilla"
 
 opts.from = 1
 opts.to = 71
-opts.nice = 0
 
 opts.concurrent = profile["concurrent"]
 if opts.concurrent == nil then
@@ -22,9 +29,10 @@ if opts.concurrent == nil then
 end
 
 if Q.runtime.GOOS() == "windows" then
-    opts.newsession = false
-else
     opts.newsession = true
+else
+    opts.nice = 15000
+    opts.newsession = false
 end
 
 opts.persist = true

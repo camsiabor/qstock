@@ -25,14 +25,13 @@ opts.to = 71
 
 opts.concurrent = profile["concurrent"]
 if opts.concurrent == nil then
-    opts.concurrent = 1
+    opts.concurrent = 3
 end
 
 if Q.runtime.GOOS() == "windows" then
-    opts.newsession = true
-else
-    opts.nice = 15000
     opts.newsession = false
+else
+    opts.newsession = true
 end
 
 opts.persist = true

@@ -1,18 +1,10 @@
-local browser_type = "gorilla"
+local simple = require("common.simple")
+local logger = require("common.logger")
 
-local browser = Q[browser_type]
+logger = logger:new()
 
-local opts = {}
-for i = 1, 10 do 
-    local opt = {}
-    opt["url"] = "http://www.baidu.com"
-    opts[#opts + 1] = opt
-end
+logger:log("hello?", "power", "over", "whelming")
 
-opts = browser.Get(opts, 0, false, 0, 0)
-
-for i = 1, #opts do 
-    local opt = opts[i]
-    local html = opt["content"]
-    print(#html)
-end
+local debuginfo = debug.getinfo(1)
+simple.table_print_all(debuginfo)
+print(line)

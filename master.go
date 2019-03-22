@@ -45,8 +45,6 @@ func master(g *global.G) {
 	var timezone = util.GetStr(g.Config, "Asia/Shanghai", "global", "timezone")
 	time.LoadLocation(timezone)
 
-	g.SetData("logger", qlog.GetLogManager().GetDef())
-
 	initMapper(g)
 
 	initDao(g)

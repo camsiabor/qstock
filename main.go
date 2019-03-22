@@ -54,6 +54,8 @@ func main() {
 	g.SetData("u", wrap.U)
 	g.SetData("runtime", qos.GetInfo())
 	g.SetData("cachem", scache.GetManager())
+	g.SetData("logger", qlog.GetLogManager().GetDef())
+	g.SetData("loggerm", qlog.GetLogManager())
 	g.Run()
 
 	signalHandle(g)

@@ -1,6 +1,20 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
+local simple = require("common.simple")
+
+local debuginfo = debug.getinfo(1)
+simple.table_print_all(debuginfo)
+print(line)
+for i = 8, 22 do
+    Q.logger.LogEx(2, i, "hello?")
+end
+
+
+if Q.runtime ~= nil then
+    print(Q.runtime.GOOS())
+    return
+end
 
 
 
@@ -23,17 +37,18 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = false
-opts.date_offset = -1
-opts.date_offset_from = -2
-opts.date_offset_to = 1
+opts.dofetch = true
+opts.date_offset = 0
+opts.date_offset_from = -4
+opts.date_offset_to = 3
 
 opts.db = "flow"
 opts.datasrc = "th"
 opts.field = "zjjlr"
 opts.order = "desc"
 
-opts.sort_field = "flow_io_rate"
+--opts.sort_field = "flow_io_rate"
+opts.sort_field = "flow_big_rate_cross_ex"
 
 
 local names_bought = {
@@ -44,22 +59,26 @@ local names_sold = {
     "安信信托", "吉视传媒", "全筑股份", "中广天择", "黑芝麻", "瑞康医药", "天山股份"
 }
 
-
 local tobe_sold = {
-    "鲁信創投", "西部证券", "陝国投A"
+    "鲁信创投", "西部证券", "陕国投A"
+}
+
+local names_specific = {
+    "中铝国际", "TCL集团"
 }
 opts.filters =  {
     
     -- codes
     --filters.codes({  codes = codes_bought })
     
-    -- names
-    filters.names({  names = names_sold })
+    --names
+    --filters.names({  names = names_sold })
+    --filters.names({  names = names_specific })
     
     --moderate
-    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1, ch_upper = 3.5, big_in_lower = 3  })
+    filters.io({  io_lower = 1.35, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  })
     
-    -- high io
+    --high io
     --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
     
     -- flow in increase

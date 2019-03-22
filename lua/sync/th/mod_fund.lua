@@ -51,7 +51,7 @@ function M:request(opts, data, result)
     for i = 1, count do
         local reqopt = reqopts[i]
         if reqopt ~= nil then
-            M:parse_html(opts, data, result, reqopt)
+            M:parse_html(opts, data, reqopt)
         end
     end
 
@@ -61,7 +61,7 @@ end
 
 
 -------------------------------------------------------------------------------------------
-function M:parse_html(opts, data, result, reqopt)
+function M:parse_html(opts, data, reqopt)
     local url = reqopt["url"]
     local html = reqopt["content"]
 
@@ -117,8 +117,7 @@ function M:parse_html(opts, data, result, reqopt)
         return
     end
 
-    --local tbody = htable.tbody
-    local tr_count = #htable.tr
+
 
     --[[
         1. 日期	
@@ -133,6 +132,13 @@ function M:parse_html(opts, data, result, reqopt)
         10. 小单净额
         11 小单净占比
     ]]--
+
+    --local tbody = htable.tbody
+    local trs = htable.tr
+    if trs == nil then
+        return
+    end
+    local tr_count = #trs
 
     local one = {}
     one.flows = {}

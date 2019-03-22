@@ -209,7 +209,7 @@ func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession
 	return o.GetMany(driver, opts, nicemilli, newsession, loglevel)
 }
 
-func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}, loglevel int) (map[string]interface{}, error) {
+func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}, newsession bool, loglevel int) (map[string]interface{}, error) {
 	var html string
 	var errget error
 	var url = util.AsStr(opt["url"], "")
@@ -221,10 +221,15 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 		}
 		html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
 	} else {
-		defer driver.Quit()
+		if newsession {
+			defer driver.Quit()
+		}
 		errget = driver.Get(url)
 		if errget == nil {
 			html, errget = driver.PageSource()
+		}
+		if newsession {
+			driver.NewSession()
 		}
 	}
 
@@ -247,16 +252,11 @@ func (o *HttpAgent) GetMany(driver selenium.WebDriver, opts []map[string]interfa
 	var n = len(opts)
 	for i := 0; i < n; i++ {
 		var one = opts[i]
-		o.GetOne(driver, one, loglevel)
+		o.GetOne(driver, one, newsession, loglevel)
 		if nicemilli > 0 {
 			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
 		}
-		if i == n-1 {
-			break
-		}
-		if newsession && driver != nil {
-			driver.NewSession()
-		}
+
 	}
 	return opts, nil
 }
@@ -359,7 +359,7 @@ func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli
 						}
 					}
 				}()
-				o.GetOne(nil, opt, loglevel)
+				o.GetOne(nil, opt, false, loglevel)
 			}(opt)
 		}
 		waitgroup.Wait()

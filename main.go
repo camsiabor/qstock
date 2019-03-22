@@ -52,6 +52,7 @@ func main() {
 	}
 	g.SetData("global", g)
 	g.SetData("u", wrap.U)
+	g.SetData("runtime", qos.GetInfo())
 	g.SetData("cachem", scache.GetManager())
 	g.Run()
 

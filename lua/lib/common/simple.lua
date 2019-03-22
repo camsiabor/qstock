@@ -120,6 +120,11 @@ function simple.table_array_print(array, fields, delimiter, suffix)
 end
 
 function simple.table_array_print_with_header(array, from, to, fields, headers, header_interval, delimiter, suffix)
+
+    if from <= 0 or from > to then
+        return
+    end
+
     if delimiter == nil then
         delimiter = "\n"
     end

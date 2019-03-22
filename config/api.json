@@ -83,14 +83,6 @@
         "key" : "date",
         "mapper" : "tushare.calendar",
         "handler" : "TuShare_trade_calendar"
-      },
-      "stock.group" : {
-        "api" : "concept",
-        "interval" : 86400,
-        "dao" : "main",
-        "db" : "common",
-        "script" : "sync/tushare/cn_stock_group.lua",
-        "handler" : "Lua_handler"
       }
     }
   },
@@ -164,6 +156,27 @@
       "k.history.sh" : {
         "embed" : "k.history.sz",
         "marker" : "sh"
+      }
+    }
+  },
+
+  "th" : {
+    "active" : true,
+    "domain" : "http://data.10jqka.com.cn",
+    "nice" : 300,
+    "timeout" : 20,
+    "concurrent" : 1,
+    "select_interval" : 120,
+    "profiles" : {
+      "stock.flow" : {
+        "api" : "http://data.10jqka.com.cn",
+        "browser" : "firefox",
+        "concurrent" : 3,
+        "interval": 3600,
+        "dao" : "main",
+        "db" : "flow",
+        "handler" : "Lua_handler",
+        "script" : "sync/th/work/flow.lua"
       }
     }
   }

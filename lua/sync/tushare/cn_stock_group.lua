@@ -1,14 +1,14 @@
 
 
 print(" --------------------- what am i --------------------- ")
-local profile = Q.work.Profile
+local profile = global.work.Profile
 local jsonlib = require("common.json")
 
 
 local api = profile["api"]
 print(api)
 
-local data, err = Q.http.Post("http://www.baidu.com", nil, "", "")
+local data, err = global.http.Post("http://www.baidu.com", nil, "", "")
 
 if data ~= nil then
     print(data)

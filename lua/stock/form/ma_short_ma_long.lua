@@ -4,12 +4,12 @@ local ma_long_count = 20
 local ma_rate_upper = 1
 local ma_rate_lower = -1
 
-local cache_code = Q.cachem.Get("stock.code");
-local cache_snapshot = Q.cachem.Get("stock.snapshot");
-local cache_khistory = Q.cachem.Get("stock.khistory");
+local cache_code = global.cachem.Get("stock.code");
+local cache_snapshot = global.cachem.Get("stock.snapshot");
+local cache_khistory = global.cachem.Get("stock.khistory");
 local codes = cache_code.Get(false, "sz.sh");
 
-local dates = Q.calendar.List(ma_long_count - 1, 0, 0, true)
+local dates = global.calendar.List(ma_long_count - 1, 0, 0, true)
 
 local all = 0
 local hit = {}

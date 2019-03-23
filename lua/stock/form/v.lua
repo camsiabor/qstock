@@ -12,11 +12,11 @@ function v(A)
 
     local date_count = down_count + up_count + 1
 
-    local cache_code = Q.cachem.Get("stock.code");
-    local cache_snapshot = Q.cachem.Get("stock.snapshot");
-    local cache_khistory = Q.cachem.Get("stock.khistory");
+    local cache_code = global.cachem.Get("stock.code");
+    local cache_snapshot = global.cachem.Get("stock.snapshot");
+    local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
-    local dates = Q.calendar.List(date_count, A.date_offset, 0, true)
+    local dates = global.calendar.List(date_count, A.date_offset, 0, true)
 
 
     local up_red = A.up_red
@@ -130,7 +130,7 @@ end
 
 --[[
 local opt = {}
-opt["mode"] = Q.mode
+opt["mode"] = global.mode
 opt["market"] = "sz.sh"
 opt["up_count"] = 2
 opt["down_count"] = 3

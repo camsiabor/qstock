@@ -6,6 +6,7 @@ M.__index = M
 M.persist_key = "flow"
 
 local xml, xml_tree_handler
+local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -41,7 +42,7 @@ function M:request(opts, data, result)
     end
 
     local err
-    local browser = Q[opts.browser]
+    local browser = global[opts.browser]
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
@@ -204,7 +205,7 @@ end
 function M:persist(opts, data)
 
     local db = opts.db
-    local dao = Q.daom.Get("main")
+    local dao = global.daom.Get("main")
 
 
     local n = #data
@@ -231,8 +232,8 @@ end
 function M:reload(opts, data, result)
 
     local db = opts.db
-    local dao = Q.daom.Get("main")
-    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
+    local dao = global.daom.Get("main")
+    local dates = global.calendar.List(0, opts.date_offset, 0, true)
     local datestr = dates[1]
 
     local find_not_curr = opts.find_not_curr

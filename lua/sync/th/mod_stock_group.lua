@@ -6,6 +6,7 @@ local M = {}
 M.__index = M
 
 local xml, xml_tree_handler
+local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -30,9 +31,9 @@ function M:group_request(opts)
     reqopts[1] = reqopt
 
     local err
-    local browser = Q["gorilla"]
+    local browser = global["gorilla"]
     if browser == nil then
-        browser = Q[opts.browser]
+        browser = global[opts.browser]
     end
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
     if err ~= nil then
@@ -63,7 +64,8 @@ function M:group_parse(html)
     local pattern = '<a href="http://q.10jqka.com.cn/gn/detail/code/(%d+)/" target="_blank">(%W+)</a>'
     local iterator = string.gmatch(html, pattern)
     for code, name in iterator do
-        groups[code] = name
+        local group = { code = code, name = name, list = { } }
+        groups[code] = group
     end
     return groups
 end
@@ -74,12 +76,12 @@ function M:list_request_page_one(opts, groups)
 
     local count = 1
     local reqopts = {}
-    for code, name in pairs(groups) do
+    for code, group in pairs(groups) do
         local url = string.format(url_pattern, code)
         local reqopt = {}
         reqopt["url"] = url
         reqopt["page"] = 1
-        reqopt["name"] = name
+        reqopt["group"] = group
         reqopt["encoding"] = "gbk"
         reqopts[count] = reqopt
         count = count + 1
@@ -88,9 +90,9 @@ function M:list_request_page_one(opts, groups)
     count = count - 1
 
     local err
-    local browser = Q["gorilla"]
+    local browser = global["gorilla"]
     if browser == nil then
-        browser = Q[opts.browser]
+        browser = global[opts.browser]
     end
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
     if err ~= nil then
@@ -100,6 +102,55 @@ function M:list_request_page_one(opts, groups)
 end
 
 function M:list_parse(opts, reqopts, groups)
+    local url = "http://q.10jqka.com.cn/gn/detail/code/301558/"
+    local opts = {}
+    opts.browser = "gorilla"
+
+    local reqopts = {}
+    local reqopt = {}
+    reqopt["url"] = url
+    reqopt["encoding"] = "gbk"
+    reqopts[1] = reqopt
+
+    local err
+    local browser = global[opts.browser]
+    reqopts, err = browser.Get(reqopts, 0, false, 1, 0)
+    if err ~= nil then
+        print("[list] [request] fatal", err)
+        return
+    end
+
+    local html = reqopts[1]["content"]
+    --print(html)
+
+    local tag_table_start = '<table class="m%-table m%-pager%-table">'
+    local tag_table_end = '</table>'
+
+    local index = string.find(html, tag_table_start)
+    if index == nil then
+        print("[list] [request] failure")
+        print(html)
+        return
+    end
+    local html_table = string.sub(html, index)
+    local index_table_end = string.find(html_table, tag_table_end)
+    html_table = string.sub(html_table, 1, index_table_end + #tag_table_end)
+
+
+    print(html_table)
+
+    local pattern_td = '<td>(%W+)</td>'
+    local iterater = string.gmatch(html_table, pattern_td)
+    for one in iterater do
+        print(one)
+    end
+
+    local tag_page_info_start = '<span class="page_info">'
+    local tag_page_info_end = '</span>'
+    local index_tag_page_info_start = string.find(html, tag_page_info_start, index_table_end + #tag_table_end + 1)
+    local index_tag_page_info_end = string.find(html, tag_page_info_end, index_tag_page_info_start + #tag_page_info_start + 1)
+    local page_count = string.sub(html, index_tag_page_info_start + #tag_page_info_start + 2, index_tag_page_info_end - 1)
+
 
 end
 
@@ -254,11 +305,11 @@ end
 
 function M:persist(opts, data)
 
-    local dates = Q.calendar.List(0, 0, 0, true)
+    local dates = global.calendar.List(0, 0, 0, true)
 
     local db = opts.db
     local datestr = dates[1]
-    local dao = Q.daom.Get("main")
+    local dao = global.daom.Get("main")
 
     local page = 1
     local pageone = {}
@@ -295,10 +346,10 @@ function M:reload(opts, data, result)
         opts.date_offset = 0
     end
 
-    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
+    local dates = global.calendar.List(0, opts.date_offset, 0, true)
     local datestr = dates[1]
     local db = opts.db
-    local dao = Q.daom.Get("main")
+    local dao = global.daom.Get("main")
 
     print("[reload]", datestr)
     for page = opts.from, opts.to do

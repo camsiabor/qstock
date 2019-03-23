@@ -5,7 +5,7 @@
 local th_mod_flow = require("sync.th.mod_flow")
 local th_mod_flow_inst = th_mod_flow:new()
 
-local work = Q.work
+local work = global.work
 local profile
 if work == nil then
     profile = { }
@@ -28,7 +28,7 @@ if opts.concurrent == nil then
     opts.concurrent = 3
 end
 
-if Q.runtime.GOOS() == "windows" then
+if global.runtime.GOOS() == "windows" then
     opts.newsession = false
 else
     opts.newsession = true

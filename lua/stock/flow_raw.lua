@@ -49,8 +49,8 @@ function request(opts, result, retry)
     end
     count = count - 1
 
-    reqopts = Q.http.Gets(reqopts)
-    --reqopts = Q.selenium.Get(reqopts, 0)
+    reqopts = global.http.Gets(reqopts)
+    --reqopts = global.selenium.Get(reqopts, 0)
 
     for i = 1, count do
         local reqopt = reqopts[i]

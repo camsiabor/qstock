@@ -15,16 +15,16 @@ function conserve(A)
     local turnover_ch_lower = A.turnover_ch_lower
     local turnover_ch_upper = A.turnover_ch_upper
 
-    local cache_code = Q.cachem.Get("stock.code");
-    local cache_snapshot = Q.cachem.Get("stock.snapshot");
-    local cache_khistory = Q.cachem.Get("stock.khistory");
+    local cache_code = global.cachem.Get("stock.code");
+    local cache_snapshot = global.cachem.Get("stock.snapshot");
+    local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
 
     local date_offset = A.date_offset
 
 
     local dates_count = conserve_count + conserve_interval + 1
-    local dates = Q.calendar.List(conserve_count + conserve_interval, date_offset, 0, true)
+    local dates = global.calendar.List(conserve_count + conserve_interval, date_offset, 0, true)
 
     local to = conserve_interval + 1
     local from = to + conserve_count - 1
@@ -140,7 +140,7 @@ function conserve(A)
 end
 
 local opt = {}
-opt["mode"] = Q.mode
+opt["mode"] = global.mode
 opt["market"] = "sz.sh"
 opt["date_count"] = 0
 opt["date_offset"] = -1

@@ -43,12 +43,12 @@ function form_cross(A)
     local h_swing_rate_higher = A.h_swing_rate_higher
 
 
-    local cache_code = Q.cachem.Get("stock.code");
+    local cache_code = global.cachem.Get("stock.code");
 
-    local cache_snapshot = Q.cachem.Get("stock.snapshot");
-    local cache_khistory = Q.cachem.Get("stock.khistory");
+    local cache_snapshot = global.cachem.Get("stock.snapshot");
+    local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
-    local dates = Q.calendar.List(cross_count, date_offset, 0, true)
+    local dates = global.calendar.List(cross_count, date_offset, 0, true)
     --Qr(dates)
     local date_count = cross_count + 1
     local cross_to = 1
@@ -148,7 +148,7 @@ function form_cross(A)
 end
 
 local opt = {}
-opt["mode"] = Q.mode
+opt["mode"] = global.mode
 opt["market"] = "sz.sh"
 opt["date_offset"] = -1
 opt["cross_count"] = 2

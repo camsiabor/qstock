@@ -1,22 +1,6 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
-local simple = require("common.simple")
-
-local debuginfo = debug.getinfo(1)
-simple.table_print_all(debuginfo)
-print(line)
-for i = 8, 22 do
-    Q.logger.LogEx(2, i, "hello?")
-end
-
-
-if Q.runtime ~= nil then
-    print(Q.runtime.GOOS())
-    return
-end
-
-
 
 local th_mod_flow = require("sync.th.mod_flow")
 local filters = require("sync.th.mod_flow_filters")

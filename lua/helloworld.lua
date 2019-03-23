@@ -34,7 +34,13 @@ local index_table_end = string.find(html_table, tag_table_end)
 html_table = string.sub(html_table, 1, index_table_end + #tag_table_end)
 
 
-print(#html_table)
+print(html_table)
+
+local pattern_td = '<td>(%W+)</td>'
+local iterater = string.gmatch(html_table, pattern_td)
+for one in iterater do
+    print(one)
+end
 
 local tag_page_info_start = '<span class="page_info">'
 local tag_page_info_end = '</span>'

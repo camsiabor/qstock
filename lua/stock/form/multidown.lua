@@ -8,11 +8,11 @@ function multi_down(A)
         prev_plus = prev + 1
     end
 
-    local cache_code = Q.cachem.Get("stock.code");
-    local cache_snapshot = Q.cachem.Get("stock.snapshot");
-    local cache_khistory = Q.cachem.Get("stock.khistory");
+    local cache_code = global.cachem.Get("stock.code");
+    local cache_snapshot = global.cachem.Get("stock.snapshot");
+    local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
-    local dates = Q.calendar.List(prev_plus - 1, A.date_offset, 0, true)
+    local dates = global.calendar.List(prev_plus - 1, A.date_offset, 0, true)
     local rate_up = A.rate_up + 0
     local rate_down = A.rate_down + 0
 

@@ -108,9 +108,10 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	L.OpenTable()
 	L.OpenString()
 
-	var Q = global.GetInstance().Data()
-	Q["mode"] = mode
-	luar.Register(L, "Q", Q)
+	var g = global.GetInstance()
+	var gmodule = g.Data()
+	gmodule["mode"] = mode
+	luar.Register(L, rlua.TokenGlobalModule(), gmodule)
 
 	var params = o.getScriptParams(m["params"])
 	if params != nil && len(params) > 0 {
@@ -333,8 +334,6 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		L.SetDoCloseStdout(false)
 	}
 
-	var Q = global.GetInstance().Data()
-	luar.Register(L, "Q", Q)
 	var start = time.Now().UnixNano()
 	var rets, rerr = rlua.RunFile(L, scriptname, nil)
 	var end = time.Now().UnixNano()

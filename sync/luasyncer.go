@@ -100,7 +100,7 @@ func (o *Syncer) Lua_handler(phrase string, work *ProfileWork) (interface{}, err
 	Q["syncer"] = o
 	Q["phrase"] = phrase
 
-	luar.Register(L, "Q", Q)
+	luar.Register(L, rlua.TokenGlobalModule(), Q)
 
 	var rets, rerr = rlua.RunFile(L, scriptname, nil)
 	if rerr == nil {

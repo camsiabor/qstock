@@ -21,6 +21,7 @@ local M = {}
 M.__index = M
 
 local xml, xml_tree_handler
+local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -52,7 +53,7 @@ function M:request(opts)
     count = count - 1
 
     local err
-    local browser = Q[opts.browser]
+    local browser = global[opts.browser]
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
@@ -209,11 +210,11 @@ end
 
 function M:persist(opts, data)
 
-    local dates = Q.calendar.List(0, 0, 0, true)
+    local dates = global.calendar.List(0, 0, 0, true)
 
     local db = opts.db
     local datestr = dates[1]
-    local dao = Q.daom.Get("main")
+    local dao = global.daom.Get("main")
 
     local page = 1
     local pageone = {}
@@ -257,10 +258,10 @@ function M:reload(opts, data, as_array)
         as_array = true
     end
 
-    local dates = Q.calendar.List(0, opts.date_offset, 0, true)
+    local dates = global.calendar.List(0, opts.date_offset, 0, true)
     local datestr = dates[1]
     local db = opts.db
-    local dao = Q.daom.Get("main")
+    local dao = global.daom.Get("main")
 
 
     local total = 0

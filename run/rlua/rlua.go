@@ -24,6 +24,12 @@ var _LUA_PATH_FULL string
 var _LUA_CPATH string
 var _LUA_CPATH_FULL string
 
+var _TOKEN_GLOBAL_MODULE = "__q_global"
+
+func TokenGlobalModule() string {
+	return _TOKEN_GLOBAL_MODULE
+}
+
 func GetVal(L *lua.State, idx int) (interface{}, error) {
 	if L.IsNoneOrNil(idx) {
 		return nil, nil
@@ -242,6 +248,10 @@ func InitState() (L *lua.State, err error) {
 
 	L.PushString(_LUA_CPATH_FULL)
 	L.SetField(-2, "cpath")
+
+	var g = global.GetInstance()
+	var gmodule = g.Data()
+	luar.Register(L, _TOKEN_GLOBAL_MODULE, gmodule)
 
 	L.Pop(-1)
 

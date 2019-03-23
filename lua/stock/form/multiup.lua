@@ -1,11 +1,11 @@
 function multi_up(A)
 
     local prev = A.prev + 0
-    local cache_code = Q.cachem.Get("stock.code");
-    local cache_snapshot = Q.cachem.Get("stock.snapshot");
-    local cache_khistory = Q.cachem.Get("stock.khistory");
+    local cache_code = global.cachem.Get("stock.code");
+    local cache_snapshot = global.cachem.Get("stock.snapshot");
+    local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
-    local dates = Q.calendar.List(prev, A.date_offset, 0, true)
+    local dates = global.calendar.List(prev, A.date_offset, 0, true)
 
     local pb_low = A.pb_low + 0
     local pb_high = A.pb_high + 0

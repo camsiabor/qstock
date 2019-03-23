@@ -36,7 +36,7 @@ for i = from, to do
 end
 n = n - 1
 
-reqopts = Q.http.Gets(reqopts)
+reqopts = global.http.Gets(reqopts)
 
 for i = 1, n do
 

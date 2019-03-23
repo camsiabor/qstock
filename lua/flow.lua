@@ -2,7 +2,7 @@ local th_mod_fund = require("sync.th.mod_fund")
 local th_mod_fund_inst = th_mod_fund:new()
 
 
-local cache_code = Q.cachem.Get("stock.code");
+local cache_code = global.cachem.Get("stock.code");
 local codes = cache_code.Get(false, "sz");
 
 -------------------------------------------------------------------------------------

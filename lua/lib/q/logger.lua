@@ -3,9 +3,9 @@
 local M = {}
 
 M.__index = M
-M.logger = Q.logger
-M.loggerm = Q.loggerm
-M.Level = Q.loggerm.LevelInt("info")
+M.logger = global.logger
+M.loggerm = global.loggerm
+M.Level = global.loggerm.LevelInt("info")
 
 M.opts_def = {
     key = "lua",

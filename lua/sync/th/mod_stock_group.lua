@@ -4,6 +4,7 @@
 
 local M = {}
 M.__index = M
+M.TOKEN_PERSIST_GROUP = "ch.stock.group.concept"
 
 local xml, xml_tree_handler
 local global = require("q.global")
@@ -42,11 +43,13 @@ function M:group_request(opts)
 
     reqopt = reqopts[1]
     local html = reqopt["content"]
-    local groups = self:group_parse(html)
+    local groups = self:group_parse(opts, html)
     return groups
 end
 
-function M:group_parse(html)
+-----------------------------------------------------------------------------------------------------------------
+
+function M:group_parse(opts, html)
     local tag_start = '<div class="category boxShadow m_links">'
     local tag_end = '<div class="cate_toggle_wrap">'
     local index = string.find(html, tag_start)
@@ -59,17 +62,73 @@ function M:group_parse(html)
     index = string.find(html, tag_end)
     html = string.sub(html, 1, index - 1)
 
-
     local groups = {}
     local pattern = '<a href="http://q.10jqka.com.cn/gn/detail/code/(%d+)/" target="_blank">(%W+)</a>'
     local iterator = string.gmatch(html, pattern)
+
+    local count = 0
     for code, name in iterator do
         local group = { code = code, name = name, list = { } }
         groups[code] = group
+        count = count + 1
     end
-    return groups
+    return groups, count
 end
 
+-----------------------------------------------------------------------------------------------------------------
+
+function M:group_persist(opts, groups, ngroups)
+    local db = opts.db
+    if db == nil then
+        db = "group"
+    end
+    local dao = global.daom.Get("main")
+    local n = #data
+    print("[persist] group", dao, db, ngroups)
+    local jsonstr = json.encode(groups)
+    local _, err = dao.Update(db, self.TOKEN_PERSIST_GROUP, "", jsonstr, true, 0, nil)
+    if err == nil then
+        print("[persist] group fin")
+    else
+        print("[persist] group failure", err)
+    end
+end
+-----------------------------------------------------------------------------------------------------------------
+
+
+function M:reload(opts, data, result)
+
+    if opts.date_offset == nil then
+        opts.date_offset = 0
+    end
+
+    local dates = global.calendar.List(0, opts.date_offset, 0, true)
+    local datestr = dates[1]
+    local db = opts.db
+    local dao = global.daom.Get("main")
+
+    print("[reload]", datestr)
+    for page = opts.from, opts.to do
+        local key = self:keygen(opts, page)
+        local datastr, err = dao.Get(db, datestr, key, 0, nil)
+        if err ~= nil then
+            print("[reload] failure", datestr, key, err)
+        end
+        if datastr == nil or #datastr == 0 then
+            print("[reload] empty", datestr, key)
+        else
+            local fragment = json.decode(datastr)
+            local n = #fragment
+            for i = 1, n do
+                data[#data + 1] = fragment[i]
+            end
+        end
+
+    end
+
+end
+
+-----------------------------------------------------------------------------------------------------------------
 
 function M:list_request(opts, groups)
 
@@ -82,7 +141,7 @@ function M:list_request(opts, groups)
         if page == nil or page == 0 then
             page = 1
         end
-        local from, to, browser
+        local from, to
         if page == 1 then
             from = 1
             to = 1
@@ -100,7 +159,6 @@ function M:list_request(opts, groups)
             reqopt["encoding"] = "gbk"
             count = count + 1
             reqopts[count] = reqopt
-
         end
     end
 
@@ -147,23 +205,18 @@ function M:list_parse(opts, reqopt, group)
     local html_table = string.sub(html, i_table_start)
     local i_table_end = string.find(html_table, table_end)
     html_table = string.sub(html_table, 1, i_table_end + #table_end)
+    --print(html_table)
 
-
-    print(html_table)
-
-    local pattern_td = '<td>(%W+)</td>'
-    local iterater = string.gmatch(html_table, pattern_td)
-    for one in iterater do
-        print(one)
+    if reqopt.page == nil or reqopt.page <= 1 then
+        local page_start = '<span class="page_info">'
+        local page_end = '</span>'
+        local i_page_start = string.find(html, page_start, i_table_end + #table_end + 1)
+        local i_page_end = string.find(html, page_end, i_page_start + #page_start + 1)
+        local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
+        group.page = page_count
     end
 
-    local page_start = '<span class="page_info">'
-    local page_end = '</span>'
-    local i_page_start = string.find(html, page_start, i_table_end + #table_end + 1)
-    local i_page_end = string.find(html, page_end, i_page_start + #page_start + 1)
-    local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
-
-    return groups
+    return group
 end
 
 
@@ -176,12 +229,20 @@ function M:go(opts)
     if result == nil then
         result = {}
     end
-    opts.browser_original = opts.browser
-    opts.browser = "gorilla"
-    local groups = self:group_request(opts)
-    groups = self:list_request(opts, groups, 1)
 
+    local groups, ngroups
+    if opts.request then
+        opts.browser_original = opts.browser
+        opts.browser = "gorilla"
+        groups, ngroups = self:group_request(opts)
+        if opts.persist then
+            self:group_persist(opts, groups, ngroups)
+        end
+        self:list_request(opts, groups)
+        opts.browser = opts.browser_original
+    else
 
+    end
 
     return data, result
 end
@@ -190,10 +251,11 @@ end
 local opts = {}
 opts.debug = false
 opts.loglevel = 0
+opts.request = true
+opts.request_from = 1
+opts.request_to = 3
 opts.browser = "firefox"
-local groups = M:group_request(opts)
---simple.table_print_all(groups)
-M:list_request(opts, groups)
+local groups = M:go(opts)
 
 
 -------------------------------------------------------------------------------------------

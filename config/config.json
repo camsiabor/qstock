@@ -26,7 +26,8 @@
         "history" : 1,
         "common" : 2,
         "calendar" : 3,
-        "flow" : 4
+        "flow" : 4,
+        "group" : 5
       }
     },
     "es" : {

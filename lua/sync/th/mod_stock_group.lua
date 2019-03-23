@@ -71,23 +71,38 @@ function M:group_parse(html)
 end
 
 
-function M:list_request_page_one(opts, groups)
-    local url_pattern = "http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/1/ajax/1/code/%d"
+function M:list_request(opts, groups)
 
-    local count = 1
+    local url_pattern = "http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/%d/ajax/1/code/%d"
+    local count = 0
     local reqopts = {}
-    for code, group in pairs(groups) do
-        local url = string.format(url_pattern, code)
-        local reqopt = {}
-        reqopt["url"] = url
-        reqopt["page"] = 1
-        reqopt["group"] = group
-        reqopt["encoding"] = "gbk"
-        reqopts[count] = reqopt
-        count = count + 1
-    end
 
-    count = count - 1
+    for code, group in pairs(groups) do
+        local page = group.page
+        if page == nil or page == 0 then
+            page = 1
+        end
+        local from, to, browser
+        if page == 1 then
+            from = 1
+            to = 1
+        else
+            from = 2
+            to = page
+        end
+
+        for p = from, to do
+            local url = string.format(url_pattern, p, code)
+            local reqopt = {}
+            reqopt["url"] = url
+            reqopt["page"] = page
+            reqopt["group"] = group
+            reqopt["encoding"] = "gbk"
+            count = count + 1
+            reqopts[count] = reqopt
+
+        end
+    end
 
     local err
     local browser = global["gorilla"]
@@ -95,46 +110,43 @@ function M:list_request_page_one(opts, groups)
         browser = global[opts.browser]
     end
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
+
     if err ~= nil then
         print("[request] fatal", err)
     end
-    self:list_parse(opts, reqopts, groups)
+
+    for i = 1, #reqopts do
+        local reqopt = reqopts[i]
+        local group = reqopt.group
+        self:list_parse(opts, reqopt, group)
+    end
+
+    return groups
 end
 
-function M:list_parse(opts, reqopts, groups)
-    local url = "http://q.10jqka.com.cn/gn/detail/code/301558/"
-    local opts = {}
-    opts.browser = "gorilla"
+function M:list_parse(opts, reqopt, group)
 
-    local reqopts = {}
-    local reqopt = {}
-    reqopt["url"] = url
-    reqopt["encoding"] = "gbk"
-    reqopts[1] = reqopt
-
-    local err
-    local browser = global[opts.browser]
-    reqopts, err = browser.Get(reqopts, 0, false, 1, 0)
-    if err ~= nil then
-        print("[list] [request] fatal", err)
+    local html = reqopt["content"]
+    if html == nil then
+        local err = reqopt["err"]
+        print("[request] [list] fail", reqopt["url"])
+        print(err)
+        print(reqopt)
         return
     end
 
-    local html = reqopts[1]["content"]
-    --print(html)
+    local table_start = '<table class="m%-table m%-pager%-table">'
+    local table_end = '</table>'
 
-    local tag_table_start = '<table class="m%-table m%-pager%-table">'
-    local tag_table_end = '</table>'
-
-    local index = string.find(html, tag_table_start)
-    if index == nil then
-        print("[list] [request] failure")
+    local i_table_start = string.find(html, table_start)
+    if i_table_start == nil then
+        print("[request] [list] failure", reqopt["url"])
         print(html)
         return
     end
-    local html_table = string.sub(html, index)
-    local index_table_end = string.find(html_table, tag_table_end)
-    html_table = string.sub(html_table, 1, index_table_end + #tag_table_end)
+    local html_table = string.sub(html, i_table_start)
+    local i_table_end = string.find(html_table, table_end)
+    html_table = string.sub(html_table, 1, i_table_end + #table_end)
 
 
     print(html_table)
@@ -145,13 +157,33 @@ function M:list_parse(opts, reqopts, groups)
         print(one)
     end
 
-    local tag_page_info_start = '<span class="page_info">'
-    local tag_page_info_end = '</span>'
-    local index_tag_page_info_start = string.find(html, tag_page_info_start, index_table_end + #tag_table_end + 1)
-    local index_tag_page_info_end = string.find(html, tag_page_info_end, index_tag_page_info_start + #tag_page_info_start + 1)
-    local page_count = string.sub(html, index_tag_page_info_start + #tag_page_info_start + 2, index_tag_page_info_end - 1)
+    local page_start = '<span class="page_info">'
+    local page_end = '</span>'
+    local i_page_start = string.find(html, page_start, i_table_end + #table_end + 1)
+    local i_page_end = string.find(html, page_end, i_page_start + #page_start + 1)
+    local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
+
+    return groups
+end
 
 
+function M:go(opts)
+    local data = opts.data
+    local result = opts.result
+    if data == nil then
+        data = {}
+    end
+    if result == nil then
+        result = {}
+    end
+    opts.browser_original = opts.browser
+    opts.browser = "gorilla"
+    local groups = self:group_request(opts)
+    groups = self:list_request(opts, groups, 1)
+
+
+
+    return data, result
 end
 
 
@@ -433,39 +465,5 @@ end
 
 
 ------------------------------------------------------------------------------------------
-
-function M:go(opts)
-    local data = opts.data
-    local result = opts.result
-    if data == nil then
-        data = {}
-    end
-    if result == nil then
-        result = {}
-    end
-    if opts.dofetch then
-        self:request(opts, data, result)
-        self:persist(opts, data)
-    else
-        self:reload(opts, data, result)
-    end
-
-    if opts.filter == nil then
-        self:filter(opts, data, result)
-    else
-        simple.func_call(opts.filter, opts, data, result)
-    end
-
-    simple.table_sort(result, opts.sort_field)
-
-
-    if opts.print_data == nil then
-        self:print_data(opts, result)
-    else
-        simple.func_call(opts.print_data, opts, result)
-    end
-
-    return data, result
-end
 
 --return M

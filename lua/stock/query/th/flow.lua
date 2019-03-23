@@ -21,7 +21,7 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
-opts.dofetch = true
+opts.dofetch = false
 opts.date_offset = 0
 opts.date_offset_from = -4
 opts.date_offset_to = 3

@@ -1,7 +1,6 @@
-
 -- http://q.10jqka.com.cn/gn/detail/code/301365/
 -- http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/2/ajax/1/code/304582
-
+-- http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/1/ajax/1/code/301558
 
 local M = {}
 M.__index = M
@@ -20,17 +19,68 @@ function M:new()
 end
 
 -------------------------------------------------------------------------------------------
-function M:request(opts, data, result)
 
-    local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
-    local url_suffix = "/ajax/1"
+function M:group_request(opts)
+    local url = "http://q.10jqka.com.cn/gn"
+
+    local reqopts = {}
+    local reqopt = {}
+    reqopt["url"] = url
+    reqopt["encoding"] = "gbk"
+    reqopts[1] = reqopt
+
+    local err
+    local browser = Q["gorilla"]
+    if browser == nil then
+        browser = Q[opts.browser]
+    end
+    reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
+    if err ~= nil then
+        print("[request] fatal", err)
+    end
+
+    reqopt = reqopts[1]
+    local html = reqopt["content"]
+    local groups = self:group_parse(html)
+    return groups
+end
+
+function M:group_parse(html)
+    local tag_start = '<div class="category boxShadow m_links">'
+    local tag_end = '<div class="cate_toggle_wrap">'
+    local index = string.find(html, tag_start)
+    if index == nil then
+        print("[group] [request] failure")
+        print(html)
+        return
+    end
+    html = string.sub(html, index)
+    index = string.find(html, tag_end)
+    html = string.sub(html, 1, index - 1)
+
+
+    local groups = {}
+    local pattern = '<a href="http://q.10jqka.com.cn/gn/detail/code/(%d+)/" target="_blank">(%W+)</a>'
+    local iterator = string.gmatch(html, pattern)
+    for code, name in iterator do
+        groups[code] = name
+    end
+    return groups
+end
+
+
+function M:list_request_page_one(opts, groups)
+    local url_pattern = "http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/1/ajax/1/code/%d"
 
     local count = 1
     local reqopts = {}
-    for page = opts.from, opts.to do
-        local url = url_prefix..page..url_suffix
+    for code, name in pairs(groups) do
+        local url = string.format(url_pattern, code)
         local reqopt = {}
         reqopt["url"] = url
+        reqopt["page"] = 1
+        reqopt["name"] = name
+        reqopt["encoding"] = "gbk"
         reqopts[count] = reqopt
         count = count + 1
     end
@@ -38,23 +88,30 @@ function M:request(opts, data, result)
     count = count - 1
 
     local err
-    local browser = Q[opts.browser]
+    local browser = Q["gorilla"]
+    if browser == nil then
+        browser = Q[opts.browser]
+    end
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
-
     if err ~= nil then
         print("[request] fatal", err)
     end
+    self:list_parse(opts, reqopts, groups)
+end
 
-    for i = 1, count do
-        local reqopt = reqopts[i]
-        self:parse_html(opts, data, result, reqopt)
-    end
-
-
-
-    return result
+function M:list_parse(opts, reqopts, groups)
 
 end
+
+
+local opts = {}
+opts.debug = false
+opts.loglevel = 0
+opts.browser = "firefox"
+local groups = M:group_request(opts)
+--simple.table_print_all(groups)
+M:list_request(opts, groups)
+
 
 -------------------------------------------------------------------------------------------
 function M:parse_html(opts, data, result, reqopt)
@@ -360,4 +417,4 @@ function M:go(opts)
     return data, result
 end
 
-return M
+--return M

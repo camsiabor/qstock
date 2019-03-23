@@ -9,7 +9,7 @@ local codes = cache_code.Get(false, "sh");
 
 local fetch_from = 1
 local fetch_to = 0
-local fetch_each = 5
+local fetch_each = 30
 
 local data = {}
 local result = {}
@@ -17,13 +17,13 @@ local opts = {}
 opts.loglevel = 0
 --opts.browser = "gorilla"
 --opts.browser = "std"
---opts.browser = "chrome"
-opts.browser = "gorilla"
+opts.browser = "chrome"
+--opts.browser = "gorilla"
 
 if opts.browser == "gorilla" then
     opts.concurrent = fetch_each
 else
-    opts.concurrent = 5
+    opts.concurrent = 3
 end
 
 opts.newsession = false

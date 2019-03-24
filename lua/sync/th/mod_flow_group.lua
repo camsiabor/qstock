@@ -1,21 +1,7 @@
 
 
--- http://data.10jqka.com.cn/funds/gnzjl/field/tradezdf/order/desc/page/2/ajax/1/
+--http://data.10jqka.com.cn/funds/gnzjl/board/1/field/tradezdf/order/desc/page/1/ajax/1/
 
-
---[[
-     1序号
-    2股票代码
-    3股票简称
-    4最新价
-    5涨跌幅
-    6换手率
-    7流入资金(元)
-    8流出资金(元)
-    9净额(元)
-    10成交额(元)
-    11大单流入(元)
-]]--
 
 local M = {}
 M.__index = M
@@ -137,8 +123,8 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function M:keygen(opts, page)
-    local key = string.format("%s.%s.%s.%d.%d", opts.datasrc, opts.request_field, opts.request_order, opts.request_board, page)
+function M:keygen(opts)
+    local key = string.format("%s.stock.group.flow.%s.%s.%d", opts.datasrc, opts.request_field, opts.request_order, opts.request_board)
     return key
 end
 
@@ -152,30 +138,15 @@ function M:persist(opts, data)
     local datestr = dates[1]
     local dao = global.daom.Get("main")
 
-    local page = 1
-    local pageone = {}
-
     local n = #data
-    print("[persist]", datestr , "data count", n)
-    for i = 1, n do
-        pageone[#pageone + 1] = data[i]
-        if (i % 50 == 0) or (i == n) then
-            local jsonstr = json.encode(pageone)
-
-            local key = self:keygen(opts, page)
-            local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
-            if err == nil then
-                if opts.debug then
-                    print("[persist]", datestr, key, #pageone)
-                end
-            else
-                print("[persist] failure", err)
-            end
-            page = page + 1
-            pageone = {}
-        end
+    local key = self:keygen(opts)
+    local jsonstr = json.encode(data)
+    local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
+    if err == nil then
+        print("[persist] success", datestr, key, n)
+    else
+        print("[persist] failure", datestr, key, err)
     end
-    print("[persist] fin")
 end
 
 -------------------------------------------------------------------------------------------
@@ -199,36 +170,17 @@ function M:reload(opts, data, as_array)
     local db = opts.db
     local dao = global.daom.Get("main")
 
-
-    local total = 0
-    for page = opts.request_from, opts.request_to do
-        local key = self:keygen(opts, page)
-        local datastr, err = dao.Get(db, datestr, key, 0, nil)
-        if err ~= nil then
-            print("[reload] failure", datestr, key, err)
-        end
-        if datastr == nil or #datastr == 0 then
-            print("[reload] empty", datestr, key)
-        else
-            local fragment = json.decode(datastr)
-            local n = #fragment
-
-            if as_array then
-                for i = 1, n do
-                    local one = fragment[i]
-                    data[#data + 1] = one
-                end
-            else
-                for i = 1, n do
-                    local one = fragment[i]
-                    local code = one.code
-                    data[code] = one
-                end
-            end
-            total = total + n
-        end
+    local key = self:keygen(opts)
+    local datastr, err = dao.Get(db, datestr, key, 0, nil)
+    if err ~= nil then
+        print("[reload] failure", datestr, key, err)
     end
-    print("[reload]", datestr, total, "as array", as_array)
+    if datastr == nil or #datastr == 0 then
+        print("[reload] empty", datestr, key)
+    else
+        data = json.decode(datastr)
+    end
+    print("[reload]", datestr, key, #data)
     return data
 
 end
@@ -458,6 +410,14 @@ end
 ------------------------------------------------------------------------------------------
 
 function M:go(opts)
+
+    simple.def(opts, "request_field", "tradezdf")
+    simple.def(opts, "request_order", "desc")
+    simple.def(opts, "request_board", 1)
+    simple.def(opts, "request_from", 1)
+    simple.def(opts, "request_to", 5)
+
+    simple.def(opts, "db", "flow")
 
     local data_curr, code_mapping
     if opts.request then

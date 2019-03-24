@@ -177,6 +177,16 @@
         "db" : "flow",
         "handler" : "Lua_handler",
         "script" : "sync/th/work/flow.lua"
+      },
+      "stock.group" : {
+        "api" : "http://data.10jqka.com.cn",
+        "browser" : "firefox",
+        "concurrent" : 1,
+        "interval": 600,
+        "dao" : "main",
+        "db" : "flow",
+        "handler" : "Lua_handler",
+        "script" : "sync/th/work/stock_group.lua"
       }
     }
   }

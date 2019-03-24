@@ -24,7 +24,7 @@ opts.browser = "firefox"
 
 opts.request = false
 opts.request_from = 1
-opts.request_to   = 10
+opts.request_to   = 5
 
 opts.reload_check = true
 

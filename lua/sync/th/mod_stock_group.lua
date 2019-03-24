@@ -282,9 +282,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function M:list_reload(opts)
-    if opts.date_offset == nil then
-        opts.date_offset = 0
-    end
     local db = opts.db
     if db == nil then
         db = "group"
@@ -356,6 +353,42 @@ function M:list_reload_non_complete(opts)
     end
     print("[noncomplete] count ", simple.table_count(todos))
     return todos
+end
+
+function M:list_code_group_mapping(groups)
+    local mapping = {}
+    for groupcode, group in pairs(groups) do
+        for code, name in pairs(group.list) do
+            local map = mapping[code]
+            if map == nil then
+                map = {}
+                mapping[code] = map
+                mapping[name] = map
+            end
+            map[group.name] = groupcode
+        end
+    end
+    return mapping
+end
+
+function M:code_group_mapping(from_cache)
+    local mapping
+    local mappingstr
+    local cachekey = "code.group.mapping"
+    local cache = global.cachem.Get(self.TOKEN_PERSIST_LIST)
+    if from_cache then
+        local mappingstr = cache.Get(false, cachekey)
+        if mappingstr ~= nil and #mappingstr > 0 then
+            mapping = json.decode(mappingstr)
+        end
+    end
+    if mapping == nil then
+        local groups = self:list_reload({})
+        mapping = self:list_code_group_mapping(groups)
+        mappingstr = json.encode(mapping)
+        cache.Set(mappingstr, cachekey)
+    end
+    return mapping
 end
 
 function M:go(opts)

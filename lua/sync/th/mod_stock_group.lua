@@ -4,7 +4,8 @@
 
 local M = {}
 M.__index = M
-M.TOKEN_PERSIST_GROUP = "ch.stock.group.concept"
+M.TOKEN_PERSIST_GROUP = "ch.stock.group.concept.index"
+M.TOKEN_PERSIST_LIST = "ch.stock.group.concept"
 
 
 local global = require("q.global")
@@ -77,7 +78,7 @@ end
 
 -----------------------------------------------------------------------------------------------------------------
 
-function M:group_persist(opts, groups, ngroups)
+function M:group_persist(opts, groups)
     local db = opts.db
     if db == nil then
         db = "group"
@@ -177,7 +178,24 @@ function M:list_request(opts, groups)
     return groups
 end
 
-function M:list_parse(opts, reqopt, group)
+
+--[[
+    1 序号
+    2 代码
+    3 名称
+    4 现价
+    5 涨跌幅(%)
+    6 涨跌(%)
+    7 涨速(%)
+    8 换手(%)
+    9 量比
+    10 振幅(%)
+    11 成交额
+    12 流通股
+    13 流通市值
+    14 市盈率
+]]--
+function M:list_parse(opts, reqopt, group, data)
 
     local html = reqopt["content"]
     if html == nil then
@@ -218,223 +236,46 @@ function M:list_parse(opts, reqopt, group)
     local tbody = root:select("tbody")[1]
     local tr_count = #tbody.nodes
     for i = 1, tr_count do
+
         local tr = tbody.nodes[i]
         local tds = tr.nodes
-        local td = tds[1]
-        print(td:getcontent())
-        print(simple.metatable_print_all(td))
-        print("----------------------------------")
+        local code = tds[2].nodes[1]:getcontent()
+        local name = tds[3].nodes[1]:getcontent()
+
+        group.list[code] = name
+
     end -- for tr end
 
     return group
 end
 
+------------------------------------------------------------------------------------------------------------------------
 
-function M:go(opts)
-    local data = opts.data
-    local result = opts.result
-    if data == nil then
-        data = {}
-    end
-    if result == nil then
-        result = {}
-    end
-
-    local groups, ngroups
-    if opts.request then
-        opts.browser_original = opts.browser
-        opts.browser = "gorilla"
-        groups, ngroups = self:group_request(opts)
-        if opts.persist then
-            self:group_persist(opts, groups, ngroups)
-        end
-        self:list_request(opts, groups)
-        opts.browser = opts.browser_original
-    else
-
-    end
-
-    return data, result
-end
-
-
--------------------------------------------------------------------------------------------
-function M:parse_html(opts, data, result, reqopt)
-    local url = reqopt["url"]
-    local html = reqopt["content"]
-
-    if html == nil then
-        print("[error] request failure")
-        print(url)
-        print(reqopt["err"])
-        return
-    end
-
-    if xml == nil then
-        xml = require("common.xml2lua.xml2lua")
-        xml_tree_handler = require("common.xml2lua.tree")
-    end
-
-    local tree = xml_tree_handler:new()
-    local parser = xml.parser(tree)
-    parser:parse(html)
-
-
-    local htable = tree.root.html.body.table
-    if htable == nil then
-        print("[error] response content invalid "..#html)
-        print(url)
-        print(html)
-        print("")
-        return
-    end
-
-    local tbody = htable.tbody
-
-    local tr_count = #tbody.tr
-
-    for i = 1, tr_count do
-
-        local tr = tbody.tr[i]
-        local index = tr.td[1][1]
-        local code = tr.td[2].a[1]
-        local name = tr.td[3].a[1]
-        local change_rate = tr.td[5][1]
-        local turnover = tr.td[6][1]
-        local flow_in = tr.td[7][1]
-        local flow_out = tr.td[8][1]
-        local flow = tr.td[9][1]
-        local amount = tr.td[10][1]
-        local flow_big = tr.td[11][1]
-
-        turnover = string.gsub(turnover, "%%", "") + 0
-        change_rate = string.gsub(change_rate, "%%", "") + 0
-
-        flow = simple.str2num(flow)
-        flow_in = simple.str2num(flow_in)
-        flow_out = simple.str2num(flow_out)
-        flow_big = simple.str2num(flow_big)
-
-        flow_in = simple.nozero(flow_in)
-        flow_out = simple.nozero(flow_out)
-        flow_big = simple.nozero(flow_big)
-
-        amount = simple.str2num(amount)
-
-        if amount <= 0 then
-            amount = 0.0001
-        end
-
-        local flow_big_rate = flow_big / amount * 100
-        local flow_big_rate_compare = flow / flow_big
-        local flow_big_rate_total = turnover * flow_big_rate / 100
-
-        local flow_in_rate = flow_in / amount * 100
-        local flow_out_rate = flow_out / amount * 100
-        local flow_io_rate = flow_in / flow_out
-
-        local flow_big_in_rate = flow_big / flow_in * 100
-
-        --local flow_big_rate_cross = (turnover * amount * flow_big_rate / 100) * flow_io_rate * flow_big_in_rate
-        local flow_big_rate_cross = flow_io_rate * flow_big_rate_total * flow_big_rate / 100 * flow_big_in_rate
-        local change_rate_ex = change_rate
-        if change_rate_ex < 0 then
-            change_rate_ex = 0.1
-        end
-        local flow_big_rate_cross_ex = flow_big_rate_cross / (change_rate_ex + 2.5)
-
-        flow_big_rate = simple.numcon(flow_big_rate)
-        flow_big_rate_compare = simple.numcon(flow_big_rate_compare)
-        flow_big_rate_total = simple.numcon(flow_big_rate_total)
-        flow_big_rate_cross = simple.numcon(flow_big_rate_cross)
-        flow_big_rate_cross_ex = simple.numcon(flow_big_rate_cross_ex)
-
-        flow_in_rate = simple.numcon(flow_in_rate)
-        flow_out_rate = simple.numcon(flow_out_rate)
-        flow_io_rate = simple.numcon(flow_io_rate)
-
-        flow_big_in_rate = simple.numcon(flow_big_in_rate)
-
-        local one = {}
-        one.index = index
-        one.code = code
-        one.name = name
-        one.flow = flow
-        one.flow_in = flow_in
-        one.flow_out = flow_out
-        one.amount = amount
-        one.turnover = turnover
-        one.flow_big = flow_big
-        one.change_rate = change_rate
-
-        one.flow_big_rate = flow_big_rate
-        one.flow_big_rate_total = flow_big_rate_total
-        one.flow_big_rate_compare = flow_big_rate_compare
-        one.flow_big_rate_cross = flow_big_rate_cross
-        one.flow_big_rate_cross_ex = flow_big_rate_cross_ex
-
-        one.flow_in_rate = flow_in_rate
-        one.flow_out_rate = flow_out_rate
-        one.flow_io_rate = flow_io_rate
-
-        one.flow_big_in_rate = flow_big_in_rate
-
-        data[#data + 1] = one
-
-
-    end -- for tr end
-end
-
-
--------------------------------------------------------------------------------------------
-
-function M:keygen(opts, page)
-    local key = string.format("%s.%s.%s.%d", opts.datasrc, opts.field, opts.order, page)
-    return key
-end
-
-
-
--------------------------------------------------------------------------------------------
-
-function M:persist(opts, data)
-
-    local dates = global.calendar.List(0, 0, 0, true)
-
+function M:list_persist(opts, groups)
     local db = opts.db
-    local datestr = dates[1]
+    if db == nil then
+        db = "group"
+    end
     local dao = global.daom.Get("main")
 
-    local page = 1
-    local pageone = {}
-    local pagesize = 50
-
-    local n = #data
-    print("[persist]", datestr , "data count", n)
-    for i = 1, n do
-        pageone[#pageone + 1] = data[i]
-        if (i % 50 == 0) or (i == n) then
-            local jsonstr = json.encode(pageone)
-            --print(jsonstr)
-            local key = self:keygen(opts, page)
-            local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
+    local n = 1
+    for code, group in pairs(groups) do
+        if n >= opts.request_from and n <= opts.request_to then
+            local jsonstr = json.encode(group)
+            local _, err = dao.Update(db, self.TOKEN_PERSIST_LIST, code, jsonstr, true, 0, nil)
             if err == nil then
-                if opts.debug then
-                    print("[persist]", datestr, key, #pageone)
-                end
+                print("[persist] list", code)
             else
-                print("[persist] failure", err)
+                print("[persist] list failure", err)
             end
-            page = page + 1
-            pageone = {}
         end
+        n = n + 1
     end
-    print("[persist] fin")
 end
 
--------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
-function M:reload(opts, data, result)
+function M:list_reload(opts)
 
     if opts.date_offset == nil then
         opts.date_offset = 0
@@ -463,28 +304,43 @@ function M:reload(opts, data, result)
         end
 
     end
-
 end
 
 
--------------------------------------------------------------------------------------------
-function M:filter(opts, data, result)
-
-    local n = #data
-    for i = 1, n do
-        local one = data[i]
-        local critical = one.change_rate >= opts.ch_lower and one.change_rate <= opts.ch_upper
-        if critical then
-            critical = one.flow_big_rate_compare >= opts.big_c_lower and one.flow_big_rate_compare <= opts.big_c_upper
-            if critical then
-                result[#result + 1] = one
-            end
-        end
+function M:go(opts)
+    local data = opts.data
+    local result = opts.result
+    if data == nil then
+        data = {}
+    end
+    if result == nil then
+        result = {}
     end
 
+    local groups, ngroups
+    if opts.request then
+        opts.browser_original = opts.browser
+        opts.browser = "gorilla"
+        groups, ngroups = self:group_request(opts)
+        if opts.persist then
+            self:group_persist(opts, groups)
+        end
+        self:list_request(opts, groups)
+        opts.browser = opts.browser_original
+        self:list_request(opts, groups)
+        if opts.persist then
+            self:list_persist(opts, groups)
+        end
+    else
 
+    end
 
+    return data, result
 end
+
+
+
+
 
 -------------------------------------------------------------------------------------------
 function M:print_data(opts, data)

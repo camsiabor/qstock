@@ -396,9 +396,6 @@ function M:filter(opts, data_curr, code_mapping, result)
     end
 
     local filters_count = #filters
-
-
-
     local data_curr_count = #data_curr
     for i = 1, data_curr_count do
         local one_curr = data_curr[i]

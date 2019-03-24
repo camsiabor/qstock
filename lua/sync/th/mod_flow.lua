@@ -42,7 +42,7 @@ function M:request(opts)
 
     local count = 1
     local reqopts = {}
-    for page = opts.from, opts.to do
+    for page = opts.request_from, opts.request_to do
         local url = url_prefix..page..url_suffix
         local reqopt = {}
         reqopt["url"] = url

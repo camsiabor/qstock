@@ -22,7 +22,7 @@ opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
 
-opts.request = false
+opts.request = true
 opts.request_from = 1
 opts.request_to   = 5
 

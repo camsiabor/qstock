@@ -21,6 +21,7 @@ opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
 
+opts.request = true
 opts.request_from = 1
 opts.request_to = 71
 
@@ -37,7 +38,6 @@ end
 
 opts.persist = true
 
-opts.dofetch = true
 opts.date_offset = 0
 opts.date_offset_from = 0
 opts.date_offset_to = 0

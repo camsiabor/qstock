@@ -182,7 +182,7 @@
         "api" : "http://data.10jqka.com.cn",
         "browser" : "firefox",
         "concurrent" : 1,
-        "interval": 360,
+        "interval": 1800,
         "dao" : "main",
         "db" : "flow",
         "handler" : "Lua_handler",

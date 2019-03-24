@@ -79,6 +79,14 @@ function simple.table_print_all(obj)
     end
 end
 
+function simple.table_count(obj)
+    local n = 0
+    for _ in pairs(obj) do
+        n = n + 1
+    end
+    return n
+end
+
 
 function simple.table_print(obj, fields, suffix)
     local n = #fields

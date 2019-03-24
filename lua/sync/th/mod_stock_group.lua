@@ -9,6 +9,7 @@ M.TOKEN_PERSIST_LIST = "ch.stock.group.concept"
 
 
 local global = require("q.global")
+local logger = require("q.logger")
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -134,9 +135,8 @@ function M:list_request(opts, groups)
                 from = 1
                 to = 1
             else
-                from = 2
+                from = 1
                 to = page
-
             end
 
             for p = from, to do
@@ -171,7 +171,8 @@ function M:list_request(opts, groups)
 
     for i = 1, #reqopts do
         local reqopt = reqopts[i]
-        local group = groups[reqopt.code]
+        local code = reqopt.code
+        local group = groups[code]
         self:list_parse(opts, reqopt, group)
     end
 
@@ -195,7 +196,7 @@ end
     13 流通市值
     14 市盈率
 ]]--
-function M:list_parse(opts, reqopt, group, data)
+function M:list_parse(opts, reqopt, group)
 
     local html = reqopt["content"]
     if html == nil then
@@ -223,9 +224,14 @@ function M:list_parse(opts, reqopt, group, data)
         local page_start = '<span class="page_info">'
         local page_end = '</span>'
         local i_page_start = string.find(html, page_start, i_table_end + #table_end + 1)
-        local i_page_end = string.find(html, page_end, i_page_start + #page_start + 1)
-        local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
-        group.page = page_count
+        if i_page_start == nil then
+            group.page = 1
+            --logger:error("[parse] list page start not found", group.code, group.name)
+        else
+            local i_page_end = string.find(html, page_end, i_page_start + #page_start + 1)
+            local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
+            group.page = page_count + 0
+        end
     end
 
     if self.htmlparser == nil then
@@ -236,7 +242,6 @@ function M:list_parse(opts, reqopt, group, data)
     local tbody = root:select("tbody")[1]
     local tr_count = #tbody.nodes
     for i = 1, tr_count do
-
         local tr = tbody.nodes[i]
         local tds = tr.nodes
         local code = tds[2].nodes[1]:getcontent()
@@ -249,22 +254,26 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 
-function M:list_persist(opts, groups)
+function M:list_persist(opts, groups, log)
     local db = opts.db
     if db == nil then
         db = "group"
     end
     local dao = global.daom.Get("main")
-
     local n = 1
     for code, group in pairs(groups) do
         if n >= opts.request_from and n <= opts.request_to then
+            local key = "ch" .. code
             local jsonstr = json.encode(group)
-            local _, err = dao.Update(db, self.TOKEN_PERSIST_LIST, code, jsonstr, true, 0, nil)
+            local _, err = dao.Update(db, self.TOKEN_PERSIST_LIST, key, jsonstr, true, 0, nil)
             if err == nil then
-                print("[persist] list", code, group.name, group.page)
+                if log then
+                    print("[persist] list", code, group.name, group.page)
+                end
             else
-                print("[persist] list failure", code, group.name, err)
+                if log then
+                    print("[persist] list failure", code, group.name, err)
+                end
             end
         end
         n = n + 1
@@ -283,17 +292,71 @@ function M:list_reload(opts)
     end
     local dao = global.daom.Get("main")
     print("[reload] stock group concept")
-    local datastr, err = dao.Get(db, self.TOKEN_PERSIST_LIST, "", 0, nil)
+    local map, err = dao.Get(db, "", self.TOKEN_PERSIST_LIST, 1, nil)
     if err ~= nil then
         print("[reload] failure", db, self.TOKEN_PERSIST_LIST, err)
         return
     end
-    if datastr == nil or #datastr == 0 then
+    if map == nil or simple.table_count(map) == 0 then
         print("[reload] empty", db, self.TOKEN_PERSIST_LIST)
         return
     end
-    local groups = json.decode(datastr)
+    local groups = {}
+    for key in pairs(map) do
+        local groupstr = map[key]
+        if #groupstr > 0 then
+            local group = json.decode(groupstr)
+            local code = string.gsub(key, "ch", "")
+            groups[code] = group
+        end
+    end
     return groups
+end
+
+function M:list_reload_non_complete(opts)
+    local index = self:group_reload(opts)
+    local groups = self:list_reload(opts)
+    local todos = { }
+    local count = 0
+
+    for code, igroup in pairs(index) do
+        local key = code
+        local group = groups[key]
+        local noncomplete = group == nil
+        if noncomplete then
+            print("[noncomplete] group nil", code)
+        else
+            if group.page == nil then
+                group.page = 0
+            else
+                group.page = group.page + 0
+            end
+            noncomplete = group.page <= 0
+            if noncomplete then
+                print("[noncomplete] group page zero", code, group.name, group.page)
+            else
+                noncomplete = simple.table_count(group.list) <= 0
+                if noncomplete then
+                    print("[noncomplete] group list zero", code, group.name, group.page)
+                end
+            end
+        end
+
+        if not noncomplete then
+            local suppose = (group.page - 1) * 10 + 1
+            local currcount = simple.table_count(group.list)
+            noncomplete = currcount < suppose
+            if noncomplete then
+                print("[noncomplete] group list not full", code, group.name, suppose, currcount)
+            end
+        end
+        if noncomplete then
+            todos[code] = igroup
+            count = count + 1
+        end
+    end
+    print("[noncomplete] count ", simple.table_count(todos))
+    return todos
 end
 
 function M:go(opts)
@@ -305,13 +368,27 @@ function M:go(opts)
         if opts.persist then
             self:group_persist(opts, groups)
         end
+
         self:list_request(opts, groups)
+        if opts.persist then
+            self:list_persist(opts, groups, false)
+        end
+
         opts.browser = opts.browser_original
         self:list_request(opts, groups)
         if opts.persist then
-            self:list_persist(opts, groups)
+            self:list_persist(opts, groups, true)
         end
     else
+        if opts.reload_check then
+            local todos = self:list_reload_non_complete(opts)
+            opts.browser_original = opts.browser
+            opts.browser = "gorilla"
+            self:list_request(opts, todos)
+            opts.browser = opts.browser_original
+            self:list_request(opts, todos)
+            self:list_persist(opts, todos, true)
+        end
         groups = self:list_reload(opts)
     end
     return groups

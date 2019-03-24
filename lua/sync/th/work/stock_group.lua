@@ -22,13 +22,15 @@ opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
 
-opts.request = true
+opts.request = false
 opts.request_from = 1
-opts.request_to   = 10
+opts.request_to   = 1
+
+opts.reload_check = true
 
 opts.persist = true
 
-opts.concurrent = simple.get(profile, "concurrent", 3)
+opts.concurrent = simple.get(profile, "concurrent", 1)
 
 if global.runtime.GOOS() == "windows" then
     opts.newsession = false
@@ -42,6 +44,11 @@ opts.datasrc = "th"
 opts.print_data_from = -1
 opts.print_data_to = -1
 
-local groups = stock_group_inst:go(opts)
 
-simple.table_print_all(groups)
+
+
+local groups = stock_group_inst:go(opts)
+for code, group in pairs(groups) do 
+    print(code, group.name, group.page, simple.table_count(group.list))
+end
+--simple.table_print_all(groups)

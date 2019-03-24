@@ -1,50 +1,31 @@
-local url = "http://q.10jqka.com.cn/gn/detail/code/301558/"
-
+local global = require("q.global")
+local json = require("common.json")
+local simple = require("common.simple")
+ 
+local TOKEN_PERSIST_LIST = "ch.stock.group.concept"
+ 
 local opts = {}
-opts.browser = "gorilla"
-
-local reqopts = {}
-local reqopt = {}
-reqopt["url"] = url
-reqopt["encoding"] = "gbk"
-reqopts[1] = reqopt
-
-local err
-local browser = Q[opts.browser]
-reqopts, err = browser.Get(reqopts, 0, false, 1, 0)
+local db = opts.db
+if db == nil then
+    db = "group"
+end
+local dao = global.daom.Get("main")
+print("[reload] stock group concept")
+local map, err = dao.Get(db, "", TOKEN_PERSIST_LIST, 1, nil)
 if err ~= nil then
-    print("[list] [request] fatal", err)
+    print("[reload] failure", db, TOKEN_PERSIST_LIST, err)
     return
 end
-
-local html = reqopts[1]["content"]
---print(html)
-
-local tag_table_start = '<table class="m%-table m%-pager%-table">'
-local tag_table_end = '</table>'
-
-local index = string.find(html, tag_table_start)
-if index == nil then
-    print("[list] [request] failure")
-    print(html)
+if map == nil or simple.table_count(map) == 0 then
+    print("[reload] empty", db, TOKEN_PERSIST_LIST)
     return
 end
-local html_table = string.sub(html, index)
-local index_table_end = string.find(html_table, tag_table_end)
-html_table = string.sub(html_table, 1, index_table_end + #tag_table_end)
-
-
-print(html_table)
-
-local pattern_td = '<td>(%W+)</td>'
-local iterater = string.gmatch(html_table, pattern_td)
-for one in iterater do
-    print(one)
+local groups = {}
+for code in pairs(map) do
+    local groupstr = map[code]
+    if #groupstr > 0 then
+        local group = json.decode(groupstr)
+        groups[code] = group
+    end
 end
-
-local tag_page_info_start = '<span class="page_info">'
-local tag_page_info_end = '</span>'
-local index_tag_page_info_start = string.find(html, tag_page_info_start, index_table_end + #tag_table_end + 1)
-local index_tag_page_info_end = string.find(html, tag_page_info_end, index_tag_page_info_start + #tag_page_info_start + 1)
-local html_page_info = string.sub(html, index_tag_page_info_start + #tag_page_info_start + 2, index_tag_page_info_end - 1)
-print(html_page_info)
+return groups

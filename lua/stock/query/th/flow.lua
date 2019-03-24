@@ -73,7 +73,10 @@ opts.filters =  {
     --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
     
     -- flow in increase
-    filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -3, ch_upper = 10 })
+    --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -3, ch_upper = 10 })
+    
+    -- io any
+    filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = -10, ch_upper = 10, big_in_lower = 0  })
     
 
 }

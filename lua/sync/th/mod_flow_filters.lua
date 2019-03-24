@@ -84,9 +84,13 @@ end
 -----------------------------------------------------------------------------------------------------------
 function M.io_any(fopts)
 
-    simple.def(fopts, "in_lower", 50)
-    simple.def(fopts, "in_upper", 100)
-    simple.def(fopts, "in_swing", 3)
+    simple.def(fopts, "io_lower", 1)
+    simple.def(fopts, "io_upper", 100)
+
+    simple.def(fopts, "big_in_lower", 10)
+    simple.def(fopts, "big_in_upper", 100)
+
+    simple.def(fopts, "turnover", 0.5)
 
     simple.def(fopts, "ch_lower", -1.5)
     simple.def(fopts, "ch_upper", 6)
@@ -95,14 +99,16 @@ function M.io_any(fopts)
         local include = false
         for i = 1, currindex do
             local one = series[i]
-            local io = one.flow_io_rate
-            local big_in = one.flow_big_in_rate
-            include = io >= fopts.io_lower and io <= fopts.io_upper
-                    and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
-                    and one.turnover >= fopts.turnover
-                    and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
-            if include then
-                break
+            if one ~= nil then
+                local io = one.flow_io_rate
+                local big_in = one.flow_big_in_rate
+                include = io >= fopts.io_lower and io <= fopts.io_upper
+                        and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
+                        and one.turnover >= fopts.turnover
+                        and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+                if include then
+                    return true
+                end
             end
         end
         return include
@@ -112,9 +118,13 @@ end
 -----------------------------------------------------------------------------------------------------------
 function M.io_all(fopts)
 
-    simple.def(fopts, "in_lower", 50)
-    simple.def(fopts, "in_upper", 100)
-    simple.def(fopts, "in_swing", 3)
+    simple.def(fopts, "io_lower", 1)
+    simple.def(fopts, "io_upper", 100)
+
+    simple.def(fopts, "big_in_lower", 10)
+    simple.def(fopts, "big_in_upper", 100)
+
+    simple.def(fopts, "turnover", 0.5)
 
     simple.def(fopts, "ch_lower", -1.5)
     simple.def(fopts, "ch_upper", 6)
@@ -123,14 +133,16 @@ function M.io_all(fopts)
         local include = true
         for i = 1, currindex do
             local one = series[i]
-            local io = one.flow_io_rate
-            local big_in = one.flow_big_in_rate
-            include = io >= fopts.io_lower and io <= fopts.io_upper
-                    and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
-                    and one.turnover >= fopts.turnover
-                    and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
-            if not include then
-                break
+            if one ~= nil then
+                local io = one.flow_io_rate
+                local big_in = one.flow_big_in_rate
+                include = io >= fopts.io_lower and io <= fopts.io_upper
+                        and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
+                        and one.turnover >= fopts.turnover
+                        and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+                if not include then
+                    break
+                end
             end
         end
         return include

@@ -71,6 +71,9 @@ end
 
 
 function simple.table_print_all(obj)
+    if obj == nil then
+        return
+    end
     for k, v in pairs(obj) do
         print(k, v)
     end

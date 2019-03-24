@@ -33,10 +33,7 @@ function M:group_request(opts)
     reqopts[1] = reqopt
 
     local err
-    local browser = global["gorilla"]
-    if browser == nil then
-        browser = global[opts.browser]
-    end
+    local browser = global[opts.browser]
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
     if err ~= nil then
         print("[request] fatal", err)
@@ -128,7 +125,10 @@ function M:list_request(opts, groups)
             local page = group.page
             if page == nil or page == 0 then
                 page = 1
+            else
+                page = page + 0
             end
+
             local from, to
             if page == 1 then
                 from = 1
@@ -150,8 +150,8 @@ function M:list_request(opts, groups)
 
                 local reqopt = {}
                 reqopt["url"] = url
-                reqopt["page"] = page
-                reqopt["group"] = group
+                reqopt["page"] = p
+                reqopt["code"] = group.code
                 reqopt["encoding"] = "gbk"
                 count = count + 1
                 reqopts[count] = reqopt
@@ -162,7 +162,7 @@ function M:list_request(opts, groups)
 
     local err
 
-    local browser = simple.get(global, "gorilla", global[opts.browser])
+    local browser = global[opts.browser]
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
@@ -171,7 +171,7 @@ function M:list_request(opts, groups)
 
     for i = 1, #reqopts do
         local reqopt = reqopts[i]
-        local group = reqopt.group
+        local group = groups[reqopt.code]
         self:list_parse(opts, reqopt, group)
     end
 
@@ -241,9 +241,7 @@ function M:list_parse(opts, reqopt, group, data)
         local tds = tr.nodes
         local code = tds[2].nodes[1]:getcontent()
         local name = tds[3].nodes[1]:getcontent()
-
         group.list[code] = name
-
     end -- for tr end
 
     return group
@@ -264,9 +262,9 @@ function M:list_persist(opts, groups)
             local jsonstr = json.encode(group)
             local _, err = dao.Update(db, self.TOKEN_PERSIST_LIST, code, jsonstr, true, 0, nil)
             if err == nil then
-                print("[persist] list", code)
+                print("[persist] list", code, group.name, group.page)
             else
-                print("[persist] list failure", err)
+                print("[persist] list failure", code, group.name, err)
             end
         end
         n = n + 1
@@ -276,52 +274,34 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 function M:list_reload(opts)
-
     if opts.date_offset == nil then
         opts.date_offset = 0
     end
-
-    local dates = global.calendar.List(0, opts.date_offset, 0, true)
-    local datestr = dates[1]
     local db = opts.db
-    local dao = global.daom.Get("main")
-
-    print("[reload]", datestr)
-    for page = opts.from, opts.to do
-        local key = self:keygen(opts, page)
-        local datastr, err = dao.Get(db, datestr, key, 0, nil)
-        if err ~= nil then
-            print("[reload] failure", datestr, key, err)
-        end
-        if datastr == nil or #datastr == 0 then
-            print("[reload] empty", datestr, key)
-        else
-            local fragment = json.decode(datastr)
-            local n = #fragment
-            for i = 1, n do
-                data[#data + 1] = fragment[i]
-            end
-        end
-
+    if db == nil then
+        db = "group"
     end
+    local dao = global.daom.Get("main")
+    print("[reload] stock group concept")
+    local datastr, err = dao.Get(db, self.TOKEN_PERSIST_LIST, "", 0, nil)
+    if err ~= nil then
+        print("[reload] failure", db, self.TOKEN_PERSIST_LIST, err)
+        return
+    end
+    if datastr == nil or #datastr == 0 then
+        print("[reload] empty", db, self.TOKEN_PERSIST_LIST)
+        return
+    end
+    local groups = json.decode(datastr)
+    return groups
 end
 
-
 function M:go(opts)
-    local data = opts.data
-    local result = opts.result
-    if data == nil then
-        data = {}
-    end
-    if result == nil then
-        result = {}
-    end
-
-    local groups, ngroups
+    local groups
     if opts.request then
         opts.browser_original = opts.browser
         opts.browser = "gorilla"
-        groups, ngroups = self:group_request(opts)
+        groups = self:group_request(opts)
         if opts.persist then
             self:group_persist(opts, groups)
         end
@@ -332,10 +312,9 @@ function M:go(opts)
             self:list_persist(opts, groups)
         end
     else
-
+        groups = self:list_reload(opts)
     end
-
-    return data, result
+    return groups
 end
 
 

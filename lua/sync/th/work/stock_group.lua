@@ -24,7 +24,7 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 1
+opts.request_to   = 10
 
 opts.persist = true
 
@@ -42,4 +42,6 @@ opts.datasrc = "th"
 opts.print_data_from = -1
 opts.print_data_to = -1
 
-stock_group_inst:go(opts)
+local groups = stock_group_inst:go(opts)
+
+simple.table_print_all(groups)

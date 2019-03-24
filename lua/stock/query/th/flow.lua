@@ -23,13 +23,15 @@ opts.newsession = false
 opts.persist = true
 
 opts.date_offset = 0
-opts.date_offset_from = -4
-opts.date_offset_to = 3
+opts.date_offset_from = -2
+opts.date_offset_to = 0
 
 opts.db = "flow"
 opts.datasrc = "th"
 opts.field = "zjjlr"
 opts.order = "desc"
+
+opts.link_stock_group = true
 
 --opts.sort_field = "flow_io_rate"
 opts.sort_field = "flow_big_rate_cross_ex"
@@ -59,14 +61,21 @@ opts.filters =  {
     --filters.names({  names = names_sold })
     --filters.names({  names = names_specific })
     
-    --moderate
-    filters.io({  io_lower = 1.35, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  })
+    --groups
+    filters.groups( { groups = { "一带一路" } } ),
     
+    --moderate
+    --filters.io({  io_lower = 1.35, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
+    
+    
+
     --high io
     --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
     
     -- flow in increase
     --filters.io_increase({ in_lower = 55, in_upper = 100, in_swing = 3, ch_lower = -3, ch_upper = 7 })
+    
+
 }
 
 th_mod_flow_inst:go(opts)

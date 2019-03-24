@@ -265,8 +265,7 @@ function M:reload(opts, data, as_array)
 
 
     local total = 0
-    for page = opts.from, opts.to do
-
+    for page = opts.request_from, opts.request_to do
         local key = self:keygen(opts, page)
         local datastr, err = dao.Get(db, datestr, key, 0, nil)
         if err ~= nil then
@@ -290,9 +289,7 @@ function M:reload(opts, data, as_array)
                     data[code] = one
                 end
             end
-
             total = total + n
-
         end
     end
     print("[reload]", datestr, total, "as array", as_array)
@@ -320,8 +317,8 @@ function M:reloads(opts)
         to = 0
     end
 
-    local opts_clone = opts
     local data_maps = { }
+    local opts_clone = opts
     for date_offset = from, to do
         opts_clone = simple.table_clone(opts_clone)
         opts_clone.date_offset = date_offset
@@ -450,6 +447,22 @@ end
 
 
 -------------------------------------------------------------------------------------------
+
+function M:link_stock_group(opts, data)
+    if self.mod_stock_group == nil then
+        self.mod_stock_group = require("sync.th.mod_stock_group")
+    end
+    local mapping = self.mod_stock_group:code_group_mapping(true)
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local code = one.code
+        one.group = mapping[code]
+    end
+    return data
+end
+
+-------------------------------------------------------------------------------------------
 function M:print_data(opts, data)
 
     local fields =
@@ -457,7 +470,7 @@ function M:print_data(opts, data)
             "index", "code", "name", "change_rate", "turnover",
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
-            "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big"
+            "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big", "group"
         }
 
     local headers =
@@ -465,8 +478,18 @@ function M:print_data(opts, data)
             "i", "code", "name", "ch", "turn",
             "io", "in",
             "big_in", "big_r", "big_t", "big_c",
-            "cross", "crossex", "big"
+            "cross", "crossex", "big", "group"
         }
+
+    local formatters = {
+        group = function(one, field, v)
+            local r = ""
+            for groupname in pairs(v) do
+                r = r .. groupname .. " "
+            end
+            return r
+        end
+    }
 
     if opts.print_fields ~= nil then
         fields = opts.print_fields
@@ -485,7 +508,13 @@ function M:print_data(opts, data)
         to = #data
     end
 
-    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n")
+    local key
+    local header_interval = opts.date_offset_to - opts.date_offset_from + 1
+    if header_interval > 1 then
+        key = "code"
+    end
+    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n", "", formatters, key)
+
 end
 
 
@@ -502,6 +531,10 @@ function M:go(opts)
         end
     else
         data_curr, code_mapping = self:reloads(opts)
+    end
+
+    if simple.is(opts.link_stock_group) then
+        data_curr = M:link_stock_group(opts, data_curr)
     end
 
     local result_curr = self:filter(opts, data_curr, code_mapping)

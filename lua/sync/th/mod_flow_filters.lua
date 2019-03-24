@@ -102,4 +102,24 @@ function M.names(fopts)
     end
 end
 
+function M.groups(fopts)
+    local groups = fopts.groups
+    local ngroups = #groups
+    return function(one, series, code, currindex, opts)
+        local one_groups = one.group
+        if one_groups == nil then
+            return false
+        end
+        local include = false
+        for i = 1, ngroups do
+            local group = groups[i]
+            if one_groups[group] ~= nil then
+                include = true
+                break
+            end
+        end
+        return include
+    end
+end
+
 return M

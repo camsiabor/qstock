@@ -202,6 +202,9 @@ func (o *HttpAgent) ReleaseDrivers(drivers []selenium.WebDriver) {
 }
 
 func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+	if len(opts) == 0 {
+		return opts, nil
+	}
 	if concurrent > 1 {
 		if o.IsBasicHttp() {
 			return o.GetSimpleConcurrent(opts, nicemilli, newsession, concurrent, loglevel)

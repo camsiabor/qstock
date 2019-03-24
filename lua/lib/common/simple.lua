@@ -1,5 +1,31 @@
 local simple = {}
 
+function simple.is(b)
+    local t = type(b)
+    if t == "nil" then
+        return false
+    end
+    if t == "boolean" then
+        return t
+    end
+    if t == "number" then
+        return t ~= 0
+    end
+    if t == "string" then
+        if t == "" or t == "0" or t == "false" then
+            return false
+        end
+        if t == "true" then
+            return true
+        end
+        return false
+    end
+    if t == "function" then
+        return t()
+    end
+    return false
+end
+
 function simple.str2num(str, keep)
     if keep == nil then
         keep = 5
@@ -147,7 +173,7 @@ function simple.table_array_print(array, fields, delimiter, suffix)
     end
 end
 
-function simple.table_array_print_with_header(array, from, to, fields, headers, header_interval, delimiter, suffix)
+function simple.table_array_print_with_header(array, from, to, fields, headers, header_interval, delimiter, suffix, formatters, key)
 
     if from <= 0 or from > to then
         return
@@ -162,23 +188,47 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
         headstr = headstr .. headers[i] .. "\t"
     end
 
+
     local nfields = #fields
+    local key_value_previous = ""
     local header_interval_original = header_interval
     for a = from, to do
 
-        if header_interval > 0 then
-            if a % header_interval == 1 then
-                printex(delimiter)
-                printex(headstr)
-                printex(delimiter)
-                header_interval = header_interval_original
+        local obj = array[a]
+        local print_header = false
+        if key == nil then
+            if header_interval > 0 then
+                if a % header_interval == 1 then
+                    print_header = true
+
+                    header_interval = header_interval_original
+                end
             end
+        else
+            local key_value = obj[key]
+            print_header = (key_value ~= key_value_previous)
+            key_value_previous = key_value
         end
 
-        local obj = array[a]
+        if print_header then
+            printex(delimiter)
+            printex(headstr)
+            printex(delimiter)
+        end
+
         for f = 1, nfields do
             local field = fields[f]
             local v = obj[field]
+            if v == nil then
+                v = ""
+            else
+                if formatters ~= nil then
+                    local formatter = formatters[field]
+                    if formatter ~= nil then
+                        v = formatter(obj, field, v)
+                    end
+                end
+            end
             printex(v, "")
         end
         printex(delimiter)

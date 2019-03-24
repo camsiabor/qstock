@@ -83,12 +83,11 @@ function M:group_persist(opts, groups, ngroups)
         db = "group"
     end
     local dao = global.daom.Get("main")
-    local n = #data
-    print("[persist] group", dao, db, ngroups)
+
     local jsonstr = json.encode(groups)
     local _, err = dao.Update(db, self.TOKEN_PERSIST_GROUP, "", jsonstr, true, 0, nil)
     if err == nil then
-        print("[persist] group fin")
+        print("[persist] group")
     else
         print("[persist] group failure", err)
     end
@@ -115,7 +114,7 @@ end
 
 function M:list_request(opts, groups)
 
-    local url_pattern = "http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/%d/ajax/1/code/%d"
+
     local count = 0
     local reqopts = {}
 
@@ -124,6 +123,7 @@ function M:list_request(opts, groups)
     simple.def(opts, "request_to", 1000)
     for code, group in pairs(groups) do
         if n >= opts.request_from and n <= opts.request_to then
+
             local page = group.page
             if page == nil or page == 0 then
                 page = 1
@@ -135,10 +135,18 @@ function M:list_request(opts, groups)
             else
                 from = 2
                 to = page
+
             end
 
             for p = from, to do
-                local url = string.format(url_pattern, p, code)
+
+                local url
+                if p == 1 then
+                    url = string.format("http://q.10jqka.com.cn/gn/detail/code/%d/", code)
+                else
+                    url = string.format("http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/%d/ajax/1/code/%d", p, code)
+                end
+
                 local reqopt = {}
                 reqopt["url"] = url
                 reqopt["page"] = page
@@ -152,10 +160,8 @@ function M:list_request(opts, groups)
     end
 
     local err
-    local browser = global["gorilla"]
-    if browser == nil then
-        browser = global[opts.browser]
-    end
+
+    local browser = simple.get(global, "gorilla", global[opts.browser])
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
@@ -194,7 +200,6 @@ function M:list_parse(opts, reqopt, group)
     local html_table = string.sub(html, i_table_start)
     local i_table_end = string.find(html_table, table_end)
     html_table = string.sub(html_table, 1, i_table_end + #table_end)
-    --print(html_table)
 
     if reqopt.page == nil or reqopt.page <= 1 then
         local page_start = '<span class="page_info">'
@@ -205,15 +210,21 @@ function M:list_parse(opts, reqopt, group)
         group.page = page_count
     end
 
-    if self.xml == nil then
-        self.xml = require("common.xml2lua.xml2lua")
-        self.xml_tree_handler = require("common.xml2lua.tree")
+    if self.htmlparser == nil then
+        self.htmlparser = require("common.htmlparser.htmlparser")
     end
 
-    local tree = self.xml_tree_handler:new()
-    local parser = self.xml.parser(tree)
-    parser:parse(html_table)
-
+    local root = self.htmlparser.parse(html_table)
+    local tbody = root:select("tbody")[1]
+    local tr_count = #tbody.nodes
+    for i = 1, tr_count do
+        local tr = tbody.nodes[i]
+        local tds = tr.nodes
+        local td = tds[1]
+        print(td:getcontent())
+        print(simple.metatable_print_all(td))
+        print("----------------------------------")
+    end -- for tr end
 
     return group
 end
@@ -245,16 +256,6 @@ function M:go(opts)
 
     return data, result
 end
-
-
-local opts = {}
-opts.debug = false
-opts.loglevel = 0
-opts.request = true
-opts.request_from = 1
-opts.request_to = 3
-opts.browser = "firefox"
-local groups = M:go(opts)
 
 
 -------------------------------------------------------------------------------------------

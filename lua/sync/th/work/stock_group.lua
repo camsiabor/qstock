@@ -4,7 +4,7 @@
 
 local global = require("q.global")
 local simple = require("common.simple")
-local stock_group = require("sync.th.mod_stcok_group")
+local stock_group = require("sync.th.mod_stock_group")
 local stock_group_inst = stock_group:new()
 
 local work = global.work
@@ -24,7 +24,7 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 2
+opts.request_to   = 1
 
 opts.persist = true
 

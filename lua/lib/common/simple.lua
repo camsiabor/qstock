@@ -76,6 +76,7 @@ function simple.table_print_all(obj)
     end
 end
 
+
 function simple.table_print(obj, fields, suffix)
     local n = #fields
     for i = 1, n do
@@ -88,6 +89,22 @@ function simple.table_print(obj, fields, suffix)
     end
 end
 
+
+function simple.metatable_print_all(obj)
+    local meta = getmetatable(obj)
+    if meta == nil then
+        return
+    end
+    if meta.__index == nil then
+        print("[meta]")
+    else
+        print("[meta] __index")
+        meta = meta.__index
+    end
+    return simple.table_print_all(meta)
+end
+
+------------------------------------------------------------------------------------------------------------------------
 
 function simple.func_call(func, ...)
     if func == nil then

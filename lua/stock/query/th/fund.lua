@@ -28,7 +28,7 @@ end
 
 opts.newsession = false
 
-opts.dofetch = false
+opts.request = false
 opts.find_not_curr = true
 
 opts.db = "flow"

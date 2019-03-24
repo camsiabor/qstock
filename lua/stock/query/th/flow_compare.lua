@@ -15,15 +15,15 @@ opts.debug = false
 opts.loglevel = 0
 opts.browser = "firefox"
 
-opts.from = 1
-opts.to = 71
+opts.request_from = 1
+opts.request_to = 71
 opts.nice = 0
 
 opts.concurrent = 3
 opts.newsession = false
 opts.persist = false
 
-opts.dofetch = false
+opts.request = false
 opts.date_offset = 0
 opts.date_offset_from = -2
 opts.date_offset_to = 1

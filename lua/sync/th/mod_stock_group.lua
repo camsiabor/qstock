@@ -6,7 +6,7 @@ local M = {}
 M.__index = M
 M.TOKEN_PERSIST_GROUP = "ch.stock.group.concept"
 
-local xml, xml_tree_handler
+
 local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
@@ -93,39 +93,22 @@ function M:group_persist(opts, groups, ngroups)
         print("[persist] group failure", err)
     end
 end
+
 -----------------------------------------------------------------------------------------------------------------
 
-
-function M:reload(opts, data, result)
-
-    if opts.date_offset == nil then
-        opts.date_offset = 0
-    end
-
-    local dates = global.calendar.List(0, opts.date_offset, 0, true)
-    local datestr = dates[1]
+function M:group_reload(opts)
     local db = opts.db
-    local dao = global.daom.Get("main")
-
-    print("[reload]", datestr)
-    for page = opts.from, opts.to do
-        local key = self:keygen(opts, page)
-        local datastr, err = dao.Get(db, datestr, key, 0, nil)
-        if err ~= nil then
-            print("[reload] failure", datestr, key, err)
-        end
-        if datastr == nil or #datastr == 0 then
-            print("[reload] empty", datestr, key)
-        else
-            local fragment = json.decode(datastr)
-            local n = #fragment
-            for i = 1, n do
-                data[#data + 1] = fragment[i]
-            end
-        end
-
+    if db == nil then
+        db = "group"
     end
-
+    print("[reload] group")
+    local dao = global.daom.Get("main")
+    local datastr, err = dao.Get(db, self.TOKEN_PERSIST_GROUP, "", 0, nil)
+    if err ~= nil then
+        print("[reload] failure", self.TOKEN_PERSIST_GROUP, "", err)
+    end
+    local groups = json.decode(datastr)
+    return groups
 end
 
 -----------------------------------------------------------------------------------------------------------------
@@ -136,30 +119,36 @@ function M:list_request(opts, groups)
     local count = 0
     local reqopts = {}
 
+    local n = 1
+    simple.def(opts, "request_from", 1)
+    simple.def(opts, "request_to", 1000)
     for code, group in pairs(groups) do
-        local page = group.page
-        if page == nil or page == 0 then
-            page = 1
-        end
-        local from, to
-        if page == 1 then
-            from = 1
-            to = 1
-        else
-            from = 2
-            to = page
-        end
+        if n >= opts.request_from and n <= opts.request_to then
+            local page = group.page
+            if page == nil or page == 0 then
+                page = 1
+            end
+            local from, to
+            if page == 1 then
+                from = 1
+                to = 1
+            else
+                from = 2
+                to = page
+            end
 
-        for p = from, to do
-            local url = string.format(url_pattern, p, code)
-            local reqopt = {}
-            reqopt["url"] = url
-            reqopt["page"] = page
-            reqopt["group"] = group
-            reqopt["encoding"] = "gbk"
-            count = count + 1
-            reqopts[count] = reqopt
+            for p = from, to do
+                local url = string.format(url_pattern, p, code)
+                local reqopt = {}
+                reqopt["url"] = url
+                reqopt["page"] = page
+                reqopt["group"] = group
+                reqopt["encoding"] = "gbk"
+                count = count + 1
+                reqopts[count] = reqopt
+            end
         end
+        n = n + 1
     end
 
     local err
@@ -215,6 +204,16 @@ function M:list_parse(opts, reqopt, group)
         local page_count = string.sub(html, i_page_start + #page_start + 2, i_page_end - 1)
         group.page = page_count
     end
+
+    if self.xml == nil then
+        self.xml = require("common.xml2lua.xml2lua")
+        self.xml_tree_handler = require("common.xml2lua.tree")
+    end
+
+    local tree = self.xml_tree_handler:new()
+    local parser = self.xml.parser(tree)
+    parser:parse(html_table)
+
 
     return group
 end
@@ -528,4 +527,4 @@ end
 
 ------------------------------------------------------------------------------------------
 
---return M
+return M

@@ -20,7 +20,7 @@
 local M = {}
 M.__index = M
 
-local xml, xml_tree_handler
+
 local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
@@ -81,13 +81,13 @@ function M:parse_html(opts, data, reqopt)
         return
     end
 
-    if xml == nil then
-        xml = require("common.xml2lua.xml2lua")
-        xml_tree_handler = require("common.xml2lua.tree")
+    if self.xml == nil then
+        self.xml = require("common.xml2lua.xml2lua")
+        self.xml_tree_handler = require("common.xml2lua.tree")
     end
 
-    local tree = xml_tree_handler:new()
-    local parser = xml.parser(tree)
+    local tree = self.xml_tree_handler:new()
+    local parser = self.xml.parser(tree)
     parser:parse(html)
 
 
@@ -498,7 +498,7 @@ end
 function M:go(opts)
 
     local data_curr, code_mapping
-    if opts.dofetch then
+    if opts.request then
         data_curr = self:request(opts)
         if opts.persist then
             self:persist(opts, data_curr)

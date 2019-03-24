@@ -258,4 +258,16 @@ function simple.def(t, field, defvalue)
     return currvalue
 end
 
+function simple.get(t, field, defvalue)
+    if t == nil then
+        return defvalue
+    end
+    local v = t[field]
+    if v == nil then
+        return defvalue
+    end
+    return v
+end
+
+
 return simple

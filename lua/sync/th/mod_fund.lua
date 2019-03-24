@@ -5,7 +5,7 @@ local M = {}
 M.__index = M
 M.persist_key = "flow"
 
-local xml, xml_tree_handler
+
 local global = require("q.global")
 local json = require('common.json')
 local simple = require("common.simple")
@@ -96,13 +96,13 @@ function M:parse_html(opts, data, reqopt)
     html = string.sub(html, 1, index + #tag_end)
 
 
-    if xml == nil then
-        xml = require("common.xml2lua.xml2lua")
-        xml_tree_handler = require("common.xml2lua.tree")
+    if self.xml == nil then
+        self.xml = require("common.xml2lua.xml2lua")
+        self.xml_tree_handler = require("common.xml2lua.tree")
     end
    
-    local tree = xml_tree_handler:new()
-    local parser = xml.parser(tree)
+    local tree = self.xml_tree_handler:new()
+    local parser = self.xml.parser(tree)
     parser:parse(html)
     
   
@@ -214,7 +214,7 @@ function M:persist(opts, data)
         local one = data[i]
         local group = "ch."..one.code
         local jsonstr = json.encode(one)
-        _, err = dao.Update(db, group, self.persist_key , jsonstr, true, 0, nil)
+        local _, err = dao.Update(db, group, self.persist_key , jsonstr, true, 0, nil)
         if err == nil then
             if opts.debug then
                 print("[persist]", group, self.persist_key)
@@ -326,7 +326,7 @@ function M:go(opts)
     end
 
 
-    if opts.dofetch then
+    if opts.request then
         self:request(opts, data, result)
         self:persist(opts, data)
     else

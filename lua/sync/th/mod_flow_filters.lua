@@ -4,6 +4,7 @@ local simple = require("common.simple")
 
 local M = {}
 
+-----------------------------------------------------------------------------------------------------------
 function M.io(fopts)
 
     simple.def(fopts, "io_lower", 1)
@@ -31,6 +32,7 @@ function M.io(fopts)
     end
 end
 
+-----------------------------------------------------------------------------------------------------------
 function M.io_increase(fopts)
 
 
@@ -77,10 +79,65 @@ function M.io_increase(fopts)
 
         return include
     end
-
-
 end
 
+-----------------------------------------------------------------------------------------------------------
+function M.io_any(fopts)
+
+    simple.def(fopts, "in_lower", 50)
+    simple.def(fopts, "in_upper", 100)
+    simple.def(fopts, "in_swing", 3)
+
+    simple.def(fopts, "ch_lower", -1.5)
+    simple.def(fopts, "ch_upper", 6)
+
+    return function(one, series, code, currindex, opts)
+        local include = false
+        for i = 1, currindex do
+            local one = series[i]
+            local io = one.flow_io_rate
+            local big_in = one.flow_big_in_rate
+            include = io >= fopts.io_lower and io <= fopts.io_upper
+                    and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
+                    and one.turnover >= fopts.turnover
+                    and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+            if include then
+                break
+            end
+        end
+        return include
+    end
+end
+
+-----------------------------------------------------------------------------------------------------------
+function M.io_all(fopts)
+
+    simple.def(fopts, "in_lower", 50)
+    simple.def(fopts, "in_upper", 100)
+    simple.def(fopts, "in_swing", 3)
+
+    simple.def(fopts, "ch_lower", -1.5)
+    simple.def(fopts, "ch_upper", 6)
+
+    return function(one, series, code, currindex, opts)
+        local include = true
+        for i = 1, currindex do
+            local one = series[i]
+            local io = one.flow_io_rate
+            local big_in = one.flow_big_in_rate
+            include = io >= fopts.io_lower and io <= fopts.io_upper
+                    and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
+                    and one.turnover >= fopts.turnover
+                    and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+            if not include then
+                break
+            end
+        end
+        return include
+    end
+end
+
+-----------------------------------------------------------------------------------------------------------
 function M.codes(fopts)
 
     local codes = fopts.codes
@@ -90,7 +147,7 @@ function M.codes(fopts)
         return codes_map[code] ~= nil
     end
 end
-
+-----------------------------------------------------------------------------------------------------------
 function M.names(fopts)
 
     local names = fopts.names
@@ -101,7 +158,7 @@ function M.names(fopts)
         return names_map[name] ~= nil
     end
 end
-
+-----------------------------------------------------------------------------------------------------------
 function M.groups(fopts)
     local groups = fopts.groups
     local ngroups = #groups
@@ -121,5 +178,5 @@ function M.groups(fopts)
         return include
     end
 end
-
+-----------------------------------------------------------------------------------------------------------
 return M

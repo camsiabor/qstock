@@ -24,7 +24,7 @@ opts.browser = "firefox"
 
 opts.request = false
 opts.request_from = 1
-opts.request_to   = 1
+opts.request_to   = 10
 
 opts.reload_check = true
 
@@ -49,6 +49,6 @@ opts.print_data_to = -1
 
 local groups = stock_group_inst:go(opts)
 for code, group in pairs(groups) do 
-    print(code, group.name, group.page, simple.table_count(group.list))
+    print(code, group.name, "   ", group.page, simple.table_count(group.list))
 end
 --simple.table_print_all(groups)

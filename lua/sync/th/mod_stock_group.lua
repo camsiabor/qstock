@@ -140,9 +140,8 @@ function M:list_request(opts, groups)
             end
 
             for p = from, to do
-
                 local url
-                if p == 1 then
+                if p == 1 and to == 1 then
                     url = string.format("http://q.10jqka.com.cn/gn/detail/code/%d/", code)
                 else
                     url = string.format("http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/%d/ajax/1/code/%d", p, code)

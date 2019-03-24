@@ -52,23 +52,33 @@ local tobe_sold = {
 local names_specific = {
     "中铝国际", "TCL集团"
 }
-opts.filters =  {
+
+local names_maybe = {
+    "杰瑞股份", -- 一带一路, io > 2
+    "巨星科技", -- 堆土给
+    
+}
+
+
+
+
+opts.filters = {
     
     -- codes
+    --filters.codes({  codes = codes_bought })
     --filters.codes({  codes = codes_bought })
     
     --names
     --filters.names({  names = names_sold })
     --filters.names({  names = names_specific })
+    filters.names({  names = names_maybe })
     
     --groups
-    filters.groups( { groups = { "一带一路" } } ),
+    --filters.groups( { groups = { "一带一路" } } ),
     
     --moderate
     --filters.io({  io_lower = 1.35, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
     
-    
-
     --high io
     --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
     
@@ -76,9 +86,9 @@ opts.filters =  {
     --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -3, ch_upper = 10 })
     
     -- io any
-    filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = -10, ch_upper = 10, big_in_lower = 0  })
+    -- filters.io_any({  io_lower = 1.5, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
     
-
 }
+
 
 th_mod_flow_inst:go(opts)

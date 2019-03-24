@@ -413,9 +413,13 @@ function M:go(opts)
         end
     else
         if opts.reload_check then
-            local todos = self:list_reload_non_complete(opts)
             opts.browser_original = opts.browser
             opts.browser = "gorilla"
+            groups = self:group_request(opts)
+            if opts.persist then
+                self:group_persist(opts, groups)
+            end
+            local todos = self:list_reload_non_complete(opts)
             self:list_request(opts, todos)
             opts.browser = opts.browser_original
             self:list_request(opts, todos)
@@ -425,50 +429,6 @@ function M:go(opts)
     end
     return groups
 end
-
-
-
-
-
--------------------------------------------------------------------------------------------
-function M:print_data(opts, data)
-
-    local fields =
-    {
-        "index", "code", "name", "change_rate", "turnover",
-        "flow_io_rate", "flow_in_rate",
-        "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
-        "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big"
-    }
-
-    local headers =
-    {
-        "i", "code", "name", "ch", "turn",
-        "io", "in",
-        "big_in", "big_r", "big_t", "big_c",
-        "cross", "crossex", "big"
-    }
-
-    if opts.print_fields ~= nil then
-        fields = opts.print_fields
-    end
-
-    if opts.print_headers ~= nil then
-        headers = opts.print_headers
-    end
-
-    local from = opts.print_data_from
-    local to = opts.print_data_to
-    if from == nil then
-        from = 1
-    end
-    if to == nil then
-        to = #data
-    end
-
-    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n")
-end
-
 
 ------------------------------------------------------------------------------------------
 

@@ -64,13 +64,13 @@ function M:group_parse(opts, html)
     local groups = {}
     local pattern = '<a href="http://q.10jqka.com.cn/gn/detail/code/(%d+)/" target="_blank">(%W+)</a>'
     local iterator = string.gmatch(html, pattern)
-
     local count = 0
     for code, name in iterator do
         local group = { code = code, name = name, list = { } }
         groups[code] = group
         count = count + 1
     end
+    print("[parse] group count", count)
     return groups, count
 end
 

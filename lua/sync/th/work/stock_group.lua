@@ -48,7 +48,10 @@ opts.print_data_to = -1
 
 
 local groups = stock_group_inst:go(opts)
+print("[stock.group] reload count", simple.table_count(groups))
+--[[
 for code, group in pairs(groups) do 
     print(code, group.name, "   ", group.page, simple.table_count(group.list))
 end
+]]--
 --simple.table_print_all(groups)

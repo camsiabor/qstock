@@ -21,8 +21,8 @@ opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
 
-opts.from = 1
-opts.to = 71
+opts.request_from = 1
+opts.request_to = 71
 
 opts.concurrent = profile["concurrent"]
 if opts.concurrent == nil then

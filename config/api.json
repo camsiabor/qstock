@@ -165,7 +165,7 @@
     "domain" : "http://data.10jqka.com.cn",
     "nice" : 300,
     "timeout" : 20,
-    "concurrent" : 1,
+    "concurrent" : 3,
     "select_interval" : 120,
     "profiles" : {
       "stock.flow" : {

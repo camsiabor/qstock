@@ -37,6 +37,18 @@ opts.link_stock_group = true
 opts.sort_field = "flow_big_rate_cross_ex"
 
 
+local names_in_list = {
+    "中设股份", -- io > 2
+    "沃特股份", -- io > 1.7
+    "凯文教育",
+    "长城影视", -- big swing
+    "全筑股份", -- big force
+    "中广天择",
+    "普利特", -- > 2
+    "中国一重",
+    "延安必康"
+}
+
 local names_bought = {
     "大名城", "生益科技", "中南传媒", "成都银行", "天龙股份", "美好置业", "科士达", "棒杰股份", "凯文教育", "三夫户外", "科力尔"
 }
@@ -74,13 +86,13 @@ opts.filters = {
     --filters.names({  names = names_maybe })
     
     --groups
-    --filters.groups( { groups = { "一带一路" } } ),
+    --filters.groups( { groups = { "一带一路", "军工", "军民融合", "一带一路", "国产航母", "海工装备" } } ),
     
     --moderate
-    filters.io({  io_lower = 1.5, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
+    --filters.io({  io_lower = 1.25, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 10  }),
     
     --high io
-    --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })
+    filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 0, ch_upper = 6.5, big_in_lower = 10  })
     
     -- flow in increase
     --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -3, ch_upper = 10 })

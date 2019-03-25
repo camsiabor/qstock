@@ -96,6 +96,23 @@ function simple.table_sort(t, field)
 end
 
 
+function simple.table_merge(tables)
+    local result = {}
+    for i = 1, #tables do
+        local table = tables[i]
+        if table ~= nil then
+            for k , v in pairs(table) do
+                result[k] = v
+            end
+        end
+    end
+    return result
+
+end
+
+
+
+
 function simple.table_print_all(obj)
     if obj == nil then
         return

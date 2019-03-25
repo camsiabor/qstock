@@ -1,6 +1,7 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
 
+--os.exit(1)
 
 local global = require("q.global")
 local simple = require("common.simple")
@@ -24,7 +25,8 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 5
+opts.request_to   = 3
+opts.request_types = { "concept" }
 
 opts.reload_check = true
 
@@ -47,8 +49,15 @@ opts.print_data_to = -1
 
 print(opts.request_to)
 
-local groups = stock_group_inst:go(opts)
-print("[stock.group] reload count", simple.table_count(groups))
+
+--local url = stock_group_inst:get_url_pattern("concept", "group")
+--print(url)
+local groups = stock_group_inst:goes(opts)
+if groups == nil then
+    print("[stock.group] null")
+else 
+    print("[stock.group] reload count", simple.table_count(groups))
+end
 
 --[[
 for code, group in pairs(groups) do 

@@ -2,14 +2,47 @@
 -- http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/2/ajax/1/code/304582
 -- http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/1/ajax/1/code/301558
 
+--
+-- http://q.10jqka.com.cn/thshy/detail/code/881121/
+-- http://q.10jqka.com.cn/thshy/detail/field/199112/order/desc/page/2/ajax/1/code/881121
+
+-- 我在去年股票最低估的时候，我选出了以下几支     601258       000727   600157
 local M = {}
 M.__index = M
-M.TOKEN_PERSIST_GROUP = "ch.stock.group.concept.index"
-M.TOKEN_PERSIST_LIST = "ch.stock.group.concept"
+
+
+
+M.TOKENS = {
+    MAPPING_ENG_TO_CH = {
+        concept = "gn",
+        industry = "thshy",
+        csrc = "zjhhy",
+        region = "dy",
+    },
+    PERSIST_CONCEPT_GROUP = "ch.stock.group.concept.index",
+    PERSIST_CONCEPT_LIST = "ch.stock.group.concept",
+    PERSIST_INDUSTRY_GROUP = "ch.stock.group.industry.index",
+    PERSIST_INDUSTRY_LIST = "ch.stock.group.industry",
+    PERSIST_CSRC_GROUP = "ch.stock.group.scrc.index",
+    PERSIST_CSRC_LIST = "ch.stock.group.scrc",
+    PERSIST_REGION_GROUP = "ch.stock.group.region.index",
+    PERSIST_REGION_LIST = "ch.stock.group.region",
+}
+
+M.URL_PATTERNS = {
+    concept_group = "http://q.10jqka.com.cn/gn/",
+    concept_list = "http://q.10jqka.com.cn/gn/detail/field/199112/order/desc/page/%d/ajax/1/code/%s",
+    industry_group = "http://q.10jqka.com.cn/thshy/",
+    industry_list = "http://q.10jqka.com.cn/thshy/detail/field/199112/order/desc/page/%d/ajax/1/code/%s",
+    csrc_group = "http://q.10jqka.com.cn/zjhhy/",
+    csrc_list = "http://q.10jqka.com.cn/zjhhy/detail/field/199112/order/desc/page/%d/ajax/1/code/%s",
+    region_group = "http://q.10jqka.com.cn/dy/",
+    region_list = "http://q.10jqka.com.cn/dy/detail/field/199112/order/desc/page/%d/ajax/1/code/%s",
+}
 
 
 local global = require("q.global")
-local logger = require("q.logger")
+--local logger = require("q.logger")
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -22,11 +55,38 @@ function M:new()
     return inst
 end
 
+
+-------------------------------------------------------------------------------------------
+
+function M:get_url_pattern(request_type, group_or_list)
+    local key = string.format("%s_%s", request_type, group_or_list)
+    key = string.lower(key)
+    local url = self.URL_PATTERNS[key]
+    if url == nil then
+        error("[url] pattern not found", key)
+    end
+    return url
+end
+
+-------------------------------------------------------------------------------------------
+
+function M:get_token(request_type, group_or_list)
+    local key = string.format("persist_%s_%s", request_type, group_or_list)
+    key = string.upper(key)
+    local token = self.TOKENS[key]
+    if token == nil then
+        print("[token] not found", key)
+    end
+    return token
+end
+
 -------------------------------------------------------------------------------------------
 
 function M:group_request(opts)
-    local url = "http://q.10jqka.com.cn/gn"
-
+    local url = self:get_url_pattern(opts.request_type, "group")
+    if url == nil then
+        return
+    end
     local reqopts = {}
     local reqopt = {}
     reqopt["url"] = url
@@ -49,6 +109,10 @@ end
 -----------------------------------------------------------------------------------------------------------------
 
 function M:group_parse(opts, html)
+    if html == nil then
+        error("[parse] group no html")
+        return
+    end
     local tag_start = '<div class="category boxShadow m_links">'
     local tag_end = '<div class="cate_toggle_wrap">'
     local index = string.find(html, tag_start)
@@ -62,7 +126,8 @@ function M:group_parse(opts, html)
     html = string.sub(html, 1, index - 1)
 
     local groups = {}
-    local pattern = '<a href="http://q.10jqka.com.cn/gn/detail/code/(%d+)/" target="_blank">(%W+)</a>'
+    local request_type_ch = self.TOKENS.MAPPING_ENG_TO_CH[opts.request_type]
+    local pattern = '<a href="http://q.10jqka.com.cn/' .. request_type_ch .. '/detail/code/(%d+)/" target="_blank">(%W+)</a>'
     local iterator = string.gmatch(html, pattern)
     local count = 0
     for code, name in iterator do
@@ -84,7 +149,8 @@ function M:group_persist(opts, groups)
     local dao = global.daom.Get("main")
 
     local jsonstr = json.encode(groups)
-    local _, err = dao.Update(db, self.TOKEN_PERSIST_GROUP, "", jsonstr, true, 0, nil)
+    local token = self:get_token(opts.request_type, "group")
+    local _, err = dao.Update(db, token, "", jsonstr, true, 0, nil)
     if err == nil then
         print("[persist] group")
     else
@@ -101,9 +167,10 @@ function M:group_reload(opts)
     end
     print("[reload] group")
     local dao = global.daom.Get("main")
-    local datastr, err = dao.Get(db, self.TOKEN_PERSIST_GROUP, "", 0, nil)
+    local token = self:get_token(opts.request_type, "group")
+    local datastr, err = dao.Get(db, token, "", 0, nil)
     if err ~= nil then
-        print("[reload] failure", self.TOKEN_PERSIST_GROUP, "", err)
+        print("[reload] failure", token, "", err)
     end
     local groups = json.decode(datastr)
     return groups
@@ -112,7 +179,6 @@ end
 -----------------------------------------------------------------------------------------------------------------
 
 function M:list_request(opts, groups)
-
 
     local count = 0
     local reqopts = {}
@@ -264,7 +330,8 @@ function M:list_persist(opts, groups, log)
         if n >= opts.request_from and n <= opts.request_to then
             local key = "ch" .. code
             local jsonstr = json.encode(group)
-            local _, err = dao.Update(db, self.TOKEN_PERSIST_LIST, key, jsonstr, true, 0, nil)
+            local token = self:get_token(opts.request_type, "list")
+            local _, err = dao.Update(db, token, key, jsonstr, true, 0, nil)
             if err == nil then
                 if log then
                     print("[persist] list", code, group.name, group.page)
@@ -288,13 +355,14 @@ function M:list_reload(opts)
     end
     local dao = global.daom.Get("main")
     print("[reload] stock group concept")
-    local map, err = dao.Get(db, "", self.TOKEN_PERSIST_LIST, 1, nil)
+    local token = self:get_token(opts.request_type, "list")
+    local map, err = dao.Get(db, "", token, 1, nil)
     if err ~= nil then
-        print("[reload] failure", db, self.TOKEN_PERSIST_LIST, err)
+        print("[reload] failure", db, token, err)
         return
     end
     if map == nil or simple.table_count(map) == 0 then
-        print("[reload] empty", db, self.TOKEN_PERSIST_LIST)
+        print("[reload] empty", db, token)
         return
     end
     local groups = {}
@@ -371,11 +439,12 @@ function M:list_code_group_mapping(groups)
     return mapping
 end
 
-function M:code_group_mapping(from_cache)
+function M:code_group_mapping(request_type, from_cache)
     local mapping
     local mappingstr
     local cachekey = "code.group.mapping"
-    local cache = global.cachem.Get(self.TOKEN_PERSIST_LIST)
+    local token = self:get_token(request_type, "list")
+    local cache = global.cachem.Get(token)
     if from_cache then
         local mappingstr = cache.Get(false, cachekey)
         if mappingstr ~= nil and #mappingstr > 0 then
@@ -392,6 +461,13 @@ function M:code_group_mapping(from_cache)
 end
 
 function M:go(opts)
+
+    local request_type = opts.request_type
+    if request_type == nil or request_type == "" then
+        print("[request] invalid no request type")
+        return
+    end
+
     local groups
     if opts.request then
         opts.browser_original = opts.browser
@@ -428,6 +504,19 @@ function M:go(opts)
         groups = self:list_reload(opts)
     end
     return groups
+end
+
+
+function M:goes(opts)
+    local all = {}
+    local request_types = opts.request_types
+    for i = 1, #request_types do
+        opts.request_type = request_types[i]
+        local groups = M:go(opts)
+        all[#all + 1] = groups
+    end
+    all = simple.table_merge(all)
+    return all
 end
 
 ------------------------------------------------------------------------------------------

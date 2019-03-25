@@ -96,6 +96,7 @@ function M.io_any(fopts)
     simple.def(fopts, "ch_upper", 6)
 
     return function(one, series, code, currindex, opts)
+
         local include = false
         for i = 1, currindex do
             local one = series[i]
@@ -188,6 +189,15 @@ function M.groups(fopts)
             end
         end
         return include
+    end
+end
+-----------------------------------------------------------------------------------------------------------
+function M.no3(fopts)
+    return function(one, series, code, currindex, opts)
+        if code:sub(1, 1) == "3" then
+            return false
+        end
+        return true
     end
 end
 -----------------------------------------------------------------------------------------------------------

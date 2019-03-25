@@ -439,25 +439,37 @@ function M:list_code_group_mapping(groups)
     return mapping
 end
 
-function M:code_group_mapping(request_type, from_cache)
-    local mapping
-    local mappingstr
-    local cachekey = "code.group.mapping"
-    local token = self:get_token(request_type, "list")
-    local cache = global.cachem.Get(token)
-    if from_cache then
-        local mappingstr = cache.Get(false, cachekey)
-        if mappingstr ~= nil and #mappingstr > 0 then
-            mapping = json.decode(mappingstr)
+function M:code_group_mapping(request_types, from_cache)
+    local all = {}
+    for i = 1, #request_types do
+        local request_type = request_types[i]
+        --print("[rq]", request_type)
+        local mapping
+        local mappingstr
+        local token = self:get_token(request_type, "list")
+        --print("[token]", token)
+        local cache = global.cachem.Get("stock.group")
+        if from_cache then
+            local mappingstr = cache.Get(false, token)
+            if mappingstr ~= nil and #mappingstr > 0 then
+                mapping = json.decode(mappingstr)
+            end
+        end
+        if mapping == nil then
+            local groups = self:list_reload({ request_type = request_type })
+            if groups ~= nil then
+                mapping = self:list_code_group_mapping(groups)
+                mappingstr = json.encode(mapping)
+                cache.Set(mappingstr, token)
+            end
+        end
+
+        if mapping ~= nil then
+            all[#all + 1] = mapping
         end
     end
-    if mapping == nil then
-        local groups = self:list_reload({})
-        mapping = self:list_code_group_mapping(groups)
-        mappingstr = json.encode(mapping)
-        cache.Set(mappingstr, cachekey)
-    end
-    return mapping
+    all = simple.table_merge(all)
+    return all
 end
 
 function M:go(opts)

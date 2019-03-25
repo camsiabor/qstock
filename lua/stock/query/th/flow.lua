@@ -23,7 +23,7 @@ opts.newsession = false
 opts.persist = true
 
 opts.date_offset = 0
-opts.date_offset_from = -5
+opts.date_offset_from = 0
 opts.date_offset_to = 0
 
 opts.db = "flow"

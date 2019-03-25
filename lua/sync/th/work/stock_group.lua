@@ -25,7 +25,8 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 3
+opts.request_to   = 1
+opts.request_types = { "concept", "industry" }
 opts.request_types = { "concept" }
 
 opts.reload_check = true
@@ -34,7 +35,7 @@ opts.persist = true
 
 opts.concurrent = simple.get(profile, "concurrent", 1)
 
-if global.runtime.GOOS() == "windows" then
+if global.runtime.GOOS() == "windows" then  
     opts.newsession = false
 else
     opts.newsession = true

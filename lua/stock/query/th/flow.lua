@@ -1,6 +1,6 @@
 -- http://data.10jqka.com.cn/funds/ggzjl/
 -- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
-
+--http://news.10jqka.com.cn/20190322/c610418561.shtml#refCountId=pop_50ab41b8_259
 
 local th_mod_flow = require("sync.th.mod_flow")
 local filters = require("sync.th.mod_flow_filters")
@@ -71,13 +71,13 @@ opts.filters = {
     --names
     --filters.names({  names = names_sold })
     --filters.names({  names = names_specific })
-    filters.names({  names = names_maybe })
+    --filters.names({  names = names_maybe })
     
     --groups
     --filters.groups( { groups = { "一带一路" } } ),
     
     --moderate
-    --filters.io({  io_lower = 1.35, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
+    filters.io({  io_lower = 1.5, io_upper = 1.75, ch_lower = 1, ch_upper = 3.5, big_in_lower = 35  }),
     
     --high io
     --filters.io({  io_lower = 2, io_upper = 100, ch_lower = -1.5, ch_upper = 6.5, big_in_lower = 10  })

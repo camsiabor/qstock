@@ -4,11 +4,11 @@
 --os.exit(1)
 
 local global = require("q.global")
+local loggerm = require("q.logger")
 local simple = require("common.simple")
 local stock_group = require("sync.th.mod_stock_group")
 local stock_group_inst = stock_group:new()
 
-print(" i am here~")
 
 local work = global.work
 local profile
@@ -27,9 +27,10 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 1
+opts.request_to   = 10
 opts.request_types = { "concept", "industry" }
 opts.request_types = { "industry" }
+--opts.request_types = { "concept" }
 
 opts.reload_check = true
 
@@ -48,9 +49,6 @@ opts.datasrc = "th"
 
 opts.print_data_from = -1
 opts.print_data_to = -1
-
-
-print(opts.request_to)
 
 
 --local url = stock_group_inst:get_url_pattern("concept", "group")

@@ -60,6 +60,14 @@ func master(g *global.G) {
 	initSyncer(g)
 
 	initHttpClient(g)
+	/*
+		go func() {
+			for {
+				qlog.Log(qlog.INFO, "hello world")
+				time.Sleep(time.Second * 5)
+			}
+		} ()
+	*/
 }
 func initAgenda(g *global.G) {
 	var agendaConfig = util.GetMap(g.Config, true, "agenda")

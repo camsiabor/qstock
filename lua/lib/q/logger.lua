@@ -2,6 +2,7 @@
 
 
 local global = require("q.global")
+local simple = require("common.simple")
 
 local M = {}
 
@@ -18,13 +19,31 @@ M.opts_def = {
     suffix = ".log",
 }
 
+function M:key()
+    local debuginfo = debug.getinfo(2, "Snl")
+    return debuginfo.short_src
+end
+
 function M:new(opts)
     local inst = {}
     inst.__index = self
     setmetatable(inst, self)
+
     if opts == nil then
         opts = {}
     end
+
+    simple.def(opts, "level", "info")
+    simple.def(opts,"dir", "log/lua")
+    simple.def(opts,"prefix", "lua")
+    simple.def(opts,"suffix", ".log")
+    simple.def(opts,"tostdout", false)
+    simple.def(opts,"tofile", false)
+
+    if opts.key == nil or opts.key == "" then
+        opts.key = self:key()
+    end
+
     if opts.logger == nil then
         if opts.suffix ~= nil and opts.prefix ~= nil then
             inst.logger = M.loggerm.New(opts.key, opts.dir, opts.prefix, opts.suffix, opts.stdout)
@@ -43,17 +62,29 @@ function M:newstdout(opts)
         opts = {}
     end
 
-    if opts.level == nil then
-        opts.level = "info"
+    simple.def(opts, "level", "info")
+    simple.def(opts,"dir", "log/lua")
+    simple.def(opts,"prefix", "lua")
+    simple.def(opts,"suffix", ".log")
+    simple.def(opts,"tostdout", false)
+    simple.def(opts,"tofile", false)
+
+    if opts.key == nil or opts.key == "" then
+        opts.key = self:key()
     end
 
     local inst = {}
     inst.__index = self
     setmetatable(inst, self)
-
     local stdout = global.stdout
-    inst.logger = M.loggerm.New("", "", "", "", opts.level, false, 0)
-    inst.logger.SetWriters( { stdout })
+    inst.logger = M.loggerm.New(opts.key, opts.dir, opts.prefix, opts.suffix, opts.level, opts.tostdout, 0)
+    if opts.tofile then
+        inst.logger.InitWriters()
+        inst.logger.AddWriter( stdout , "", 0, true)
+    else
+        inst.logger.SetWriters( { stdout } )
+    end
+
     return inst
 end
 

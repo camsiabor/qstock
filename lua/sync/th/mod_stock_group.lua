@@ -51,16 +51,18 @@ local simple = require("common.simple")
 function M:new()
     local inst = {}
     inst.__index = self
-
     setmetatable(inst, self)
     return inst
 end
 
+function M:set_logger(logger)
+    self.logger = logger
+end
 
 function M:get_logger()
     if self.logger == nil then
         local loggerm = require("q.logger")
-        self.logger = loggerm:new()
+        self.logger = loggerm:newstdout({ level = "verbose" })
     end
     return self.logger
 end
@@ -72,7 +74,10 @@ function M:get_url_pattern(request_type, group_or_list)
     key = string.lower(key)
     local url = self.URL_PATTERNS[key]
     if url == nil then
-        error("[url] pattern not found", key)
+        local msg = "[url] pattern not found" .. key
+        self:get_logger():error(msg)
+        error(msg)
+        return
     end
     return url
 end
@@ -84,7 +89,10 @@ function M:get_token(request_type, group_or_list)
     key = string.upper(key)
     local token = self.TOKENS[key]
     if token == nil then
-        print("[token] not found", key)
+        local msg = "[token] not found" .. key
+        self:get_logger():error(msg)
+        error(msg)
+        return
     end
     return token
 end
@@ -106,7 +114,7 @@ function M:group_request(opts)
     local browser = global[opts.browser]
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
     if err ~= nil then
-        print("[request] fatal", err)
+        self:get_logger():error("[request] fatal", err)
     end
 
     reqopt = reqopts[1]
@@ -126,8 +134,8 @@ function M:group_parse(opts, html)
     local tag_end = '<div class="cate_toggle_wrap">'
     local index = string.find(html, tag_start)
     if index == nil then
-        print("[group] [request] failure")
-        print(html)
+        self:get_logger():error("[group] [request] failure")
+        self:get_logger():error(html)
         return
     end
     html = string.sub(html, index)
@@ -144,7 +152,7 @@ function M:group_parse(opts, html)
         groups[code] = group
         count = count + 1
     end
-    print("[parse] group count", count)
+    self:get_logger():info("[parse] group count", count)
     return groups, count
 end
 
@@ -161,9 +169,9 @@ function M:group_persist(opts, groups)
     local token = self:get_token(opts.request_type, "group")
     local _, err = dao.Update(db, token, "", jsonstr, true, 0, nil)
     if err == nil then
-        print("[persist] group")
+        self:get_logger():info("[persist]", token)
     else
-        print("[persist] group failure", err)
+        self:get_logger():info("[persist] failure", token, err)
     end
 end
 
@@ -174,12 +182,12 @@ function M:group_reload(opts)
     if db == nil then
         db = "group"
     end
-    print("[reload] group")
+    self:get_logger():info("[reload] group")
     local dao = global.daom.Get("main")
     local token = self:get_token(opts.request_type, "group")
     local datastr, err = dao.Get(db, token, "", 0, nil)
     if err ~= nil then
-        print("[reload] failure", token, "", err)
+        self:get_logger():info("[reload] failure", token, "", err)
     end
     local groups = json.decode(datastr)
     return groups
@@ -240,7 +248,7 @@ function M:list_request(opts, groups)
     reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
 
     if err ~= nil then
-        print("[request] fatal", err)
+        self:get_logger():error("[request] fatal", err)
     end
 
     for i = 1, #reqopts do
@@ -275,9 +283,9 @@ function M:list_parse(opts, reqopt, group)
     local html = reqopt["content"]
     if html == nil then
         local err = reqopt["err"]
-        print("[request] [list] fail", reqopt["url"])
-        print(err)
-        print(reqopt)
+        self:get_logger():error("[request] [list] fail", reqopt["url"])
+        self:get_logger():error(err)
+        self:get_logger():error(reqopt)
         return
     end
 
@@ -286,8 +294,8 @@ function M:list_parse(opts, reqopt, group)
 
     local i_table_start = string.find(html, table_start)
     if i_table_start == nil then
-        print("[request] [list] failure", reqopt["url"])
-        print(html)
+        self:get_logger():error("[request] [list] failure", reqopt["url"])
+        self:get_logger():error(html)
         return
     end
     local html_table = string.sub(html, i_table_start)
@@ -308,11 +316,12 @@ function M:list_parse(opts, reqopt, group)
         end
     end
 
-
+    --[[
     local logger = self:get_logger()
     logger:info("-------------------------------------------------------")
     logger:info(html_table)
     logger:info("-------------------------------------------------------")
+    ]]--
 
     if self.htmlparser == nil then
         self.htmlparser = require("common.htmlparser.htmlparser")
@@ -324,9 +333,11 @@ function M:list_parse(opts, reqopt, group)
     for i = 1, tr_count do
         local tr = tbody.nodes[i]
         local tds = tr.nodes
-        local code = tds[2].nodes[1]:getcontent()
-        local name = tds[3].nodes[1]:getcontent()
-        group.list[code] = name
+        if #tds > 2 then
+            local code = tds[2].nodes[1]:getcontent()
+            local name = tds[3].nodes[1]:getcontent()
+            group.list[code] = name
+        end
     end -- for tr end
 
     return group
@@ -349,11 +360,11 @@ function M:list_persist(opts, groups, log)
             local _, err = dao.Update(db, token, key, jsonstr, true, 0, nil)
             if err == nil then
                 if log then
-                    print("[persist] list", code, group.name, group.page)
+                    self:get_logger():info("[persist]", token, code, group.name, group.page)
                 end
             else
                 if log then
-                    print("[persist] list failure", code, group.name, err)
+                    self:get_logger():error("[persist] failure", token, code, group.name, err)
                 end
             end
         end
@@ -369,15 +380,15 @@ function M:list_reload(opts)
         db = "group"
     end
     local dao = global.daom.Get("main")
-    print("[reload] stock group concept")
+    self:get_logger():info("[reload] stock group concept")
     local token = self:get_token(opts.request_type, "list")
     local map, err = dao.Get(db, "", token, 1, nil)
     if err ~= nil then
-        print("[reload] failure", db, token, err)
+        self:get_logger():error("[reload] failure", db, token, err)
         return
     end
     if map == nil or simple.table_count(map) == 0 then
-        print("[reload] empty", db, token)
+        self:get_logger():error("[reload] empty", db, token)
         return
     end
     local groups = {}
@@ -403,7 +414,7 @@ function M:list_reload_non_complete(opts)
         local group = groups[key]
         local noncomplete = group == nil
         if noncomplete then
-            print("[noncomplete] group nil", code)
+            self:get_logger():info("[noncomplete] group nil", code)
         else
             if group.page == nil then
                 group.page = 0
@@ -412,11 +423,11 @@ function M:list_reload_non_complete(opts)
             end
             noncomplete = group.page <= 0
             if noncomplete then
-                print("[noncomplete] group page zero", code, group.name, group.page)
+                self:get_logger():info("[noncomplete] group page zero", code, group.name, group.page)
             else
                 noncomplete = simple.table_count(group.list) <= 0
                 if noncomplete then
-                    print("[noncomplete] group list zero", code, group.name, group.page)
+                    self:get_logger():info("[noncomplete] group list zero", code, group.name, group.page)
                 end
             end
         end
@@ -426,7 +437,7 @@ function M:list_reload_non_complete(opts)
             local currcount = simple.table_count(group.list)
             noncomplete = currcount < suppose
             if noncomplete then
-                print("[noncomplete] group list not full", code, group.name, suppose, currcount)
+                self:get_logger():info("[noncomplete] group list not full", code, group.name, suppose, currcount)
             end
         end
         if noncomplete then
@@ -434,7 +445,7 @@ function M:list_reload_non_complete(opts)
             count = count + 1
         end
     end
-    print("[noncomplete] count ", simple.table_count(todos))
+    self:get_logger():info("[noncomplete] count ", simple.table_count(todos))
     return todos
 end
 
@@ -458,7 +469,6 @@ function M:code_group_mapping(request_types, from_cache)
     local all = {}
     for i = 1, #request_types do
         local request_type = request_types[i]
-        --print("[rq]", request_type)
         local mapping
         local mappingstr
         local token = self:get_token(request_type, "list")
@@ -489,11 +499,13 @@ end
 
 function M:go(opts)
 
-    self:power()
+    if opts.logger then
+        self.logger = opts.logger
+    end
 
     local request_type = opts.request_type
     if request_type == nil or request_type == "" then
-        print("[request] invalid no request type")
+        self:get_logger():error("[request] invalid no request type")
         return
     end
 

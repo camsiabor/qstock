@@ -30,7 +30,7 @@ opts.request_from = 1
 opts.request_to   = 10
 opts.request_types = { "concept", "industry" }
 opts.request_types = { "industry" }
---opts.request_types = { "concept" }
+opts.request_types = { "concept" }
 
 opts.reload_check = true
 

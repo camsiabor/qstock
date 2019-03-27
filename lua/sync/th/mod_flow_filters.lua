@@ -95,10 +95,19 @@ function M.io_any(fopts)
     simple.def(fopts, "ch_lower", -1.5)
     simple.def(fopts, "ch_upper", 6)
 
-    return function(one, series, code, currindex, opts)
+    simple.def(fopts, "date_offset", 0)
 
+    return function(one, series, code, currindex, opts)
+        if series == nil then
+            series = { one }
+        end
         local include = false
         for i = 1, currindex do
+
+            if i > fopts.date_offset then
+                break
+            end
+
             local one = series[i]
             if one ~= nil then
                 local io = one.flow_io_rate

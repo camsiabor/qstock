@@ -27,7 +27,9 @@ function M:new(opts)
     end
     if opts.logger == nil then
         if opts.suffix ~= nil and opts.prefix ~= nil then
-            M.loggerm.New(opts.key, opts.dir, opts.prefix, opts.suffix, opts.stdout)
+            inst.logger = M.loggerm.New(opts.key, opts.dir, opts.prefix, opts.suffix, opts.stdout)
+        else
+            inst.logger = M.loggerm.GetDef()
         end
     else
         inst.logger = opts.logger
@@ -35,14 +37,36 @@ function M:new(opts)
     return inst
 end
 
-function M:log(level, ...)
+function M:newstdout(opts)
+
+    if opts == nil then
+        opts = {}
+    end
+
+    if opts.level == nil then
+        opts.level = "info"
+    end
+
+    local inst = {}
+    inst.__index = self
+    setmetatable(inst, self)
+
+    local stdout = global.stdout
+    inst.logger = M.loggerm.New("", "", "", "", opts.level, false, 0)
+    inst.logger.SetWriters( { stdout })
+    return inst
+end
+
+
+
+function M:log(level, skip, ...)
     if level == nil then
         level = self.level
         if level == nil then
             level = 2
         end
     end
-    local debuginfo = debug.getinfo(2, "Snl")
+    local debuginfo = debug.getinfo(skip, "Snl")
     if debuginfo.name == nil then
         debuginfo.name = debuginfo.what
     end
@@ -51,27 +75,27 @@ end
 
 
 function M:debug(...)
-    self:log(0, ...)
+    self:log(0, 3,...)
 end
 
 function M:verbose(...)
-    self:log(1, ...)
+    self:log(1, 3, ...)
 end
 
 function M:info(...)
-    self:log(2, ...)
+    self:log(2, 3,...)
 end
 
 function M:warn(...)
-    self:log(3, ...)
+    self:log(3, 3,...)
 end
 
 function M:error(...)
-    self:log(4, ...)
+    self:log(4, 3,...)
 end
 
 function M:fatal(...)
-    self:log(5, ...)
+    self:log(5, 3,...)
 end
 
 

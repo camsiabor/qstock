@@ -42,7 +42,7 @@ M.URL_PATTERNS = {
 
 
 local global = require("q.global")
---local logger = require("q.logger")
+
 local json = require('common.json')
 local simple = require("common.simple")
 
@@ -51,10 +51,19 @@ local simple = require("common.simple")
 function M:new()
     local inst = {}
     inst.__index = self
+
     setmetatable(inst, self)
     return inst
 end
 
+
+function M:get_logger()
+    if self.logger == nil then
+        local loggerm = require("q.logger")
+        self.logger = loggerm:new()
+    end
+    return self.logger
+end
 
 -------------------------------------------------------------------------------------------
 
@@ -299,6 +308,12 @@ function M:list_parse(opts, reqopt, group)
         end
     end
 
+
+    local logger = self:get_logger()
+    logger:info("-------------------------------------------------------")
+    logger:info(html_table)
+    logger:info("-------------------------------------------------------")
+
     if self.htmlparser == nil then
         self.htmlparser = require("common.htmlparser.htmlparser")
     end
@@ -473,6 +488,8 @@ function M:code_group_mapping(request_types, from_cache)
 end
 
 function M:go(opts)
+
+    self:power()
 
     local request_type = opts.request_type
     if request_type == nil or request_type == "" then

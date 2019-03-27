@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/camsiabor/golua/lua"
 	"github.com/camsiabor/golua/luar"
-	"github.com/camsiabor/qcom/global"
 	"github.com/camsiabor/qcom/qio"
 	"github.com/camsiabor/qcom/qref"
 	"github.com/camsiabor/qcom/util"
@@ -108,10 +107,8 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 	L.OpenTable()
 	L.OpenString()
 
-	var g = global.GetInstance()
-	var gmodule = g.Data()
-	gmodule["mode"] = mode
-	luar.Register(L, rlua.TokenGlobalModule(), gmodule)
+	var exmodules = map[string]interface{}{"mode": mode}
+	rlua.FillGlobalModules(L, exmodules)
 
 	var params = o.getScriptParams(m["params"])
 	if params != nil && len(params) > 0 {
@@ -338,6 +335,12 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 	var rets, rerr = rlua.RunFile(L, scriptname, nil)
 	var end = time.Now().UnixNano()
 
+	var stdoutstr string
+	if stdout != nil {
+		bytes, _ := stdout.Bytes()
+		stdoutstr = string(bytes[:])
+	}
+
 	if rerr != nil {
 		var luaerr, ok = rerr.(*lua.LuaError)
 		if ok {
@@ -347,6 +350,9 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 			m["error"] = luaerr.Error()
 			m["stack"] = stacktrace
 			m["qtrace"] = rets
+			if len(stdoutstr) > 0 {
+				m["stdout"] = stdoutstr
+			}
 			o.RespJson(luaerr.Code(), m, c)
 		} else {
 			o.RespJsonEx(nil, rerr, c)
@@ -362,12 +368,6 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 		if len(rets) >= 2 && rets[1] != nil {
 			rerr = fmt.Errorf("%v", rets[1])
 		}
-	}
-
-	var stdoutstr string
-	if stdout != nil {
-		bytes, _ := stdout.Bytes()
-		stdoutstr = string(bytes[:])
 	}
 
 	var wrap = make(map[string]interface{})

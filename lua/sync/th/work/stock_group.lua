@@ -8,6 +8,8 @@ local simple = require("common.simple")
 local stock_group = require("sync.th.mod_stock_group")
 local stock_group_inst = stock_group:new()
 
+print(" i am here~")
+
 local work = global.work
 local profile
 if work == nil then
@@ -27,7 +29,7 @@ opts.request = true
 opts.request_from = 1
 opts.request_to   = 1
 opts.request_types = { "concept", "industry" }
-opts.request_types = { "concept" }
+opts.request_types = { "industry" }
 
 opts.reload_check = true
 

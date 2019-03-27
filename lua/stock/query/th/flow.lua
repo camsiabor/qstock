@@ -23,7 +23,7 @@ opts.newsession = false
 opts.persist = true
 
 opts.date_offset = 0
-opts.date_offset_from = -6
+opts.date_offset_from = -7
 opts.date_offset_to = 10
 
 opts.db = "flow"
@@ -50,8 +50,9 @@ local names_in_list = {
 }
 
 local names_bought = {
-    "大名城", "生益科技", "中南传媒", "成都银行", "宁波银行", 
-    "科士达", "凯文教育", "三夫户外", "奥瑞德", "双象股份",
+    "悦达投资", "美盛文化", "大名城", "英派斯", "莱茵体育",
+    "生益科技", "中南传媒", "成都银行", "宁波银行", 
+    "科士达", "凯文教育", "三夫户外",
     "华东重机", "柘中股份", "中航沈飞", "中国一重", "中设股份",
     "海亮股份", "中核钛白"
 }
@@ -91,34 +92,40 @@ opts.filters = {
     
     
     --names
-    --filters.names({  names = names_sold })
-    --filters.names({  names = names_sold })
-    --filters.names({  names = names_specific })
-    --filters.names({  names = names_maybe })
+    --filters.names({  names = names_bought }),
+    --filters.names({  names = names_sold }),
+    --filters.names({  names = names_sold }),
+    --filters.names({  names = names_specific }),
+    --filters.names({  names = names_maybe }),
     
     --codes
-    filters.codes({ codes = codes_list })
+    --filters.codes({ codes = codes_list })
     
     --groups
     --filters.groups( { groups = { "一带一路", "军工", "军民融合", "一带一路", "国产航母", "海工装备" } } ),
     
     --moderate
-    --filters.io({  io_lower = 1.25, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 10  }),
+    filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 5, ch_upper = 10, big_in_lower = 10  }),
+    
+    -- low io
+    --filters.io({  io_lower = 0.8, io_upper = 1.25, ch_lower = 0, ch_upper = 5, big_in_lower = 0  })
     
     --high io
-    --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 0, ch_upper = 6.5, big_in_lower = 10  })
+    --filters.io({  io_lower = 1.65, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  })
     
     --very high io
-    --filters.io({  io_lower = 1.85, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0 })
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0 }),
     
     -- flow in increase
-    --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -3, ch_upper = 10 })
+    --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -10, ch_upper = 10 })
     
     -- chase high 
     --filters.io_any({  io_lower = 1.5, io_upper = 100, ch_lower = 5, ch_upper = 10, big_in_lower = 0 }),
     
     -- find underline
-    --filters.io_any({  io_lower = 2, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  }),
+    --filters.io_any({  io_lower = 1.85, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  }),
+    
+    --filters.io_any({  io_lower = 1.85, io_upper = 100, ch_lower = -10, ch_upper = 10, big_in_lower = 0  }),
     
 }
 

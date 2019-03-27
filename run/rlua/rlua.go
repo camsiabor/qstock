@@ -249,13 +249,24 @@ func InitState() (L *lua.State, err error) {
 	L.PushString(_LUA_CPATH_FULL)
 	L.SetField(-2, "cpath")
 
-	var g = global.GetInstance()
-	var gmodule = g.Data()
-	luar.Register(L, _TOKEN_GLOBAL_MODULE, gmodule)
-
 	L.Pop(-1)
 
 	return L, err
+}
+
+func FillGlobalModules(L *lua.State, ex map[string]interface{}) {
+	var g = global.GetInstance()
+	var gmodule = g.Data()
+	gmodule["stdout"] = L.GetStdout()
+	gmodule["Qrace"] = func(data interface{}) {
+		L.SetData("qrace", data)
+	}
+	if ex != nil {
+		for k, v := range ex {
+			gmodule[k] = v
+		}
+	}
+	luar.Register(L, _TOKEN_GLOBAL_MODULE, gmodule)
 }
 
 func DefaultErrHandler(L *lua.State, pan interface{}) {
@@ -277,17 +288,13 @@ func RunFile(L *lua.State, filename string, errhandler lua.LuaGoErrHandler) (ret
 
 	GetLuaPath()
 
+	FillGlobalModules(L, nil)
+
 	var top_before = L.GetTop()
 	var fpath = _LUA_PATH + filename
 	if err = L.LoadFileEx(fpath); err != nil {
 		return rets, err
 	}
-
-	luar.Register(L, "", map[string]interface{}{
-		"Qrace": func(data interface{}) {
-			L.SetData("qrace", data)
-		},
-	})
 
 	if errhandler == nil {
 		errhandler = DefaultErrHandler

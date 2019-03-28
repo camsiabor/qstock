@@ -475,7 +475,7 @@ function M:print_data(opts, data)
         {
             "index", "code", "name", "change_rate", "turnover",
             "flow_io_rate", "flow_in_rate",
-            "flow_big_in_rate", "flow_big_rate", "flow_big_rate_total", "flow_big_rate_compare",
+            "flow_big_in_rate", "flow_big_rate",
             "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big", "group"
         }
 
@@ -483,7 +483,7 @@ function M:print_data(opts, data)
         {
             "i", "code", "name", "ch", "turn",
             "io", "in",
-            "big_in", "big_r", "big_t", "big_c",
+            "big_in", "big_r",
             "cross", "crossex", "big", "group"
         }
 

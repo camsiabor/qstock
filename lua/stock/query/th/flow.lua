@@ -22,9 +22,11 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
+opts.date_prev = 1
+
 opts.date_offset = 0
-opts.date_offset_from = -8
 opts.date_offset_to = 10
+opts.date_offset_from = -opts.date_prev - opts.date_offset
 
 opts.db = "flow"
 opts.datasrc = "th"
@@ -49,6 +51,7 @@ local names_bought = {
 }
 
 local names_tobe = {
+    "美盛文化",
     "尚纬股份", 
     "片仔癀", 
     "渤海轮渡", 
@@ -58,14 +61,24 @@ local names_tobe = {
     "绝味食品",
     "天马科技",
     "华纺股份",
-    "中源家居",
+    "中源家居", -- star
     "云赛智联",
     "好太太",
     "商赢环球",
     "志邦家居",
     "京城股份",
     "中炬高新",
-    "安徽合力"
+    "安徽合力",
+    "六国化工",
+    "中国海防",
+    "汇得科技",
+    "安井食品",
+    "妙可蓝多",
+    "雅运股份",
+    "春秋电子",
+    "博信股份",
+    "海油工程",
+    "山西汾酒"
 }
 
 local codes_tobe = {
@@ -108,13 +121,33 @@ opts.filters = {
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_specific }),
-    filters.names({  names = names_tobe }),
+    --filters.names({  names = names_tobe }),
     
+    
+    
+    
+    
+    -------------------------------------------------------------------------------------------------------------
     --codes
     --filters.codes({ codes = codes_tobe })
     
+    --------------------------------------------------------------------------------------------------------------
+    
     --groups
     --filters.groups( { groups = { "一带一路", "军工", "军民融合", "一带一路", "国产航母", "海工装备" } } ),
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    --anti io
+    filters.io({  io_lower = 0.5, io_upper = 0.95, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  })
+
+    --------------------------------------------------------------------------------------------------------------
+
+    --high io
+    --filters.io({  io_lower = 1.25, io_upper = 100, ch_lower = 0.5, ch_upper = 3, big_in_lower = 20  })
+
+    -------------------------------------------------------------------------------------------------------------    
+
     
     --moderate
     --filters.io({  io_lower = 1.2, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0  }),
@@ -122,17 +155,14 @@ opts.filters = {
     -- low io
     --filters.io({  io_lower = 0.8, io_upper = 1.25, ch_lower = 0, ch_upper = 5, big_in_lower = 0  })
     
-    --high io
-    --filters.io({  io_lower = 1.25, io_upper = 100, ch_lower = 0.5, ch_upper = 3, big_in_lower = 20  })
     
-    --anit io
-    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -5, ch_upper = 0, big_in_lower = 20  })
+    
     
     --very high io
-    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
+    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
     
     -- io ceil
-    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 9, ch_upper = 11, big_in_lower = 0 }),
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 8, ch_upper = 11, big_in_lower = 0 }),
     
     -- flow in increase
     --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -10, ch_upper = 10 })

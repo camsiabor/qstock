@@ -19,16 +19,22 @@ function M.io(fopts)
     simple.def(fopts, "ch_upper", 6)
 
 
-    --simple.table_print_all(fopts)
+    simple.def(fopts, "date_offset", 0)
+
+
+    local date_offset = fopts.date_offset
+
 
     return function(one, series, code, currindex, opts)
-        local io = one.flow_io_rate
-        local big_in = one.flow_big_in_rate
-        return
-            io >= fopts.io_lower and io <= fopts.io_upper
-            and big_in >= fopts.big_in_lower and big_in <= fopts.big_in_upper
-            and one.turnover >= fopts.turnover
-            and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+        if date_offset ~= 0 then
+            --print("[?]", currindex, date_offset, currindex + date_offset)
+            one = series[currindex + date_offset]
+        end
+        return one.flow_io_rate >= fopts.io_lower and one.flow_io_rate <= fopts.io_upper
+                and one.flow_big_in_rate >= fopts.big_in_lower and one.flow_big_in_rate <= fopts.big_in_upper
+                and one.turnover >= fopts.turnover
+                and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
+
     end
 end
 

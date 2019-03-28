@@ -30,6 +30,9 @@ function M.io(fopts)
             --print("[?]", currindex, date_offset, currindex + date_offset)
             one = series[currindex + date_offset]
         end
+        if one == nil then
+            return false
+        end
         return one.flow_io_rate >= fopts.io_lower and one.flow_io_rate <= fopts.io_upper
                 and one.flow_big_in_rate >= fopts.big_in_lower and one.flow_big_in_rate <= fopts.big_in_upper
                 and one.turnover >= fopts.turnover

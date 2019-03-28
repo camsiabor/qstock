@@ -22,11 +22,11 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
-opts.date_prev = 1
+opts.date_show = 8
 
 opts.date_offset = 0
 opts.date_offset_to = 10
-opts.date_offset_from = -opts.date_prev - opts.date_offset
+opts.date_offset_from = -opts.date_show - opts.date_offset
 
 opts.db = "flow"
 opts.datasrc = "th"
@@ -52,6 +52,7 @@ local names_bought = {
 
 local names_tobe = {
     "美盛文化",
+    "江苏舜天",
     "尚纬股份", 
     "片仔癀", 
     "渤海轮渡", 
@@ -78,7 +79,8 @@ local names_tobe = {
     "春秋电子",
     "博信股份",
     "海油工程",
-    "山西汾酒"
+    "山西汾酒",
+    "蒙娜丽莎"
 }
 
 local codes_tobe = {
@@ -139,7 +141,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --anti io
-    filters.io({  io_lower = 0.5, io_upper = 0.95, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  })
+    filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
+    filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  })
 
     --------------------------------------------------------------------------------------------------------------
 

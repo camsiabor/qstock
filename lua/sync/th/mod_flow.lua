@@ -391,29 +391,30 @@ function M:filter(opts, data_curr, code_mapping, result)
     end
 
 
-    local scan_next = {}
-    local scan_curr = data_curr
+    local includes
+    local scans = data_curr
     local filters_count = #filters
     for f = 1, filters_count do
+        includes = {}
+        local n = #scans
         local filter = filters[f]
-        local n = #scan_curr
         for i = 1, n do
             local series
-            local one_curr = scan_curr[i]
-            local code = one_curr.code
+            local one = scans[i]
+            local code = one.code
             if code_mapping ~= nil then
                 series = code_mapping[code]
             end
-            if filter(one_curr, series, code, data_curr_index, opts) then
-                scan_next[#scan_next + 1] = one_curr
+            if filter(one, series, code, data_curr_index, opts) then
+                includes[#includes + 1] = one
             end
         end
-        scan_curr = scan_next
+        scans = includes
     end
 
-    local n = #scan_next
+    local n = #includes
     for i = 1, n do
-        result[#result + 1] = scan_next[i]
+        result[#result + 1] = includes[i]
     end
 
     return result

@@ -48,6 +48,30 @@ local names_bought = {
     "中核钛白"
 }
 
+local names_tobe = {
+    "尚纬股份", 
+    "片仔癀", 
+    "渤海轮渡", 
+    "香飘飘", 
+    "济民制药", 
+    "格尔软件", 
+    "绝味食品",
+    "天马科技",
+    "华纺股份",
+    "中源家居",
+    "云赛智联",
+    "好太太",
+    "商赢环球",
+    "志邦家居",
+    "京城股份",
+    "中炬高新",
+    "安徽合力"
+}
+
+local codes_tobe = {
+    "603333"
+}
+
 
 opts.result_adapter2 = function(opts, result, mapping)
     local up = 0
@@ -84,10 +108,10 @@ opts.filters = {
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_specific }),
-    --filters.names({  names = names_maybe }),
+    filters.names({  names = names_tobe }),
     
     --codes
-    --filters.codes({ codes = codes_list })
+    --filters.codes({ codes = codes_tobe })
     
     --groups
     --filters.groups( { groups = { "一带一路", "军工", "军民融合", "一带一路", "国产航母", "海工装备" } } ),
@@ -105,7 +129,7 @@ opts.filters = {
     --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -5, ch_upper = 0, big_in_lower = 20  })
     
     --very high io
-    filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
     
     -- io ceil
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 9, ch_upper = 11, big_in_lower = 0 }),
@@ -120,7 +144,12 @@ opts.filters = {
     --filters.io_any({  io_lower = 1.85, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  }),
     
     --filters.io_any({  io_lower = 0.5, io_upper = 0.75, ch_lower = -1, ch_upper = 5, big_in_lower = 0  }),
-    --filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = -9, ch_upper = 10.5, big_in_lower = 0  }),
+    --filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0, ch_avg_lower = 0, ch_avg_upper = 10  }),
+    
+    --all
+    --filters.io_all({  io_lower = 1, io_upper = 100, ch_lower = -2.5, ch_upper = 10.5, big_in_lower = 0, ch_avg_lower = 0, ch_avg_upper = 10  }),
+    
+    
     
 }
 

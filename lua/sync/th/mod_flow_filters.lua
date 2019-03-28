@@ -97,13 +97,17 @@ function M.io_any(fopts)
 
     simple.def(fopts, "date_offset", 0)
 
+    simple.def(fopts, "ch_avg_lower", 0)
+    simple.def(fopts, "ch_avg_upper", 10)
+
+    local cal_avg = fopts.ch_avg_lower < fopts.ch_avg_upper
+
     return function(one, series, code, currindex, opts)
         if series == nil then
             series = { one }
         end
         local include = false
         for i = 1, currindex do
-
             local one = series[i]
             if one ~= nil then
                 local io = one.flow_io_rate
@@ -113,10 +117,30 @@ function M.io_any(fopts)
                         and one.turnover >= fopts.turnover
                         and one.change_rate >= fopts.ch_lower and one.change_rate <= fopts.ch_upper
                 if include then
-                    return true
+                    break
                 end
             end
         end
+
+        if include and cal_avg then
+            local sum = 0
+            local count = 0
+            for i = 1, currindex do
+                local one = series[i]
+                if one ~= nil then
+                    count = count + 1
+                    sum = sum +  one.change_rate
+                end
+            end
+            if count == 0 then
+                include = false
+            else
+                local avg = sum / count
+                include = avg >= fopts.ch_avg_lower and avg <= fopts.ch_avg_upper
+            end
+
+        end
+
         return include
     end
 end
@@ -135,6 +159,13 @@ function M.io_all(fopts)
     simple.def(fopts, "ch_lower", -1.5)
     simple.def(fopts, "ch_upper", 6)
 
+    simple.def(fopts, "date_offset", 0)
+
+    simple.def(fopts, "ch_avg_lower", 0)
+    simple.def(fopts, "ch_avg_upper", 10)
+
+    local cal_avg = fopts.ch_avg_lower < fopts.ch_avg_upper
+
     return function(one, series, code, currindex, opts)
         local include = true
         for i = 1, currindex do
@@ -151,6 +182,25 @@ function M.io_all(fopts)
                 end
             end
         end
+
+        if include and cal_avg then
+            local sum = 0
+            local count = 0
+            for i = 1, currindex do
+                local one = series[i]
+                if one ~= nil then
+                    count = count + 1
+                    sum = sum +  one.change_rate
+                end
+            end
+            if count == 0 then
+                include = false
+            else
+                local avg = sum / count
+                include = avg >= fopts.ch_avg_lower and avg <= fopts.ch_avg_upper
+            end
+        end
+
         return include
     end
 end

@@ -380,10 +380,8 @@ function M:filter(opts, data_curr, code_mapping, result)
 
     local filters = opts.filters
     if filters == nil or #filters == 0 then
-        --print("no filter?")
         return data_curr
     end
-    --print("filter?!", #filters)
 
     local data_curr_index = opts.date_offset_from
     if data_curr_index == nil then
@@ -392,28 +390,30 @@ function M:filter(opts, data_curr, code_mapping, result)
         data_curr_index = -data_curr_index + 1
     end
 
-    local filters_count = #filters
-    local data_curr_count = #data_curr
-    for i = 1, data_curr_count do
-        local one_curr = data_curr[i]
-        local code = one_curr.code
-        local series
-        if code_mapping ~= nil then
-            series = code_mapping[code]
-        end
 
-        local include = true
-        for f = 1, filters_count do
-            local filter = filters[f]
-            include = filter(one_curr, series, code, data_curr_index, opts)
-            if not include then
-                break
+    local scan_next = {}
+    local scan_curr = data_curr
+    local filters_count = #filters
+    for f = 1, filters_count do
+        local filter = filters[f]
+        local n = #scan_curr
+        for i = 1, n do
+            local series
+            local one_curr = scan_curr[i]
+            local code = one_curr.code
+            if code_mapping ~= nil then
+                series = code_mapping[code]
+            end
+            if filter(one_curr, series, code, data_curr_index, opts) then
+                scan_next[#scan_next + 1] = one_curr
             end
         end
-        if include then
-            result[#result + 1] = one_curr
-        end
+        scan_curr = scan_next
+    end
 
+    local n = #scan_next
+    for i = 1, n do
+        result[#result + 1] = scan_next[i]
     end
 
     return result
@@ -544,9 +544,18 @@ function M:go(opts)
 
     local result_curr = self:filter(opts, data_curr, code_mapping)
 
+    if opts.result_adapter ~= nil then
+        local adapted = simple.func_call(opts.result_adapter, opts, result_curr, code_mapping)
+        if adapted ~= nil then
+            result_curr = adapted
+        end
+    end
+
     simple.table_sort(result_curr, opts.sort_field)
 
     local result = self:data_merge(opts, result_curr, code_mapping)
+
+
 
     if opts.print_data == nil then
         self:print_data(opts, result)

@@ -84,7 +84,6 @@ function M:newstdout(opts)
     else
         inst.logger.SetWriters( { stdout } )
     end
-
     return inst
 end
 

@@ -104,10 +104,6 @@ function M.io_any(fopts)
         local include = false
         for i = 1, currindex do
 
-            if i > fopts.date_offset then
-                break
-            end
-
             local one = series[i]
             if one ~= nil then
                 local io = one.flow_io_rate

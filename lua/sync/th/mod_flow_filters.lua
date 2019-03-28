@@ -171,7 +171,9 @@ function M.io_all(fopts)
     simple.def(fopts, "date_offset", 0)
 
     simple.def(fopts, "ch_avg_lower", 0)
-    simple.def(fopts, "ch_avg_upper", 10)
+    simple.def(fopts, "ch_avg_upper", 0)
+    
+    simple.def(fopts, "date_offset", 0)
 
     local cal_avg = fopts.ch_avg_lower < fopts.ch_avg_upper
 

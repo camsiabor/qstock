@@ -24,7 +24,7 @@ opts.persist = true
 
 opts.date_show = 8
 
-opts.date_offset = 0
+opts.date_offset = -3
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -80,7 +80,9 @@ local names_tobe = {
     "博信股份",
     "海油工程",
     "山西汾酒",
-    "蒙娜丽莎"
+    "蒙娜丽莎",
+    "塞力斯",
+    "思美传媒"
 }
 
 local codes_tobe = {
@@ -142,7 +144,8 @@ opts.filters = {
     
     --anti io
     filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
-    filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  })
+    filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
 
     --------------------------------------------------------------------------------------------------------------
 

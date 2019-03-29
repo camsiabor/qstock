@@ -27,7 +27,9 @@ function M.io(fopts)
 
     return function(one, series, code, currindex, opts)
         if date_offset ~= 0 then
-            --print("[?]", currindex, date_offset, currindex + date_offset)
+            if series == nil then
+                return false
+            end
             one = series[currindex + date_offset]
         end
         if one == nil then

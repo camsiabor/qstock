@@ -24,7 +24,7 @@ opts.persist = true
 
 opts.date_show = 8
 
-opts.date_offset = -3
+opts.date_offset = -1
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -82,7 +82,8 @@ local names_tobe = {
     "山西汾酒",
     "蒙娜丽莎",
     "塞力斯",
-    "思美传媒"
+    "思美传媒",
+    "双箭股份",
 }
 
 local codes_tobe = {
@@ -128,9 +129,6 @@ opts.filters = {
     --filters.names({  names = names_tobe }),
     
     
-    
-    
-    
     -------------------------------------------------------------------------------------------------------------
     --codes
     --filters.codes({ codes = codes_tobe })
@@ -143,14 +141,14 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --anti io
-    filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
-    filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
-    filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    --filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
+    --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
 
     --------------------------------------------------------------------------------------------------------------
 
     --high io
-    --filters.io({  io_lower = 1.25, io_upper = 100, ch_lower = 0.5, ch_upper = 3, big_in_lower = 20  })
+    --filters.io({  io_lower = 2, io_upper = 100, ch_lower = 3, ch_upper = 10, big_in_lower })
 
     -------------------------------------------------------------------------------------------------------------    
 
@@ -165,7 +163,7 @@ opts.filters = {
     
     
     --very high io
-    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0 }),
     
     -- io ceil
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 8, ch_upper = 11, big_in_lower = 0 }),
@@ -174,13 +172,13 @@ opts.filters = {
     --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -10, ch_upper = 10 })
     
     -- chase high 
-    --filters.io_any({  io_lower = 1.5, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0 }),
+    filters.io({  io_lower = 1.2, io_upper = 100, ch_lower = 5, ch_upper = 10, big_in_lower = 0 }),
     
     -- find underline
     --filters.io_any({  io_lower = 1.85, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  }),
     
     --filters.io_any({  io_lower = 0.5, io_upper = 0.75, ch_lower = -1, ch_upper = 5, big_in_lower = 0  }),
-    --filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = -1, ch_upper = 10.5, big_in_lower = 0, ch_avg_lower = 0, ch_avg_upper = 10  }),
+    --filters.io_any({  io_lower = 1.75, io_upper = 100, ch_lower = 0, ch_upper = 10.5, big_in_lower = 0, ch_avg_lower = 0, ch_avg_upper = 10  }),
     
     --all
     --filters.io_all({  io_lower = 1, io_upper = 100, ch_lower = -2.5, ch_upper = 10.5, big_in_lower = 0, ch_avg_lower = 0, ch_avg_upper = 10  }),

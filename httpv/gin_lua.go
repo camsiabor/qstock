@@ -353,7 +353,11 @@ func (o *HttpServer) handleLuaFileCmd(cmd string, m map[string]interface{}, c *g
 			if len(stdoutstr) > 0 {
 				m["stdout"] = stdoutstr
 			}
-			o.RespJson(luaerr.Code(), m, c)
+			var retcode = luaerr.Code()
+			if retcode == 0 {
+				retcode = 101
+			}
+			o.RespJson(retcode, m, c)
 		} else {
 			o.RespJsonEx(nil, rerr, c)
 		}

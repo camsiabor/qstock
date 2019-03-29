@@ -22,9 +22,9 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
-opts.date_show = 8
+opts.date_show = 0
 
-opts.date_offset = -1
+opts.date_offset = 0
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -34,6 +34,7 @@ opts.field = "zjjlr"
 opts.order = "desc"
 
 opts.link_stock_group = true
+opts.link_stock_snapshot = true
 
 --opts.sort_field = "flow_io_rate"
 opts.sort_field = "flow_big_rate_cross_ex"

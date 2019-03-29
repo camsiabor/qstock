@@ -469,13 +469,11 @@ function M:link_stock_group(opts, data)
     return data
 end
 
--------------------------------------------------------------------------------------------
-
 
 -------------------------------------------------------------------------------------------
 function M:link_stock_snapshot(opts, data, code_mapping)
     if self.mod_stock_snapshot == nil then
-        self.mod_stock_snapshot = require("sync.th.mod_stock_snapshot")
+        self.mod_stock_snapshot = require("sync.th.mod_snapshot")
     end
 
     local dates = self.mod_stock_snapshot:dates(-opts.date_offset_from, opts.date_offset, opts.date_offset_to)
@@ -484,8 +482,13 @@ function M:link_stock_snapshot(opts, data, code_mapping)
         local one = data[i]
         local code = one.code
         local key = "ch" .. code
-        local ks = self.mod_stock_snapshot:snapshot(key, dates)
-        local series = code_mapping[code]
+        local ks = self.mod_stock_snapshot:snapshot_by_cache(key, dates)
+        local series
+        if code_mapping == nil then
+            series = { one }
+        else
+            series = code_mapping[code]
+        end
         self.mod_stock_snapshot:merges(series, ks)
     end -- for
 
@@ -496,7 +499,7 @@ function M:print_data(opts, data)
 
     local fields =
         {
-            "index", "code", "name", "change_rate", "turnover",
+            "index", "code", "name", "change_rate", "turnover", "open", "close",
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate", "flow_big_rate",
             "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big", "group"
@@ -504,20 +507,28 @@ function M:print_data(opts, data)
 
     local headers =
         {
-            "i", "code", "name", "ch", "turn",
+            "i", "code", "name", "ch", "turn", "open", "close",
             "io", "in",
             "big_in", "big_r",
             "cross", "crossex", "big", "group"
         }
 
     local formatters = {
+        --[[
+        date = function(one, field, v)
+            if v == nil or #v == 0 then
+                return ""
+            end
+            return string.sub(v, 5)
+        end,
+        ]]--
         group = function(one, field, v)
             local r = ""
             for groupname in pairs(v) do
                 r = r .. groupname .. " "
             end
             return r
-        end
+        end,
     }
 
     if opts.print_fields ~= nil then
@@ -567,7 +578,7 @@ function M:go(opts)
     end
 
     if simple.is(opts.link_stock_snapshot) then
-        M:link_stock_snapshot(opts, data_curr)
+        M:link_stock_snapshot(opts, data_curr, code_mapping)
     end
 
     local result_curr = self:filter(opts, data_curr, code_mapping)

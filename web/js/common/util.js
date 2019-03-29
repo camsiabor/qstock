@@ -86,9 +86,11 @@ QUtil.prototype.handle_response = function(resp, printer, msg) {
             msg = r.data.err
                 + "\n\n" + JSON.stringify(rdataclone, null, 2)
                 + "\n\n@stack:\n" + stack;
+
             if (stdout) {
                 msg = msg + "\n\n@stdout:\n" + stdout;
             }
+
         } else {
             msg = JSON.stringify(r.data, null, 2);
         }

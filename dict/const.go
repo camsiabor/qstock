@@ -12,6 +12,7 @@ const HONGKONG = "hk"
 
 const CACHE_STOCK_SNAPSHOT = "stock.snapshot"
 const CACHE_STOCK_KHISTORY = "stock.khistory"
+const CACHE_STOCK_KHISTORY_FLAT = "stock.khistory.flat"
 const CACHE_STOCK_KHISTORY_WEEK = "stock.khistory.week"
 const CACHE_STOCK_KHISTORY_MONTH = "stock.khistory.month"
 const CACHE_STOCK_CODE = "stock.code"

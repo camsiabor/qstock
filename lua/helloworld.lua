@@ -1,13 +1,24 @@
+local global = require("q.global")
+local json = require("common.json")
 local mod_snapshot = require("sync.th.mod_snapshot")
 
-local dates = mod_snapshot:dates(3, 0, 0)
-local ks = mod_snapshot:snapshot("ch000009", dates)
-
---print(ks[1])
-
-for k, v in pairs(ks[1]) do
-    print(k, v)
+local cache_code = global.cachem.Get("stock.code");
+local cache_khistory = global.cachem.Get("stock.khistory");
+local dates = global.calendar.List(3, 0, 0, true)
+local codes = cache_code.Get(false, "sz.sh");
+local map = {}
+for i = 1, #codes do
+    local code = codes[i];
+    local ks = mod_snapshot:snapshot(code, dates)
+    map[code] = ks
 end
+
+local str = json:encode(map)
+
+print(str)
+
+
+
 
 if 1 == 1 then
     return

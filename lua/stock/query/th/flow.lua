@@ -25,7 +25,7 @@ opts.persist = true
 opts.date_show = 0
 
 opts.date_offset = 0
-opts.date_offset_to = 10
+opts.date_offset_to = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
 opts.db = "flow"
@@ -34,7 +34,7 @@ opts.field = "zjjlr"
 opts.order = "desc"
 
 opts.link_stock_group = true
-opts.link_stock_snapshot = true
+opts.link_stock_snapshot = false
 
 --opts.sort_field = "flow_io_rate"
 opts.sort_field = "flow_big_rate_cross_ex"
@@ -137,7 +137,7 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --groups
-    --filters.groups( { groups = { "一带一路", "军工", "军民融合", "一带一路", "国产航母", "海工装备" } } ),
+    filters.groups( { groups = { "沪股通" } } ),
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -149,7 +149,7 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
 
     --high io
-    --filters.io({  io_lower = 2, io_upper = 100, ch_lower = 3, ch_upper = 10, big_in_lower })
+    filters.io({  io_lower = 1.8, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0 })
 
     -------------------------------------------------------------------------------------------------------------    
 
@@ -173,7 +173,7 @@ opts.filters = {
     --filters.io_increase({ in_lower = 30, in_upper = 100, in_swing = 5, ch_lower = -10, ch_upper = 10 })
     
     -- chase high 
-    filters.io({  io_lower = 1.2, io_upper = 100, ch_lower = 5, ch_upper = 10, big_in_lower = 0 }),
+    --filters.io({  io_lower = 1.2, io_upper = 100, ch_lower = 5, ch_upper = 10, big_in_lower = 0 }),
     
     -- find underline
     --filters.io_any({  io_lower = 1.85, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0  }),

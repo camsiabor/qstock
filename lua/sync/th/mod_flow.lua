@@ -499,7 +499,7 @@ function M:print_data(opts, data)
 
     local fields =
         {
-            "index", "code", "name", "change_rate", "turnover", "open", "close",
+            "index", "code", "name", "change_rate", "turnover",
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate", "flow_big_rate",
             "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big", "group"
@@ -507,7 +507,7 @@ function M:print_data(opts, data)
 
     local headers =
         {
-            "i", "code", "name", "ch", "turn", "open", "close",
+            "i", "code", "name", "ch", "turn",
             "io", "in",
             "big_in", "big_r",
             "cross", "crossex", "big", "group"
@@ -578,7 +578,7 @@ function M:go(opts)
     end
 
     if simple.is(opts.link_stock_snapshot) then
-        M:link_stock_snapshot(opts, data_curr, code_mapping)
+        --M:link_stock_snapshot(opts, data_curr, code_mapping)
     end
 
     local result_curr = self:filter(opts, data_curr, code_mapping)

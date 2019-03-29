@@ -189,12 +189,12 @@ func InitMainCache(g *global.G) {
 		}
 	}
 
-	var scache_khistory = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY)
-	scache_khistory.ArrayLimitInit = 1000000
-	scache_khistory.Dao = dict.DAO_MAIN
-	scache_khistory.Db = dict.DB_HISTORY
-	scache_khistory.Timeout = -1 //time.Second * time.Duration(20);
-	scache_khistory.Loader = cache_khistory_loader_generator("", "")
+	var cache_stock_khistory = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY)
+	cache_stock_khistory.ArrayLimitInit = 1000000
+	cache_stock_khistory.Dao = dict.DAO_MAIN
+	cache_stock_khistory.Db = dict.DB_HISTORY
+	cache_stock_khistory.Timeout = -1 //time.Second * time.Duration(20);
+	cache_stock_khistory.Loader = cache_khistory_loader_generator("", "")
 
 	var cache_stock_khistory_week = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY_WEEK)
 	cache_stock_khistory_week.ArrayLimitInit = 1000000
@@ -209,6 +209,20 @@ func InitMainCache(g *global.G) {
 	cache_stock_khistory_month.Db = dict.DB_HISTORY
 	cache_stock_khistory_month.Timeout = -1 //time.Second * time.Duration(20);
 	cache_stock_khistory_month.Loader = cache_khistory_loader_generator("m.", "month")
+
+	var cache_stock_khistory_flat = scache.GetManager().Get(dict.CACHE_STOCK_KHISTORY_FLAT)
+	cache_stock_khistory_flat.Dao = dict.DAO_MAIN
+	cache_stock_khistory_flat.Db = dict.DB_HISTORY
+	cache_stock_khistory_flat.Loader = func(cache *scache.SCache, factor int, timeout time.Duration, lock bool, keys ...interface{}) (interface{}, error) {
+		var mapping = make(map[string]interface{})
+		var codesInterf, _ = scache_code.Get(true, "sz.sh")
+		var codes = codesInterf.([]string)
+		for i, n := 0, len(codes); i < n; i++ {
+			// var code = codes[i]
+		}
+		cache_stock_khistory.Get(true, "")
+		return mapping, nil
+	}
 
 	g.SetData("calendar", stock.GetStockCalendar())
 }

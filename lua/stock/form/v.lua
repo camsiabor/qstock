@@ -9,7 +9,6 @@ function v(A)
     local up_from = 2
     local up_to = up_count + 1
 
-
     local date_count = down_count + up_count + 1
 
     local cache_code = global.cachem.Get("stock.code");
@@ -17,7 +16,6 @@ function v(A)
     local cache_khistory = global.cachem.Get("stock.khistory");
     local codes = cache_code.Get(false, A.market);
     local dates = global.calendar.List(date_count, A.date_offset, 0, true)
-
 
     local up_red = A.up_red
     local up_rate = A.up_rate

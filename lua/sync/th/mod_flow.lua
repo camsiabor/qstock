@@ -447,6 +447,7 @@ function M:data_merge(opts, result_curr, code_mapping)
 end
 
 
+
 -------------------------------------------------------------------------------------------
 
 function M:link_stock_group(opts, data)
@@ -466,6 +467,28 @@ function M:link_stock_group(opts, data)
         one.group = mapping[code]
     end
     return data
+end
+
+-------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------
+function M:link_stock_snapshot(opts, data, code_mapping)
+    if self.mod_stock_snapshot == nil then
+        self.mod_stock_snapshot = require("sync.th.mod_stock_snapshot")
+    end
+
+    local dates = self.mod_stock_snapshot:dates(-opts.date_offset_from, opts.date_offset, opts.date_offset_to)
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local code = one.code
+        local key = "ch" .. code
+        local ks = self.mod_stock_snapshot:snapshot(key, dates)
+        local series = code_mapping[code]
+        self.mod_stock_snapshot:merges(series, ks)
+    end -- for
+
 end
 
 -------------------------------------------------------------------------------------------
@@ -540,7 +563,11 @@ function M:go(opts)
     end
 
     if simple.is(opts.link_stock_group) then
-        data_curr = M:link_stock_group(opts, data_curr)
+        M:link_stock_group(opts, data_curr, code_mapping)
+    end
+
+    if simple.is(opts.link_stock_snapshot) then
+        M:link_stock_snapshot(opts, data_curr)
     end
 
     local result_curr = self:filter(opts, data_curr, code_mapping)

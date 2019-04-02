@@ -24,7 +24,7 @@ opts.persist = true
 
 opts.date_show = 10
 
-opts.date_offset = -8
+opts.date_offset = -1
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -136,13 +136,13 @@ opts.filters = {
     
     --------------------------------------------------------------------------------------------------------------
     
-    --anti io
+    --anti io series
     --filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
     --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     
     --------------------------------------------------------------------------------------------------------------
-    -- anti io 2
+    -- anti io series 2
     --filters.io({  io_lower = 1.1, io_upper = 100, ch_lower = -1.5, ch_upper = 0, big_in_lower = 0, date_offset = -1  }),
     --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
@@ -151,12 +151,12 @@ opts.filters = {
 
     --high io
     --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 0, ch_upper = 4.5, big_in_lower = 0 })
-    --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 4.5, ch_upper = 10, big_in_lower = 0 })
+    filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 4.5, ch_upper = 10, big_in_lower = 0 })
     
     -------------------------------------------------------------------------------------------------------------    
 
-    
-    filters.io({  io_lower = 1.2, io_upper = 2, ch_lower = -1, ch_upper = 1, big_in_lower = 0 })
+    -- anti io     
+    --filters.io({  io_lower = 1.2, io_upper = 2, ch_lower = -1, ch_upper = 1, big_in_lower = 0 })
     
     -------------------------------------------------------------------------------------------------------------    
 

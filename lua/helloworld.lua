@@ -1,3 +1,26 @@
+local simple = require("common.simple")
+
+local t = os.time()
+
+
+
+local str = simple.now_hour_min()
+print(str)
+
+
+local strn = (str + 0)
+local m = strn % 100
+m = simple.intstr(m)
+print(m)
+
+local array = {"1800", "1815", "1830", "1845", "1900" }
+local r = simple.num_array_align(array, strn)
+print("r", r)
+if 1 == 1 then
+    return
+end
+
+
 local global = require("q.global")
 local json = require("common.json")
 local mod_snapshot = require("sync.th.mod_snapshot")

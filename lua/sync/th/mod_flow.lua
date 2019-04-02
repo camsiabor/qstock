@@ -210,6 +210,8 @@ end
 
 function M:persist(opts, data)
 
+
+
     local dates = global.calendar.List(0, 0, 0, true)
 
     local db = opts.db
@@ -219,15 +221,35 @@ function M:persist(opts, data)
     local page = 1
     local pageone = {}
 
+    local slicify = false
+    local timeslice = nil
+    local datestr_cur = simple.now_date()
+    if datestr_cur == datestr then
+        local hm_cur = simple.now_hour_min() + 0
+        slicify = (hm_cur >= 930 and hm_cur <= 1130) or (hm_cur >= 1300 and hm_cur <= hm_cur <= 1500)
+        if slicify then
+            local timearray = opts.persist_time_array
+            if timearray == nil then
+                timearray = { "0930", "1000", "1030", "1100", "1130", "1315", "1330", "1400", "1430", "1445", "1500" }
+            end
+            local timeslice = simple.num_array_align(timearray, hm_cur)
+            if timeslice == nil then
+                slicify = false
+            end
+        end
+    end
+
     local n = #data
     print("[persist]", datestr , "data count", n)
     for i = 1, n do
         pageone[#pageone + 1] = data[i]
         if (i % 50 == 0) or (i == n) then
             local jsonstr = json.encode(pageone)
-
             local key = self:keygen(opts, page)
             local _, err = dao.Update(db, datestr, key, jsonstr, true, 0, nil)
+            if slicify then
+                dao.Update(db, datestr .. "_" .. timeslice, key, jsonstr, true, 0, nil)
+            end
             if err == nil then
                 if opts.debug then
                     print("[persist]", datestr, key, #pageone)

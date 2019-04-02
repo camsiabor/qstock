@@ -365,4 +365,61 @@ function simple.get(t, field, defvalue)
 end
 
 
+function simple.now_date(formatter)
+    if formatter == nil or #formatter == 0 then
+        formatter = "%Y%m%d %H%M"
+    end
+    local t = os.time()
+    return os.date(formatter, t)
+end
+
+function simple.now_datetime(formatter)
+    if formatter == nil or #formatter == 0 then
+        formatter = "%Y%m%d %H%M%S"
+    end
+    local t = os.time()
+    return os.date(formatter, t)
+end
+
+function simple.now_hour_min(formatter)
+    if formatter == nil or #formatter == 0 then
+        formatter = "%H%M"
+    end
+    local t = os.time()
+    return os.date(formatter, t)
+end
+
+function simple.intstr(n)
+    local s = n ..""
+
+    local index = string.find(s, "%.")
+    if index == nil then
+        return s
+    end
+    if index == 0 then
+        return "0"
+    end
+    s = string.sub(s, 1, index - 1)
+    return s
+end
+
+function simple.num_array_align(array, num)
+    num = num + 0
+    local n = #array - 1
+    for i = 1, n do
+        local a = array[i] + 0
+        local b = array[i + 1] + 0
+        if num >= a and num <= b then
+            local a_delta = num - a
+            local b_delta = b - num
+            if a_delta < b_delta then
+                return array[i]
+            else
+                return array[i + 1]
+            end
+        end
+    end
+    return nil
+end
+
 return simple

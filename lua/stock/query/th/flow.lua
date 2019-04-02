@@ -22,10 +22,10 @@ opts.concurrent = 3
 opts.newsession = false
 opts.persist = true
 
-opts.date_show = 0
+opts.date_show = 10
 
-opts.date_offset = 0
-opts.date_offset_to = 0
+opts.date_offset = -8
+opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
 opts.db = "flow"
@@ -43,12 +43,7 @@ opts.sort_field = "flow_big_rate_cross_ex"
 
 
 local names_bought = {
-    "贵人鸟",
-    "黑芝麻",
-    "美盛文化", 
-    "中南传媒", 
-    "华东重机", "中国一重",
-    "中核钛白"
+    "梦百合"
 }
 
 local names_tobe = {
@@ -137,7 +132,7 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --groups
-    filters.groups( { groups = { "沪股通" } } ),
+    --filters.groups( { groups = { "区块链" } } ),
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -145,15 +140,26 @@ opts.filters = {
     --filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
     --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    
+    --------------------------------------------------------------------------------------------------------------
+    -- anti io 2
+    --filters.io({  io_lower = 1.1, io_upper = 100, ch_lower = -1.5, ch_upper = 0, big_in_lower = 0, date_offset = -1  }),
+    --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
 
     --------------------------------------------------------------------------------------------------------------
 
     --high io
-    filters.io({  io_lower = 1.8, io_upper = 100, ch_lower = 0, ch_upper = 10, big_in_lower = 0 })
-
+    --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 0, ch_upper = 4.5, big_in_lower = 0 })
+    --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 4.5, ch_upper = 10, big_in_lower = 0 })
+    
     -------------------------------------------------------------------------------------------------------------    
 
     
+    filters.io({  io_lower = 1.2, io_upper = 2, ch_lower = -1, ch_upper = 1, big_in_lower = 0 })
+    
+    -------------------------------------------------------------------------------------------------------------    
+
     --moderate
     --filters.io({  io_lower = 1.2, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0  }),
     

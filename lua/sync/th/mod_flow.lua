@@ -594,8 +594,6 @@ function M:go(opts)
 
     local result = self:data_merge(opts, result_curr, code_mapping)
 
-
-
     if opts.print_data == nil then
         self:print_data(opts, result)
     else

@@ -340,7 +340,7 @@ function M:link_stock_group(opts, data)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
-    local mapping = self.mod_stock_group:code_group_mapping(true)
+    local mapping = self.mod_stock_group:code_group_mapping(false)
     local n = #data
     for i = 1, n do
         local one = data[i]

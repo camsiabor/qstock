@@ -449,7 +449,10 @@ function M:list_reload_non_complete(opts)
     return todos
 end
 
-function M:list_code_group_mapping(groups)
+function M:list_code_group_mapping(groups, withname)
+    if withname == nil then
+        withname = false
+    end
     local mapping = {}
     for groupcode, group in pairs(groups) do
         for code, name in pairs(group.list) do
@@ -457,7 +460,9 @@ function M:list_code_group_mapping(groups)
             if map == nil then
                 map = {}
                 mapping[code] = map
-                mapping[name] = map
+                if withname then
+                    mapping[name] = map
+                end
             end
             map[group.name] = groupcode
         end
@@ -465,28 +470,16 @@ function M:list_code_group_mapping(groups)
     return mapping
 end
 
-function M:code_group_mapping(request_types, from_cache)
+-----------------------------------------------------------------------------------------------------
+
+function M:code_group_mapping(request_types, withname)
     local all = {}
     for i = 1, #request_types do
-        local request_type = request_types[i]
         local mapping
-        local mappingstr
-        local token = self:get_token(request_type, "list")
-        --print("[token]", token)
-        local cache = global.cachem.Get("stock.group")
-        if from_cache then
-            local mappingstr = cache.Get(false, token)
-            if mappingstr ~= nil and #mappingstr > 0 then
-                mapping = json.decode(mappingstr)
-            end
-        end
-        if mapping == nil then
-            local groups = self:list_reload({ request_type = request_type })
-            if groups ~= nil then
-                mapping = self:list_code_group_mapping(groups)
-                mappingstr = json.encode(mapping)
-                cache.Set(mappingstr, token)
-            end
+        local request_type = request_types[i]
+        local groups = self:list_reload({ request_type = request_type })
+        if groups ~= nil then
+            mapping = self:list_code_group_mapping(groups, withname)
         end
 
         if mapping ~= nil then
@@ -496,6 +489,8 @@ function M:code_group_mapping(request_types, from_cache)
     all = simple.table_merge(all)
     return all
 end
+
+-----------------------------------------------------------------------------------------------------
 
 function M:go(opts)
 

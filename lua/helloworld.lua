@@ -1,3 +1,16 @@
+local a = {}
+a[1] = 3
+a[10] = 6
+print(#a)
+for i = 1, #a do 
+    print(a[i])
+end
+
+if 1 == 1 then
+    return
+end
+
+
 local simple = require("common.simple")
 
 local t = os.time()

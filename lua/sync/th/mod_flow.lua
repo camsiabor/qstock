@@ -369,16 +369,13 @@ function M:reloads(opts)
     local code_mapping
 
     if data_maps_count > 1 then
-
         code_mapping = { }
-
         for i = 1, data_curr_count do
             local one_curr = data_curr[i]
             local code = one_curr.code
 
             local mapping_array = { }
             code_mapping[code] = mapping_array
-
             for n = 1, data_maps_count do
                 if n == currindex then
                     mapping_array[#mapping_array + 1] = one_curr
@@ -391,7 +388,6 @@ function M:reloads(opts)
                 end
             end
         end
-
     end
 
     --[[
@@ -469,10 +465,20 @@ function M:data_merge(opts, result_curr, code_mapping)
     local result_merge = { }
     local result_curr_count = #result_curr
     for i = 1, result_curr_count do
-
         local one_curr = result_curr[i]
         local code = one_curr.code
         local series = code_mapping[code]
+
+        if series ~= nil then
+            local nseries = #series
+            for n = 1, nseries do
+                local serie = series[n]
+                if serie ~= nil then
+                    serie.group = one_curr.group
+                end
+            end
+        end
+
         simple.array_append(result_merge, series)
     end
 
@@ -491,7 +497,7 @@ function M:link_stock_group(opts, data)
     if opts.stock_group_types == nil then
         opts.stock_group_types =  { "concept" }
     end
-    local mapping = self.mod_stock_group:code_group_mapping(opts.stock_group_types, true)
+    local mapping = self.mod_stock_group:code_group_mapping(opts.stock_group_types, false)
     local n = #data
     for i = 1, n do
         local one = data[i]
@@ -528,6 +534,8 @@ end
 
 -------------------------------------------------------------------------------------------
 
+
+
 function M:profile_result_stock_group(opts, data, code_mapping)
     local profiles = {}
     local n = #data
@@ -537,7 +545,48 @@ function M:profile_result_stock_group(opts, data, code_mapping)
         local ch = one.change_rate
         local big_in = one.flow_big_in_rate
         local groups = one.group
+        local series = code_mapping[one.code]
+
         if groups ~= nil then
+            for gname in pairs(groups) do
+                local profile = profiles[gname]
+                if profile == nil then
+                    profile = { name = gname, count = 0, sum_io = 0, sum_ch = 0, sum_big_in = 0 }
+                    profiles[gname] = profile
+                end
+                profile.count = profile.count + 1
+                profile.sum_io = profile.sum_io + io
+                profile.sum_ch = profile.sum_ch + ch
+                profile.sum_big_in = profile.sum_big_in + big_in
+            end
+        end
+    end
+
+    for _, profile in pairs(profiles) do
+        local count = profile.count
+        if count > 0 then
+            profile.avg_io = simple.numcon(profile.sum_io / count)
+            profile.avg_ch = simple.numcon(profile.sum_io / count)
+            profile.avg_big_in = simple.numcon(profile.sum_big_in / count)
+        end
+    end
+    return profiles
+end
+
+
+-------------------------------------------------------------------------------------------
+
+function M:profile_result_stock_group_history(opts, data, code_mapping)
+
+    local daycount = opts.date_offset_to - opts.date_offset_from + 1
+
+    local profiles = {}
+    local n = #data
+    for i = 1, n do
+        local one = data[i]
+        local groups = one.group
+        local series = code_mapping[one.code]
+        if groups ~= nil and series ~= nil then
             for gname in pairs(groups) do
                 local profile = profiles[gname]
                 if profile == nil then
@@ -591,7 +640,10 @@ function M:print_data(opts, data)
             return string.sub(v, 5)
         end,
         ]]--
-        group = function(one, field, v)
+        group = function(one, field, v, ikey)
+            if ikey > 1 then
+               return ""
+            end
             local r = ""
             for groupname in pairs(v) do
                 r = r .. groupname .. " "
@@ -683,18 +735,17 @@ function M:go(opts)
         end
     end
 
+    local group_profiles = self:profile_result_stock_group(opts, result_curr, code_mapping)
+    group_profiles = simple.map_to_array(group_profiles)
+    simple.table_sort(group_profiles, "count")
+    print("[result.group.profile] ^ ---------------------------------------------------------------------------------------------")
+    self:print_stock_group_profile(opts, group_profiles)
+    print("[result.group.profile] # ---------------------------------------------------------------------------------------------")
+    print("")
+
+
     simple.table_sort(result_curr, opts.sort_field)
-
     local result = self:data_merge(opts, result_curr, code_mapping)
-
-    local result_group_profiles = self:profile_result_stock_group(opts, result_curr, code_mapping)
-    result_group_profiles = simple.map_to_array(result_group_profiles)
-    simple.table_sort(result_group_profiles, "count")
-
-    print("---------------------------------------------------------------------------------------------")
-    self:print_stock_group_profile(opts, result_group_profiles)
-    print("---------------------------------------------------------------------------------------------")
-
     if opts.print_data == nil then
         self:print_data(opts, result)
     else
@@ -706,5 +757,27 @@ function M:go(opts)
 
     return opts.data, opts.result
 end
+
+
+------------------------------------------------------------------------------------------
+
+function M:go_stock_group_profile(opts)
+
+    local data_curr, code_mapping = self:reloads(opts)
+    self:link_stock_group(opts, data_curr, code_mapping)
+
+    local group_profiles = self:profile_result_stock_group_history(opts, data_curr, code_mapping)
+    group_profiles = simple.map_to_array(group_profiles)
+    simple.table_sort(group_profiles, "count")
+    print("[result.group.profile] ^ ---------------------------------------------------------------------------------------------")
+    self:print_stock_group_profile(opts, group_profiles)
+    print("[result.group.profile] # ---------------------------------------------------------------------------------------------")
+    print("")
+
+    return opts.data, opts.result
+end
+
+
+-----------------------------------------------------------------------------------------------------------------------
 
 return M

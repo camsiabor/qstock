@@ -205,7 +205,7 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
         headstr = headstr .. headers[i] .. "\t"
     end
 
-
+    local ikey = 1
     local nfields = #fields
     local key_value_previous = ""
     local header_interval_original = header_interval
@@ -217,7 +217,6 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
             if header_interval > 0 then
                 if a % header_interval == 1 then
                     print_header = true
-
                     header_interval = header_interval_original
                 end
             end
@@ -225,12 +224,14 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
             local key_value = obj[key]
             print_header = (key_value ~= key_value_previous)
             key_value_previous = key_value
+            ikey = ikey + 1
         end
 
         if print_header then
             printex(delimiter)
             printex(headstr)
             printex(delimiter)
+            ikey = 1
         end
 
         for f = 1, nfields do
@@ -242,7 +243,7 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
                 if formatters ~= nil then
                     local formatter = formatters[field]
                     if formatter ~= nil then
-                        v = formatter(obj, field, v)
+                        v = formatter(obj, field, v, ikey)
                     end
                 end
             end

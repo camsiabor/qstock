@@ -37,36 +37,43 @@ end
 -------------------------------------------------------------------------------------------
 function M:request(opts)
 
+    local each = opts.request_each
+    if each == nil or each <= 1 then
+        each = opts.request_to
+    end
     local url_prefix = "http://data.10jqka.com.cn/funds/ggzjl/field/"..opts.field.."/order/"..opts.order.."/page/"
     local url_suffix = "/ajax/1"
-
-    local count = 1
-    local reqopts = {}
-    for page = opts.request_from, opts.request_to do
-        local url = url_prefix..page..url_suffix
-        local reqopt = {}
-        reqopt["url"] = url
-        reqopts[count] = reqopt
-        count = count + 1
-    end
-
-    count = count - 1
-
-    local err
-    local browser = global[opts.browser]
-    reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
-
-    if err ~= nil then
-        print("[request] fatal", err)
-    end
-
     local data = { }
-    for i = 1, count do
-        local reqopt = reqopts[i]
-        self:parse_html(opts, data, reqopt)
+    local from = opts.request_from
+    local limit = opts.request_to
+    while from <= limit do
+        local to = from + each - 1
+        if to > limit then
+            to = limit
+        end
+        local count = 1
+        local reqopts = {}
+        for page = from, to do
+            local url = url_prefix..page..url_suffix
+            local reqopt = {}
+            reqopt["url"] = url
+            reqopts[count] = reqopt
+            count = count + 1
+        end
+        count = count - 1
+        local err
+        local browser = global[opts.browser]
+        reqopts, err = browser.Get(reqopts, opts.nice, opts.newsession, opts.concurrent, opts.loglevel)
+        if err ~= nil then
+            print("[request] fatal", err)
+        end
+        for i = 1, count do
+            local reqopt = reqopts[i]
+            self:parse_html(opts, data, reqopt)
+        end
+        from = from + each
     end
     return data
-
 end
 
 -------------------------------------------------------------------------------------------
@@ -534,8 +541,6 @@ end
 
 -------------------------------------------------------------------------------------------
 
-
-
 function M:profile_result_stock_group(opts, data, code_mapping)
     local profiles = {}
     local n = #data
@@ -545,8 +550,6 @@ function M:profile_result_stock_group(opts, data, code_mapping)
         local ch = one.change_rate
         local big_in = one.flow_big_in_rate
         local groups = one.group
-        local series = code_mapping[one.code]
-
         if groups ~= nil then
             for gname in pairs(groups) do
                 local profile = profiles[gname]
@@ -574,43 +577,6 @@ function M:profile_result_stock_group(opts, data, code_mapping)
 end
 
 
--------------------------------------------------------------------------------------------
-
-function M:profile_result_stock_group_history(opts, data, code_mapping)
-
-    local daycount = opts.date_offset_to - opts.date_offset_from + 1
-
-    local profiles = {}
-    local n = #data
-    for i = 1, n do
-        local one = data[i]
-        local groups = one.group
-        local series = code_mapping[one.code]
-        if groups ~= nil and series ~= nil then
-            for gname in pairs(groups) do
-                local profile = profiles[gname]
-                if profile == nil then
-                    profile = { name = gname, count = 0, sum_io = 0, sum_ch = 0, sum_big_in = 0 }
-                    profiles[gname] = profile
-                end
-                profile.count = profile.count + 1
-                profile.sum_io = profile.sum_io + io
-                profile.sum_ch = profile.sum_ch + ch
-                profile.sum_big_in = profile.sum_big_in + big_in
-            end
-        end
-    end
-
-    for _, profile in pairs(profiles) do
-        local count = profile.count
-        if count > 0 then
-            profile.avg_io = simple.numcon(profile.sum_io / count)
-            profile.avg_ch = simple.numcon(profile.sum_io / count)
-            profile.avg_big_in = simple.numcon(profile.sum_big_in / count)
-        end
-    end
-    return profiles
-end
 
 -------------------------------------------------------------------------------------------
 function M:print_data(opts, data)
@@ -762,17 +728,25 @@ end
 ------------------------------------------------------------------------------------------
 
 function M:go_stock_group_profile(opts)
-
     local data_curr, code_mapping = self:reloads(opts)
-    self:link_stock_group(opts, data_curr, code_mapping)
-
-    local group_profiles = self:profile_result_stock_group_history(opts, data_curr, code_mapping)
-    group_profiles = simple.map_to_array(group_profiles)
-    simple.table_sort(group_profiles, "count")
-    print("[result.group.profile] ^ ---------------------------------------------------------------------------------------------")
-    self:print_stock_group_profile(opts, group_profiles)
-    print("[result.group.profile] # ---------------------------------------------------------------------------------------------")
-    print("")
+    if self.mod_stock_group == nil then
+        self.mod_stock_group = require("sync.th.mod_stock_group")
+    end
+    local daycount = opts.date_offset_to - opts.date_offset_from + 1
+    local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types } )
+    for _, group in pairs(groups) do
+        local gname = group.name
+        local list = group.list
+        if list == nil then
+            list = {}
+        end
+        for code in pairs(list) do
+            local series = code_mapping[code]
+            if series == nil then
+                series = {}
+            end
+        end
+    end
 
     return opts.data, opts.result
 end

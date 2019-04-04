@@ -20,7 +20,6 @@ opts.debug = false
 opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
-
 opts.request = true
 opts.request_from = 1
 opts.request_to = 71
@@ -29,6 +28,7 @@ opts.concurrent = profile["concurrent"]
 if opts.concurrent == nil then
     opts.concurrent = 3
 end
+opts.concurrent = 1
 
 if global.runtime.GOOS() == "windows" then
     opts.newsession = false
@@ -52,4 +52,22 @@ opts.sort_field = "flow_big_rate_cross_ex"
 opts.print_data_from = -1
 opts.print_data_to = -1
 
+
+opts.request_each = 5
 th_mod_flow_inst:go(opts)
+--[[
+local each = 5
+local to = 1
+local from = 1
+local limit = 71
+while from <= limit do
+    to = from + each - 1
+    if to > limit then
+        to = limit
+    end
+    opts.request_from = from
+    opts.request_to = to
+    th_mod_flow_inst:go(opts)
+    from = from + each
+end
+]]--

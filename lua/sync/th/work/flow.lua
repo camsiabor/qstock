@@ -54,20 +54,5 @@ opts.print_data_to = -1
 
 
 opts.request_each = 5
+opts.concurrent = 1
 th_mod_flow_inst:go(opts)
---[[
-local each = 5
-local to = 1
-local from = 1
-local limit = 71
-while from <= limit do
-    to = from + each - 1
-    if to > limit then
-        to = limit
-    end
-    opts.request_from = from
-    opts.request_to = to
-    th_mod_flow_inst:go(opts)
-    from = from + each
-end
-]]--

@@ -488,11 +488,9 @@ function M:link_stock_group(opts, data)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
-
     if opts.stock_group_types == nil then
         opts.stock_group_types =  { "concept" }
     end
-
     local mapping = self.mod_stock_group:code_group_mapping(opts.stock_group_types, true)
     local n = #data
     for i = 1, n do
@@ -534,27 +532,23 @@ function M:profile_result_stock_group(opts, data, code_mapping)
     local profiles = {}
     local n = #data
     for i = 1, n do
-        local groupcount = 0
         local one = data[i]
         local io = one.flow_io_rate
         local ch = one.change_rate
         local big_in = one.flow_big_in_rate
         local groups = one.group
         if groups ~= nil then
-            groupcount = #groups
-        end
-        print("?", groups, groupcount)
-        for g = 1, groupcount do
-            local gname = groups[g]
-            local profile = profiles[gname]
-            if profile == nil then
-                profile = { name = gname, count = 0, sum_io = 0, sum_ch = 0, sum_big_in = 0 }
-                profiles[gname] = profile
+            for gname in pairs(groups) do
+                local profile = profiles[gname]
+                if profile == nil then
+                    profile = { name = gname, count = 0, sum_io = 0, sum_ch = 0, sum_big_in = 0 }
+                    profiles[gname] = profile
+                end
+                profile.count = profile.count + 1
+                profile.sum_io = profile.sum_io + io
+                profile.sum_ch = profile.sum_ch + ch
+                profile.sum_big_in = profile.sum_big_in + big_in
             end
-            profile.count = profile.count + 1
-            profile.sum_io = profile.sum_io + io
-            profile.sum_ch = profile.sum_ch + ch
-            profile.sum_big_in = profile.sum_big_in + big_in
         end
     end
 
@@ -638,12 +632,12 @@ function M:print_stock_group_profile(opts, data)
 
     local fields =
     {
-        "name", "count", "avg_io", "avg_ch", "avg_big_in"
+        "count", "avg_io", "avg_ch", "avg_big_in", "name"
     }
 
     local headers =
     {
-        "name", "count", "avg_io", "avg_ch", "avg_big_in"
+        "count", "avg_io", "avg_ch", "avg_big", "name"
     }
 
     if opts.print_fields ~= nil then
@@ -655,7 +649,7 @@ function M:print_stock_group_profile(opts, data)
     end
     local from = 1
     local to = #data
-    simple.table_array_print_with_header(data, from, to, fields, headers, 0, "\n", "")
+    simple.table_array_print_with_header(data, from, to, fields, headers, 10, "\n", "")
 end
 
 ------------------------------------------------------------------------------------------
@@ -673,11 +667,11 @@ function M:go(opts)
     end
 
     if simple.is(opts.link_stock_group) then
-        M:link_stock_group(opts, data_curr, code_mapping)
+        self:link_stock_group(opts, data_curr, code_mapping)
     end
 
     if simple.is(opts.link_stock_snapshot) then
-        --M:link_stock_snapshot(opts, data_curr, code_mapping)
+        --self:link_stock_snapshot(opts, data_curr, code_mapping)
     end
 
     local result_curr = self:filter(opts, data_curr, code_mapping)
@@ -696,7 +690,10 @@ function M:go(opts)
     local result_group_profiles = self:profile_result_stock_group(opts, result_curr, code_mapping)
     result_group_profiles = simple.map_to_array(result_group_profiles)
     simple.table_sort(result_group_profiles, "count")
+
+    print("---------------------------------------------------------------------------------------------")
     self:print_stock_group_profile(opts, result_group_profiles)
+    print("---------------------------------------------------------------------------------------------")
 
     if opts.print_data == nil then
         self:print_data(opts, result)

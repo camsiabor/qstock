@@ -47,11 +47,11 @@ local names_target = {
 local names_bought = {
     "中远海能", "中集集团", "中联重科",
     "宁波海运", "宁波港",
-    "皖江物流",
+    "皖江物流", "天顺股份",
     "中国武夷",
-    "石化即系"
+    "石化机械",
     "中国汽研", "长安汽车",
-    "柳药股份",
+    "柳药股份", "景峰医药",
     "诺力股份",
     "长江证券",
 }
@@ -94,7 +94,7 @@ opts.filters = {
     
     
     --names
-    filters.names({  names = names_bought }),
+    --filters.names({  names = names_bought }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_specific }),
@@ -127,12 +127,20 @@ opts.filters = {
 
     -- high io, io >= 1.6 && ch >= 4.5
     --filters.io({  io_lower = 0.6, io_upper = 1.6, ch_lower = -5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- high io, io >= 1.6 && ch <= 4.5
-    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 4.5, big_in_lower = 0 })
+    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+
+    -- two days ago io >= 2 plus high io
+    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = -2 }),
+    --filters.io({  io_lower = 0.6, io_upper = 100, ch_lower = -1, ch_upper = 1.5, big_in_lower = 0, date_offset = -1 }),
+    --filters.io({  io_lower = 0.6, io_upper = 100, ch_lower = -1, ch_upper = 1.5, big_in_lower = 0, date_offset = 0 }),
+    
     
     --------------------------------------------------------------------------------------------------------------
     

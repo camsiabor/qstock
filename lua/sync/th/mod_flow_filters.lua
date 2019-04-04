@@ -23,8 +23,8 @@ function M.io(fopts)
 
 
     local date_offset = fopts.date_offset
-
-
+    local msg = "[filter] [io] %f <= io <= %f, %f <= ch <= %f, date_offset = %d"
+    print(string.format(msg, fopts.io_lower, fopts.io_upper, fopts.ch_lower, fopts.ch_upper, fopts.date_offset))
     return function(one, series, code, currindex, opts)
         if date_offset ~= 0 then
             if series == nil then

@@ -18,13 +18,13 @@ opts.request_from = 1
 opts.request_to = 71
 opts.nice = 0
 
-opts.concurrent = 3
-opts.newsession = false
+opts.concurrent = 5
+opts.newsession = true
 opts.persist = true
 
 opts.date_show = 10
 
-opts.date_offset = -1
+opts.date_offset = 0
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -40,52 +40,28 @@ opts.link_stock_snapshot = false
 opts.sort_field = "flow_big_rate_cross_ex"
 
 
-
+local names_target = {
+    "福田汽车",
+}
 
 local names_bought = {
-    "梦百合"
+    "中远海能", "中集集团", "中联重科",
+    "宁波海运", "宁波港",
+    "皖江物流",
+    "中国武夷",
+    "石化即系"
+    "中国汽研", "长安汽车",
+    "柳药股份",
+    "诺力股份",
+    "长江证券",
 }
 
 local names_tobe = {
-    "美盛文化",
-    "江苏舜天",
-    "尚纬股份", 
-    "片仔癀", 
-    "渤海轮渡", 
-    "香飘飘", 
-    "济民制药", 
-    "格尔软件", 
-    "绝味食品",
-    "天马科技",
-    "华纺股份",
-    "中源家居", -- star
-    "云赛智联",
-    "好太太",
-    "商赢环球",
-    "志邦家居",
-    "京城股份",
-    "中炬高新",
-    "安徽合力",
-    "六国化工",
-    "中国海防",
-    "汇得科技",
-    "安井食品",
-    "妙可蓝多",
-    "雅运股份",
-    "春秋电子",
-    "博信股份",
-    "海油工程",
-    "山西汾酒",
-    "蒙娜丽莎",
-    "塞力斯",
-    "思美传媒",
-    "双箭股份",
+    "沃尔核材",
+    "天目药业",
+    "华懋科技",
+    "亚太药业",
 }
-
-local codes_tobe = {
-    "603333"
-}
-
 
 opts.result_adapter2 = function(opts, result, mapping)
     local up = 0
@@ -118,7 +94,7 @@ opts.filters = {
     
     
     --names
-    --filters.names({  names = names_bought }),
+    filters.names({  names = names_bought }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_sold }),
     --filters.names({  names = names_specific }),
@@ -137,8 +113,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --anti io series
-    --filters.io({  io_lower = 0.5, io_upper = 0.975, ch_lower = -0.1, ch_upper = 1, big_in_lower = 0, date_offset = -1  }),
-    --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
+    --filters.io({  io_lower = 0.8, io_upper = 100, ch_lower = -0.1, ch_upper = 0.15, big_in_lower = 0, date_offset = -1  }),
+    --filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     
     --------------------------------------------------------------------------------------------------------------
@@ -149,14 +125,44 @@ opts.filters = {
 
     --------------------------------------------------------------------------------------------------------------
 
-    --high io
-    --filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 0, ch_upper = 4.5, big_in_lower = 0 })
-    filters.io({  io_lower = 1.7, io_upper = 100, ch_lower = 4.5, ch_upper = 10, big_in_lower = 0 })
+    -- high io, io >= 1.6 && ch >= 4.5
+    --filters.io({  io_lower = 0.6, io_upper = 1.6, ch_lower = -5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
+    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    
+    --------------------------------------------------------------------------------------------------------------
+
+    -- high io, io >= 1.6 && ch <= 4.5
+    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 4.5, big_in_lower = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- high io, ch == 0
+    --filters.io({  io_lower = 1.05, io_upper = 100, ch_lower = -0.1, ch_upper = 0.1, big_in_lower = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+
+    -- serial anti io
+    --filters.io({  io_lower = 0.7, io_upper = 1, ch_lower = -0.1, ch_upper = 8, big_in_lower = 0, date_offset = -2 }),
+    --filters.io({  io_lower = 0.7, io_upper = 1, ch_lower = -0.1, ch_upper = 8, big_in_lower = 0, date_offset = -1 }),
+    -- filters.io({  io_lower = 0.7, io_upper = 1, ch_lower = -0.1, ch_upper = 8, big_in_lower = 0, date_offset = 0 }),
+    
+    
+    
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- high io, io >= 1.4 && ch >= 0 && ch <= 2
+    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 0, ch_upper = 2, big_in_lower = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- moderate io and low ch
+    --filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 0, ch_upper = 2, big_in_lower = 0 })
     
     -------------------------------------------------------------------------------------------------------------    
 
-    -- anti io     
-    --filters.io({  io_lower = 1.2, io_upper = 2, ch_lower = -1, ch_upper = 1, big_in_lower = 0 })
+    -- anti io, 0.5 <= io <= 0.98, ch >= 0, ch <= 3
+    --filters.io({  io_lower = 0.8, io_upper = 0.98, ch_lower = 1, ch_upper = 3, big_in_lower = 0, date_offset = 0 }),
     
     -------------------------------------------------------------------------------------------------------------    
 

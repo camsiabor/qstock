@@ -27,7 +27,7 @@ opts.browser = "firefox"
 
 opts.request = true
 opts.request_from = 1
-opts.request_to   = 1
+opts.request_to   = 6
 opts.request_types = { "concept", "industry" }
 opts.request_types = { "industry" }
 opts.request_types = { "concept" }

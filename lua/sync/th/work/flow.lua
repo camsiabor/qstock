@@ -23,18 +23,10 @@ opts.browser = "firefox"
 opts.request = true
 opts.request_from = 1
 opts.request_to = 71
+opts.request_each = 5
+opts.newsession = false
 
-opts.concurrent = profile["concurrent"]
-if opts.concurrent == nil then
-    opts.concurrent = 3
-end
 opts.concurrent = 1
-
-if global.runtime.GOOS() == "windows" then
-    opts.newsession = false
-else
-    opts.newsession = true
-end
 
 opts.persist = true
 
@@ -53,6 +45,4 @@ opts.print_data_from = -1
 opts.print_data_to = -1
 
 
-opts.request_each = 5
-opts.concurrent = 1
 th_mod_flow_inst:go(opts)

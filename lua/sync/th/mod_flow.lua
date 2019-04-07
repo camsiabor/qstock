@@ -73,6 +73,7 @@ function M:request(opts)
         end
         from = from + each
     end
+    print("[data] count", #data)
     return data
 end
 
@@ -732,6 +733,7 @@ function M:go_stock_group_profile(opts)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
+
     local daycount = opts.date_offset_to - opts.date_offset_from + 1
     local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types } )
     for _, group in pairs(groups) do
@@ -740,11 +742,31 @@ function M:go_stock_group_profile(opts)
         if list == nil then
             list = {}
         end
+
+        group.profiles = { }
         for code in pairs(list) do
             local series = code_mapping[code]
             if series == nil then
                 series = {}
             end
+
+            local profile = { name = gname, count = 0, io = 0, ch = 0, big_in = 0 }
+            group.profiles[#group.profiles + 1] = profile
+            for i = 1, daycount do
+                local serie = series[i]
+                if serie ~= nil then
+                    profile.count = profile.count + 1
+                    profile.io = profile.io + serie.flow_io_rate
+                    profile.ch = profile.ch + serie.change_rate
+                    profile.big_in = profile.big_in + series.flow_big_in_rate
+                end
+
+            end
+
+            profile.avg_io = simple.numcon(profile.io / profile.count)
+            profile.avg_ch = simple.numcon(profile.ch / profile.count)
+            profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
+
         end
     end
 

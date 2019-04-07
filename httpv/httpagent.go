@@ -17,49 +17,58 @@ import (
 )
 
 type HttpAgent struct {
-	Name         string
-	Type         string
-	DriverPath   string
-	RemotePath   string
-	RemotePort   int
+	Name string
+
+	atype      string
+	driverPath string
+	remotePath string
+
+	remotePortIndex int
+	remotePortLower int
+	remotePortUpper int
+
 	Output       io.Writer
-	Headless     bool
-	service      *selenium.Service
+	headless     bool
+	services     []*selenium.Service
 	simpleClient *qnet.SimpleHttp
-	Config       map[string]interface{}
+	config       map[string]interface{}
 
 	basicHttp        bool
 	basicHttpChecked bool
 
-	mutex sync.RWMutex
+	mutex     sync.RWMutex
+	portmutex sync.RWMutex
 }
 
 func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 
 	var opts = config
 	o.basicHttpChecked = false
-	o.Type = util.GetStr(opts, "firefox", "type")
-	o.RemotePort = util.GetInt(opts, 60001, "port")
-	o.RemotePath = util.GetStr(opts, "selenium-server.jar", "path")
-	o.DriverPath = util.GetStr(opts, "", "driver")
-	o.Headless = util.GetBool(opts, true, "headless")
+	o.atype = util.GetStr(opts, "firefox", "type")
+
+	o.remotePortLower = util.GetInt(opts, 60000, "port")
+	o.remotePortUpper = util.GetInt(opts, 60010, "port")
+
+	o.remotePath = util.GetStr(opts, "selenium-server.jar", "path")
+	o.driverPath = util.GetStr(opts, "", "driver")
+	o.headless = util.GetBool(opts, true, "headless")
 
 	if o.IsBasicHttp() {
 		o.simpleClient = qnet.GetSimpleHttp()
 		return
 	}
 
-	if o.DriverPath == "" {
-		if o.Type == "chrome" {
-			o.DriverPath = "chromedriver"
+	if o.driverPath == "" {
+		if o.atype == "chrome" {
+			o.driverPath = "chromedriver"
 		} else {
-			o.DriverPath = "geckodriver"
+			o.driverPath = "geckodriver"
 		}
 	}
 
 	if runtime.GOOS == "windows" {
-		if !strings.Contains(o.DriverPath, ".exe") {
-			o.DriverPath = o.DriverPath + ".exe"
+		if !strings.Contains(o.driverPath, ".exe") {
+			o.driverPath = o.driverPath + ".exe"
 		}
 	}
 	// TODO other os
@@ -68,30 +77,38 @@ func (o *HttpAgent) InitParameters(config map[string]interface{}) {
 
 func (o *HttpAgent) IsBasicHttp() bool {
 	if !o.basicHttpChecked {
-		o.basicHttp = o.Type == "" || o.Type == "std" || o.Type == "gorilla"
+		o.basicHttp = o.atype == "" || o.atype == "std" || o.atype == "gorilla"
 		o.basicHttpChecked = true
 	}
 	return o.basicHttp
 }
 
-func (o *HttpAgent) InitService() (*selenium.Service, error) {
+func (o *HttpAgent) getAvailablePort() int {
+	o.portmutex.Lock()
+	defer o.portmutex.Unlock()
+	o.remotePortIndex = o.remotePortIndex + 1
+	if o.remotePortIndex < o.remotePortLower || o.remotePortIndex > o.remotePortUpper {
+		o.remotePortIndex = o.remotePortLower
+	}
+	return o.remotePortIndex
+}
 
-	o.InitParameters(o.Config)
+func (o *HttpAgent) InitService() ([]*selenium.Service, error) {
+
+	o.InitParameters(o.config)
 
 	if o.IsBasicHttp() {
-		return o.service, nil
+		return o.services, nil
 	}
 
-	if o.service != nil {
-		o.service.Stop()
+	if o.services != nil {
+		o.StopService()
 	}
 
 	defer func() {
 		var pan = recover()
 		if pan != nil {
-			if o.service != nil {
-				o.service.Stop()
-			}
+			o.StopService()
 			panic(pan)
 		}
 	}()
@@ -100,10 +117,10 @@ func (o *HttpAgent) InitService() (*selenium.Service, error) {
 		o.Output = os.Stdout
 	}
 	var browserOption selenium.ServiceOption
-	if o.Type == "chrome" {
-		browserOption = selenium.ChromeDriver(o.DriverPath)
+	if o.atype == "chrome" {
+		browserOption = selenium.ChromeDriver(o.driverPath)
 	} else {
-		browserOption = selenium.GeckoDriver(o.DriverPath)
+		browserOption = selenium.GeckoDriver(o.driverPath)
 	}
 	opts := []selenium.ServiceOption{
 		//selenium.StartFrameBuffer(), // Start an X frame buffer for the browser to run in.
@@ -112,8 +129,37 @@ func (o *HttpAgent) InitService() (*selenium.Service, error) {
 	}
 	var err error
 	selenium.SetDebug(false)
-	o.service, err = selenium.NewSeleniumService(o.RemotePath, o.RemotePort, opts...)
-	return o.service, err
+
+	if o.remotePortLower < 1000 {
+		o.remotePortLower = 60000
+	}
+	if o.remotePortUpper <= o.remotePortLower {
+		o.remotePortUpper = o.remotePortLower + 10
+	}
+	var count = o.remotePortUpper - o.remotePortLower
+	o.services = make([]*selenium.Service, count)
+	for i := 0; i < count; i++ {
+		o.services[i], err = selenium.NewSeleniumService(o.remotePath, o.remotePortLower+i, opts...)
+	}
+	return o.services, err
+}
+
+func (o *HttpAgent) StopService() {
+	if o.services == nil {
+		return
+	}
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	var n = len(o.services)
+	for i := 0; i < n; i++ {
+		var service = o.services[i]
+		if service != nil {
+			func() {
+				defer recover()
+				service.Stop()
+			}()
+		}
+	}
 }
 
 func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
@@ -123,14 +169,14 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 	}
 
 	var browserName string
-	if o.Type == "chrome" {
-		browserName = o.Type
+	if o.atype == "chrome" {
+		browserName = o.atype
 	} else {
 		browserName = "firefox"
 	}
 	caps := selenium.Capabilities{"browserName": browserName}
-	if o.Headless {
-		if o.Type == "chrome" {
+	if o.headless {
+		if o.atype == "chrome" {
 			caps.AddChrome(chrome.Capabilities{
 				Args: []string{"headless"},
 			})
@@ -140,13 +186,14 @@ func (o *HttpAgent) InitDriver() (driver selenium.WebDriver, err error) {
 			})
 		}
 	}
-	var url = fmt.Sprintf("http://localhost:%d/wd/hub", o.RemotePort)
+	var port = o.getAvailablePort()
+	var url = fmt.Sprintf("http://localhost:%d/wd/hub", port)
 	driver, err = selenium.NewRemote(caps, url)
 	if err != nil {
-		if o.service == nil {
+		if o.services == nil {
 			o.mutex.Lock()
 			defer o.mutex.Unlock()
-			if o.service == nil {
+			if o.services == nil {
 				_, err = o.InitService()
 			} else {
 				err = nil
@@ -235,7 +282,7 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 		if o.simpleClient == nil {
 			o.simpleClient = qnet.GetSimpleHttp()
 		}
-		html, _, errget = o.simpleClient.Get(o.Type, url, headers, encoding)
+		html, _, errget = o.simpleClient.Get(o.atype, url, headers, encoding)
 	} else {
 		errget = driver.Get(url)
 		if errget == nil {
@@ -249,12 +296,12 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 	if errget == nil {
 		opt["content"] = html
 		if loglevel >= 0 {
-			qlog.Log(qlog.INFO, "httpagent", o.Type, "done", url, len(html))
+			qlog.Log(qlog.INFO, "httpagent", o.atype, "done", url, len(html))
 		}
 	} else {
 		opt["err"] = errget
 		if loglevel >= 0 {
-			qlog.Log(qlog.INFO, "httpagent", o.Type, "fail", url, errget.Error())
+			qlog.Log(qlog.INFO, "httpagent", o.atype, "fail", url, errget.Error())
 		}
 	}
 	return opt, nil
@@ -310,7 +357,7 @@ func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli
 				var pan = recover()
 				if pan == nil {
 					if loglevel >= 0 {
-						qlog.Log(qlog.INFO, "httpagent", o.Type, "one concurrent done", index)
+						qlog.Log(qlog.INFO, "httpagent", o.atype, "one concurrent done", index)
 					}
 				} else {
 					if loglevel >= 0 {
@@ -318,7 +365,7 @@ func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli
 						if ok {
 							pan = panerr.Error()
 						}
-						qlog.Log(qlog.ERROR, "httpagent", o.Type, "one concurrent error", pan)
+						qlog.Log(qlog.ERROR, "httpagent", o.atype, "one concurrent error", pan)
 					}
 				}
 			}()
@@ -329,7 +376,7 @@ func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli
 	}
 	waitgroup.Wait()
 	if loglevel >= 0 {
-		qlog.Log(qlog.INFO, "httpagent", o.Type, "driver concurrent fin", concurrent)
+		qlog.Log(qlog.INFO, "httpagent", o.atype, "driver concurrent fin", concurrent)
 	}
 	return opts, err
 }
@@ -367,7 +414,7 @@ func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli
 								}
 								pan = panerr.Error()
 							}
-							qlog.Log(qlog.ERROR, "httpagent", o.Type, "one concurrent error", pan)
+							qlog.Log(qlog.ERROR, "httpagent", o.atype, "one concurrent error", pan)
 						}
 					}
 				}()
@@ -377,14 +424,12 @@ func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli
 		waitgroup.Wait()
 	}
 	if loglevel >= 0 {
-		qlog.Log(qlog.INFO, "httpagent", o.Type, "simple concurrent fin", concurrent)
+		qlog.Log(qlog.INFO, "httpagent", o.atype, "simple concurrent fin", concurrent)
 	}
 	return opts, erroverall
 }
 
 func (o *HttpAgent) Terminate() error {
-	if o.service != nil {
-		return o.service.Stop()
-	}
+	o.StopService()
 	return nil
 }

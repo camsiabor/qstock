@@ -116,19 +116,6 @@ function simple.table_sort(t, field)
     end
 end
 
-function simple.table_sort_with_subs(t, fields)
-    local n = #t
-    for i = 1, n do
-        for j = 1, n - i do
-            local a = t[j]
-            local b = t[j + 1]
-            if a[field] < b[field] then
-                t[j] = b
-                t[j + 1] = a
-            end
-        end
-    end
-end
 
 
 function simple.table_merge(tables)
@@ -240,6 +227,12 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
         headstr = headstr .. headers[i] .. "\t"
     end
 
+    local fieldsimple = {}
+    for i = 1, #fields do
+        local field = fields[i]
+        fieldsimple[i] = type(field) ~= "table"
+    end
+
     local ikey = 1
     local nfields = #fields
     local key_value_previous = ""
@@ -271,7 +264,13 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
 
         for f = 1, nfields do
             local field = fields[f]
-            local v = obj[field]
+            local easy = fieldsimple[f]
+            local v
+            if easy then
+                v = obj[field]
+            else
+                v = simple.pathex(obj, field)
+            end
             if v == nil then
                 v = ""
             else

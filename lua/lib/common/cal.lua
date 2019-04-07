@@ -1,5 +1,6 @@
 local cal = {}
 
+local simple = require("common.simple")
 
 function cal.str2num(str, keep)
     if keep == nil then
@@ -16,21 +17,53 @@ function cal.str2num(str, keep)
 end
 
 
-function cal.array_div(array, factor)
-    if factor == 0 then
-        return array
-    end
+function cal.array_div(array, factor, callback)
     local n = #array
-    for i = 1, n do
-        array[i] = array[i] / factor
+    if factor == 0 then
+        for i = 1, n do
+            array[i] = 0
+        end
+    else
+        local target
+        for i = 1, n do
+            target = array[i] / factor
+            if callback ~= nil then
+                target = callback(target)
+            end
+            array[i] = target
+        end
     end
     return array
 end
 
-function cal.array_mul(array, factor)
+function cal.array_mul(array, factor, callback)
+    local target
     local n = #array
     for i = 1, n do
-        array[i] = array[i] * factor
+        target = array[i] * factor
+        if callback ~= nil then
+            target = callback(target)
+        end
+        array[i] = target
+    end
+    return array
+end
+
+function cal.array_div_mul(array, div_factor, mul_factor, callback)
+    local n = #array
+    if div_factor == 0 then
+        for i = 1, n do
+            array[i] = 0
+        end
+    else
+        local target
+        for i = 1, n do
+            target = array[i] / div_factor * mul_factor
+            if callback ~= nil then
+                target = callback(target)
+            end
+            array[i] = target
+        end
     end
     return array
 end

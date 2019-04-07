@@ -1,8 +1,3 @@
-print(type({ }))
-if 1 == 1 then
-    return
-end
-
 local global = require("q.global")
 
 local th_mod_flow = require("sync.th.mod_flow")
@@ -39,6 +34,5 @@ opts.link_stock_group = true
 opts.link_stock_snapshot = false
 
 --opts.sort_field = "flow_io_rate"
-opts.sort_field = "flow_big_rate_cross_ex"
 
 th_mod_flow_inst:go_stock_group_profile(opts)

@@ -15,6 +15,26 @@ function cal.str2num(str, keep)
     return string.sub(str, 1, keep) + 0
 end
 
+
+function cal.array_div(array, factor)
+    if factor == 0 then
+        return array
+    end
+    local n = #array
+    for i = 1, n do
+        array[i] = array[i] / factor
+    end
+    return array
+end
+
+function cal.array_mul(array, factor)
+    local n = #array
+    for i = 1, n do
+        array[i] = array[i] * factor
+    end
+    return array
+end
+
 function cal.num_level_criteria_init(criteria, container)
     for i = 1, #criteria do
         container[i] = 0

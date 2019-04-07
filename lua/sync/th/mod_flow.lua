@@ -408,7 +408,6 @@ function M:reloads(opts)
     return data_curr, code_mapping
 end
 
-
 -------------------------------------------------------------------------------------------
 
 function M:filter(opts, data_curr, code_mapping, result)
@@ -736,6 +735,9 @@ function M:go_stock_group_profile(opts)
     if opts.stock_group_types == nil then
         opts.stock_group_types =  { "concept" }
     end
+    if opts.cal_limit == nil then
+        opts.cal_limit = 256
+    end
     opts.date_offset_to = 0
 
     local data_curr, code_mapping = self:reloads(opts)
@@ -785,7 +787,7 @@ function M:go_stock_group_profile(opts)
             group.profiles[#group.profiles + 1] = profile
         end
 
-        if nlist < 200 then
+        if nlist <= opts.cal_limit then
             for code in pairs(list) do
                 local series = code_mapping[code]
                 if series == nil then
@@ -793,12 +795,14 @@ function M:go_stock_group_profile(opts)
                 end
                 for i = 1, daycount do
                     local serie = series[i]
+
                     if serie ~= nil then
                         local profile = group.profiles[i]
                         local io = serie.flow_io_rate
                         local fin = serie.flow_in_rate
                         local ch = serie.change_rate
-                        local big_in = serie.big_in
+                        local big_in = serie.flow_big_in_rate
+
                         profile.count = profile.count + 1
                         profile.io = profile.io + io
                         profile.fin = profile.fin + fin
@@ -820,6 +824,10 @@ function M:go_stock_group_profile(opts)
                 profile.avg_fin = simple.numcon(profile.fin / profile.count)
                 profile.avg_ch = simple.numcon(profile.ch / profile.count)
                 profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
+
+                cal.array_div(profile.n_io, profile.count)
+                cal.array_div(profile.n_io, profile.count)
+
                 print(profile.date, profile.name, profile.count, profile.avg_io, profile.avg_ch)
             end
         end

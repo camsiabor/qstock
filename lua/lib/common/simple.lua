@@ -26,6 +26,31 @@ function simple.is(b)
     return false
 end
 
+function simple.path(t, ...)
+    local v = t
+    local n = select('#', ...)
+    for i = 1, n do
+        local field = select(i, ...)
+        v = v[field]
+        if v == nil then
+            return nil
+        end
+    end
+    return v
+end
+
+function simple.pathex(t, fields)
+    local v = t
+    local n = #fields
+    for i = 1, n do
+        local field = fields[i]
+        v = v[field]
+        if v == nil then
+            return nil
+        end
+    end
+    return v
+end
 
 function simple.numcon(num, limit)
     if limit == nil then
@@ -69,6 +94,29 @@ function simple.table_clone(t)
 end
 
 function simple.table_sort(t, field)
+    local single = type(field) ~= "table"
+    local n = #t
+    local a, b, av, bv
+    for i = 1, n do
+        for j = 1, n - i do
+            a = t[j]
+            b = t[j + 1]
+            if single then
+                av = a[field]
+                bv = b[field]
+            else
+                av = simple.pathex(a, field)
+                bv = simple.pathex(b, field)
+            end
+            if av < bv then
+                t[j] = b
+                t[j + 1] = a
+            end
+        end
+    end
+end
+
+function simple.table_sort_with_subs(t, fields)
     local n = #t
     for i = 1, n do
         for j = 1, n - i do

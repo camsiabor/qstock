@@ -16,10 +16,11 @@ opts.browser = "firefox"
 opts.request = false
 opts.request_from = 1
 opts.request_to = 71
+opts.request_each = 1
+opts.concurrent = 1
+opts.newsession = 5
 opts.nice = 0
 
-opts.concurrent = 5
-opts.newsession = true
 opts.persist = true
 
 opts.date_show = 10
@@ -127,12 +128,17 @@ opts.filters = {
 
     -- high io, io >= 1.6 && ch >= 4.5
     --filters.io({  io_lower = 0.6, io_upper = 1.6, ch_lower = -5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- high io, io >= 1.6 && ch <= 4.5
     --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- high ch, low io, io <= 1.2 && ch >= 5
+    filters.io({  io_lower = 0.8, io_upper = 1.35, ch_lower = 2, ch_upper = 3, big_in_lower = 0, date_offset = -2 }),
     
     --------------------------------------------------------------------------------------------------------------
 

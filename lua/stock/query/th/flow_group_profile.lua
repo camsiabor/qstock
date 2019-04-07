@@ -1,3 +1,8 @@
+print(type({ }))
+if 1 == 1 then
+    return
+end
+
 local global = require("q.global")
 
 local th_mod_flow = require("sync.th.mod_flow")
@@ -23,7 +28,7 @@ opts.date_show = 10
 
 opts.date_offset = 0
 opts.date_offset_to = 0
-opts.date_offset_from = -8
+opts.date_offset_from = -3
 
 opts.db = "flow"
 opts.datasrc = "th"

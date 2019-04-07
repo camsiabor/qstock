@@ -23,6 +23,7 @@ M.__index = M
 
 local global = require("q.global")
 local json = require('common.json')
+local cal = require("common.cal")
 local simple = require("common.simple")
 
 -------------------------------------------------------------------------------------------
@@ -133,16 +134,16 @@ function M:parse_html(opts, data, reqopt)
         turnover = string.gsub(turnover, "%%", "") + 0
         change_rate = string.gsub(change_rate, "%%", "") + 0
 
-        flow = simple.str2num(flow)
-        flow_in = simple.str2num(flow_in)
-        flow_out = simple.str2num(flow_out)
-        flow_big = simple.str2num(flow_big)
+        flow = cal.str2num(flow)
+        flow_in = cal.str2num(flow_in)
+        flow_out = cal.str2num(flow_out)
+        flow_big = cal.str2num(flow_big)
 
         flow_in = simple.nozero(flow_in)
         flow_out = simple.nozero(flow_out)
         flow_big = simple.nozero(flow_big)
 
-        amount = simple.str2num(amount)
+        amount = cal.str2num(amount)
 
         if amount <= 0 then
             amount = 0.0001
@@ -735,16 +736,26 @@ function M:go_stock_group_profile(opts)
     if opts.stock_group_types == nil then
         opts.stock_group_types =  { "concept" }
     end
+    opts.date_offset_to = 0
 
     local data_curr, code_mapping = self:reloads(opts)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
     -- TODO multi stock group request type
-    local dates = global.calendar.List(-opts.date_offset_from, opts.date_offset, opts.date_offset_to, true)
+    local dates = global.calendar.List(-opts.date_offset_from, opts.date_offset, opts.date_offset_to, false)
     local daycount = opts.date_offset_to - opts.date_offset_from + 1
 
     local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types[1] } )
+
+
+    local  n_io_criteria = {
+        0, 0.5, 0.75, 1, 1.25, 1.5, 2
+    }
+    local n_ch_criteria = {
+        -11, -5, -2.5, 0, 2.5, 5, 7.5, 11
+    }
+
     for _, group in pairs(groups) do
         local gname = group.name
         local list = group.list
@@ -761,13 +772,17 @@ function M:go_stock_group_profile(opts)
         group.profiles = { }
 
         for i = 1, daycount do
-            group.profiles[i] = {
+            local profile = {
                 name = gname,
                 date = dates[i],
                 count = 0,
                 io = 0, fin = 0, ch = 0, big_in = 0,
-                avg_io = 0, avg_fin = 0, avg_ch = 0, avg_big_in = 0
+                avg_io = 0, avg_fin = 0, avg_ch = 0, avg_big_in = 0,
+                n_io = { }, n_ch = { }
             }
+            cal.num_level_criteria_init(n_io_criteria, profile.n_io)
+            cal.num_level_criteria_init(n_ch_criteria, profile.n_ch)
+            group.profiles[#group.profiles + 1] = profile
         end
 
         if nlist < 200 then
@@ -782,10 +797,17 @@ function M:go_stock_group_profile(opts)
                         local profile = group.profiles[i]
                         local io = serie.flow_io_rate
                         local fin = serie.flow_in_rate
+                        local ch = serie.change_rate
+                        local big_in = serie.big_in
                         profile.count = profile.count + 1
-                        profile.io = profile.io + serie.flow_io_rate
-                        profile.ch = profile.ch + serie.change_rate
-                        profile.big_in = profile.big_in + serie.flow_big_in_rate
+                        profile.io = profile.io + io
+                        profile.fin = profile.fin + fin
+                        profile.ch = profile.ch + ch
+                        profile.big_in = profile.big_in + big_in
+
+                        cal.num_level_criteria_count(io, n_io_criteria, profile.n_io)
+                        cal.num_level_criteria_count(ch, n_ch_criteria, profile.n_ch)
+
                     end
                 end
             end
@@ -798,7 +820,7 @@ function M:go_stock_group_profile(opts)
                 profile.avg_fin = simple.numcon(profile.fin / profile.count)
                 profile.avg_ch = simple.numcon(profile.ch / profile.count)
                 profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
-                print(profile.date, profile.name, profile.avg_io)
+                print(profile.date, profile.name, profile.count, profile.avg_io, profile.avg_ch)
             end
         end
     end

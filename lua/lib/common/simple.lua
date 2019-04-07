@@ -26,19 +26,6 @@ function simple.is(b)
     return false
 end
 
-function simple.str2num(str, keep)
-    if keep == nil then
-        keep = 5
-    end
-    local n = string.find(str, "亿")
-    if n == nil then
-        str = string.gsub(str, "万", "") + 0
-        str = str / 10000
-    else
-        str = string.gsub(str, "亿", "") + 0
-    end
-    return string.sub(str, 1, keep) + 0
-end
 
 function simple.numcon(num, limit)
     if limit == nil then
@@ -422,5 +409,7 @@ function simple.num_array_align(array, num)
     end
     return nil
 end
+
+
 
 return simple

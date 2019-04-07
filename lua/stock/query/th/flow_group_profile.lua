@@ -1,6 +1,4 @@
--- http://data.10jqka.com.cn/funds/ggzjl/
--- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
---http://news.10jqka.com.cn/20190322/c610418561.shtml#refCountId=pop_50ab41b8_259
+local global = require("q.global")
 
 local th_mod_flow = require("sync.th.mod_flow")
 
@@ -24,8 +22,8 @@ opts.persist = true
 opts.date_show = 10
 
 opts.date_offset = 0
-opts.date_offset_to = 10
-opts.date_offset_from = -opts.date_show - opts.date_offset
+opts.date_offset_to = 0
+opts.date_offset_from = -8
 
 opts.db = "flow"
 opts.datasrc = "th"

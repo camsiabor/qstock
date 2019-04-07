@@ -89,7 +89,7 @@ function M:get_token(request_type, group_or_list)
     key = string.upper(key)
     local token = self.TOKENS[key]
     if token == nil then
-        local msg = "[token] not found" .. key
+        local msg = "[token] not found " .. key
         self:get_logger():error(msg)
         error(msg)
         return

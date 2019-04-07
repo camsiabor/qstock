@@ -208,7 +208,4 @@ opts.filters = {
     
 }
 
-
---th_mod_flow_inst:go(opts)
-
-th_mod_flow_inst:go_stock_group_profile(opts)
+th_mod_flow_inst:go(opts)

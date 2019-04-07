@@ -502,9 +502,7 @@ function M:link_stock_group(opts, data)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
-    if opts.stock_group_types == nil then
-        opts.stock_group_types =  { "concept" }
-    end
+
     local mapping = self.mod_stock_group:code_group_mapping(opts.stock_group_types, false)
     local n = #data
     for i = 1, n do
@@ -675,6 +673,10 @@ end
 
 function M:go(opts)
 
+    if opts.stock_group_types == nil then
+        opts.stock_group_types =  { "concept" }
+    end
+
     local data_curr, code_mapping
     if opts.request then
         data_curr = self:request(opts)
@@ -729,13 +731,20 @@ end
 ------------------------------------------------------------------------------------------
 
 function M:go_stock_group_profile(opts)
+
+    if opts.stock_group_types == nil then
+        opts.stock_group_types =  { "concept" }
+    end
+
     local data_curr, code_mapping = self:reloads(opts)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
-
+    -- TODO multi stock group request type
+    local dates = global.calendar.List(-opts.date_offset_from, opts.date_offset, opts.date_offset_to, true)
     local daycount = opts.date_offset_to - opts.date_offset_from + 1
-    local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types } )
+
+    local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types[1] } )
     for _, group in pairs(groups) do
         local gname = group.name
         local list = group.list
@@ -743,30 +752,54 @@ function M:go_stock_group_profile(opts)
             list = {}
         end
 
+        local nlist = 0
+        for _ in pairs(list) do
+            nlist = nlist + 1
+        end
+
+        group.nlist = nlist
         group.profiles = { }
-        for code in pairs(list) do
-            local series = code_mapping[code]
-            if series == nil then
-                series = {}
-            end
 
-            local profile = { name = gname, count = 0, io = 0, ch = 0, big_in = 0 }
-            group.profiles[#group.profiles + 1] = profile
-            for i = 1, daycount do
-                local serie = series[i]
-                if serie ~= nil then
-                    profile.count = profile.count + 1
-                    profile.io = profile.io + serie.flow_io_rate
-                    profile.ch = profile.ch + serie.change_rate
-                    profile.big_in = profile.big_in + series.flow_big_in_rate
+        for i = 1, daycount do
+            group.profiles[i] = {
+                name = gname,
+                date = dates[i],
+                count = 0,
+                io = 0, fin = 0, ch = 0, big_in = 0,
+                avg_io = 0, avg_fin = 0, avg_ch = 0, avg_big_in = 0
+            }
+        end
+
+        if nlist < 200 then
+            for code in pairs(list) do
+                local series = code_mapping[code]
+                if series == nil then
+                    series = {}
                 end
-
+                for i = 1, daycount do
+                    local serie = series[i]
+                    if serie ~= nil then
+                        local profile = group.profiles[i]
+                        local io = serie.flow_io_rate
+                        local fin = serie.flow_in_rate
+                        profile.count = profile.count + 1
+                        profile.io = profile.io + serie.flow_io_rate
+                        profile.ch = profile.ch + serie.change_rate
+                        profile.big_in = profile.big_in + serie.flow_big_in_rate
+                    end
+                end
             end
+        end
 
-            profile.avg_io = simple.numcon(profile.io / profile.count)
-            profile.avg_ch = simple.numcon(profile.ch / profile.count)
-            profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
-
+        for i = 1, daycount do
+            local profile = group.profiles[i]
+            if profile.count > 0 then
+                profile.avg_io = simple.numcon(profile.io / profile.count)
+                profile.avg_fin = simple.numcon(profile.fin / profile.count)
+                profile.avg_ch = simple.numcon(profile.ch / profile.count)
+                profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
+                print(profile.date, profile.name, profile.avg_io)
+            end
         end
     end
 

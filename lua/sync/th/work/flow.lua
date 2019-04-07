@@ -26,7 +26,7 @@ opts.request_to = 71
 opts.request_each = 1
 opts.newsession = 5
 
-opts.concurrent = 2
+opts.concurrent = 1
 
 opts.persist = true
 

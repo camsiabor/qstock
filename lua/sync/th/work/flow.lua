@@ -23,10 +23,10 @@ opts.browser = "firefox"
 opts.request = true
 opts.request_from = 1
 opts.request_to = 71
-opts.request_each = 5
-opts.newsession = false
+opts.request_each = 1
+opts.newsession = 5
 
-opts.concurrent = 1
+opts.concurrent = 2
 
 opts.persist = true
 

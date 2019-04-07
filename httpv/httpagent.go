@@ -248,7 +248,7 @@ func (o *HttpAgent) ReleaseDrivers(drivers []selenium.WebDriver) {
 	}
 }
 
-func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) Get(opts []map[string]interface{}, nicemilli int, newsession int, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 	if len(opts) == 0 {
 		return opts, nil
 	}
@@ -307,11 +307,18 @@ func (o *HttpAgent) GetOne(driver selenium.WebDriver, opt map[string]interface{}
 	return opt, nil
 }
 
-func (o *HttpAgent) GetMany(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, newsession bool, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetMany(driver selenium.WebDriver, opts []map[string]interface{}, nicemilli int, newsession int, loglevel int) ([]map[string]interface{}, error) {
 	var n = len(opts)
+	var sessioncount = 0
 	for i := 0; i < n; i++ {
 		var one = opts[i]
-		o.GetOne(driver, one, newsession, loglevel)
+		var refreshsession = false
+		sessioncount = sessioncount + 1
+		if newsession > 0 && sessioncount >= newsession {
+			sessioncount = 0
+			refreshsession = true
+		}
+		o.GetOne(driver, one, refreshsession, loglevel)
 		if nicemilli > 0 {
 			time.Sleep(time.Duration(nicemilli) * time.Millisecond)
 		}
@@ -320,7 +327,7 @@ func (o *HttpAgent) GetMany(driver selenium.WebDriver, opts []map[string]interfa
 	return opts, nil
 }
 
-func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli int, newsession int, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 	var optscount = len(opts)
 	if concurrent > optscount {
 		concurrent = optscount
@@ -381,7 +388,7 @@ func (o *HttpAgent) GetDriverConcurrent(opts []map[string]interface{}, nicemilli
 	return opts, err
 }
 
-func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli int, newsession bool, concurrent int, loglevel int) ([]map[string]interface{}, error) {
+func (o *HttpAgent) GetSimpleConcurrent(opts []map[string]interface{}, nicemilli int, newsession int, concurrent int, loglevel int) ([]map[string]interface{}, error) {
 	var optscount = len(opts)
 
 	if concurrent > optscount {

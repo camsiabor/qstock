@@ -59,11 +59,13 @@
   "httpclient" : {
     "chrome" : {
       "type" : "chrome",
-      "port" : 60000
+      "port_lower" : 60000,
+      "port_upper" : 60003
     },
     "firefox" : {
       "type" : "firefox",
-      "port" : 60001
+      "port_lower" : 60100,
+      "port_upper" : 60103
     },
     "std" : {
       "type" : "std"

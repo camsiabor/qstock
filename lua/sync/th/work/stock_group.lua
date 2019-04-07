@@ -31,6 +31,7 @@ opts.request_to   = 1
 opts.request_types = { "concept", "industry" }
 opts.request_types = { "industry" }
 opts.request_types = { "concept" }
+opts.newsession = 5
 
 opts.reload_check = true
 
@@ -38,11 +39,9 @@ opts.persist = true
 
 opts.concurrent = simple.get(profile, "concurrent", 1)
 
-if global.runtime.GOOS() == "windows" then  
-    opts.newsession = false
-else
-    opts.newsession = true
-end
+
+
+
 
 opts.db = "group"
 opts.datasrc = "th"

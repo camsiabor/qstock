@@ -730,13 +730,25 @@ end
 
 ------------------------------------------------------------------------------------------
 
-function M:go_stock_group_profile(opts)
 
+function M:profile_stock_group(opts)
     if opts.stock_group_types == nil then
         opts.stock_group_types =  { "concept" }
     end
+
     if opts.cal_limit == nil then
         opts.cal_limit = 300
+    end
+
+    if opts.n_io_criteria == nil then
+        opts.n_io_criteria = {
+            0.5, 0.75, 1, 1.2, 1.5, 1.7
+        }
+    end
+    if opts.n_ch_criteria == nil then
+        opts.n_ch_criteria = {
+            -5, -2.5, 0, 2.5, 5, 7.5
+        }
     end
     opts.date_offset_to = 0
 
@@ -750,22 +762,8 @@ function M:go_stock_group_profile(opts)
         dates[i] = string.sub(dates[i], 5)
     end
 
-
     local daycount = opts.date_offset_to - opts.date_offset_from + 1
-
-
-
     local groups = self.mod_stock_group:list_reload( { request_type = opts.stock_group_types[1] } )
-
-
-    local  n_io_criteria = {
-        0.5, 0.75, 1, 1.2, 1.5, 1.7
-    }
-    local n_ch_criteria = {
-        -5, -2.5, 0, 2.5, 5, 7.5
-    }
-    local n_io_criteria_len = #n_io_criteria
-    local n_ch_criteria_len = #n_ch_criteria
 
     for _, group in pairs(groups) do
         local gname = group.name
@@ -791,8 +789,8 @@ function M:go_stock_group_profile(opts)
                 avg_io = 0, avg_fin = 0, avg_ch = 0, avg_big_in = 0,
                 n_io = { }, n_ch = { }
             }
-            cal.num_level_criteria_init(n_io_criteria, profile.n_io)
-            cal.num_level_criteria_init(n_ch_criteria, profile.n_ch)
+            cal.num_level_criteria_init(opts.n_io_criteria, profile.n_io)
+            cal.num_level_criteria_init(opts.n_ch_criteria, profile.n_ch)
             group.profiles[#group.profiles + 1] = profile
         end
 
@@ -818,8 +816,8 @@ function M:go_stock_group_profile(opts)
                             profile.fin = profile.fin + fin
                             profile.ch = profile.ch + ch
                             profile.big_in = profile.big_in + big_in
-                            cal.num_level_criteria_count(io, n_io_criteria, profile.n_io)
-                            cal.num_level_criteria_count(ch, n_ch_criteria, profile.n_ch)
+                            cal.num_level_criteria_count(io, opts.n_io_criteria, profile.n_io)
+                            cal.num_level_criteria_count(ch, opts.n_ch_criteria, profile.n_ch)
                         end
                     end
                 end
@@ -836,22 +834,29 @@ function M:go_stock_group_profile(opts)
 
                 cal.array_div_mul(profile.n_io, profile.count, 100, simple.numcon)
                 cal.array_div_mul(profile.n_ch, profile.count, 100, simple.numcon)
-
-                --print(profile.date, profile.name, profile.count, profile.avg_io, profile.avg_ch)
             end
         end
     end
 
+    return groups
+end
 
+----------------------------------------------------------------------------------------------------------------------------------------
+function M:go_stock_group_profile(opts)
+
+    local groups = self:profile_stock_group(opts)
     local grouparray = simple.map_to_array(groups)
+    local daycount = opts.date_offset_to - opts.date_offset_from + 1
     simple.table_sort(grouparray, { "profiles", daycount, opts.sort_field })
-
 
     local profiles = {}
     for i = 1, #grouparray do
         local group = grouparray[i]
         simple.array_append(profiles, group.profiles)
     end
+
+    local n_io_criteria_len = #opts.n_io_criteria
+    local n_ch_criteria_len = #opts.n_ch_criteria
 
     local headers = {
         "date", "count", "io", "ch", "big",

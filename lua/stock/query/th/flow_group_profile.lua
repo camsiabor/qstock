@@ -33,6 +33,6 @@ opts.order = "desc"
 opts.link_stock_group = true
 opts.link_stock_snapshot = false
 
-opts.sort_field = "avg_ch"
+opts.sort_field = "avg_io"
 
 th_mod_flow_inst:go_stock_group_profile(opts)

@@ -46,15 +46,19 @@ local names_target = {
 }
 
 local names_bought = {
-    "中远海能", "中集集团", "中联重科",
+    "中远海能", "中集集团", "中联重科", "中源家居",
     "宁波海运", "宁波港",
     "皖江物流", "天顺股份",
     "中国武夷",
     "石化机械",
     "中国汽研", "长安汽车",
-    "柳药股份", "景峰医药",
+    "柳药股份", "汉森制药",
     "诺力股份",
     "长江证券",
+    "山煤国际",
+    "科华恆盛",
+    "英联股份",
+    
 }
 
 local names_tobe = {
@@ -109,7 +113,42 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --groups
-    --filters.groups( { groups = { "钛白粉" } } ),
+    --filters.groups( { groups = { "两桶油改革" } } ),
+    
+    
+    
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- 很高的 IO, 
+    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
+    
+    --------------------------------------------------------------------------------------------------------------
+
+    -- 高 IO, 高 CH
+    --filters.io({  io_lower = 1.55, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = -2 }),
+    
+    --------------------------------------------------------------------------------------------------------------
+
+    -- 高 IO, 低 CH
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1.5, ch_upper = 5, big_in_lower = 0, date_offset = -1 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- 非常低 IO, 正 CH, 蓄力股
+    --filters.io({  io_lower = 0.5, io_upper = 1, ch_lower = 0, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
+    filters.io({  io_lower = 1, io_upper = 1.15, ch_lower = 3, ch_upper = 6, big_in_lower = 0, date_offset = -2 }),
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- ch 0
+    --filters.io({  io_lower = 0.8, io_upper = 1.2, ch_lower = -0.1, ch_upper = 0.1, big_in_lower = 0, date_offset = -1 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- 迥 CH
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 9, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -124,28 +163,11 @@ opts.filters = {
     --filters.io({  io_lower = 0.5, io_upper = 3, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
     --filters.io_all({  io_lower = 0, io_upper = 100, ch_lower = -3, ch_upper = 11, big_in_lower = 0, date_offset = 0  }),
 
-    --------------------------------------------------------------------------------------------------------------
-
-    -- high io, io >= 1.6 && ch >= 4.5
-    --filters.io({  io_lower = 0.6, io_upper = 1.6, ch_lower = -5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
-    --------------------------------------------------------------------------------------------------------------
-
-    -- high io, io >= 1.6 && ch <= 4.5
-    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0 })
+    -- two days anti io io >= 2 plus high io
+    --filters.io({  io_lower = 0.6, io_upper = 0.97, ch_lower = -0.1, ch_upper = 3, big_in_lower = 0, date_offset = -1 }),
+    --filters.io({  io_lower = 0.6, io_upper = 0.97, ch_lower = -0.1, ch_upper = 3, big_in_lower = 0, date_offset = 0 }),
     
-    --------------------------------------------------------------------------------------------------------------
-    
-    -- high ch, low io, io <= 1.2 && ch >= 5
-    --filters.io({  io_lower = 0.8, io_upper = 1.35, ch_lower = 2, ch_upper = 3, big_in_lower = 0, date_offset = -2 }),
-    
-    --------------------------------------------------------------------------------------------------------------
-
-    -- two days ago io >= 2 plus high io
-    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = -2 }),
-    --filters.io({  io_lower = 0.6, io_upper = 100, ch_lower = -1, ch_upper = 1.5, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 0.6, io_upper = 100, ch_lower = -1, ch_upper = 1.5, big_in_lower = 0, date_offset = 0 }),
     
     
     --------------------------------------------------------------------------------------------------------------

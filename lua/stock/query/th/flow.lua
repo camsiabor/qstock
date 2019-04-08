@@ -109,7 +109,7 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --groups
-    filters.groups( { groups = { "白酒概念" } } ),
+    --filters.groups( { groups = { "钛白粉" } } ),
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -128,7 +128,7 @@ opts.filters = {
 
     -- high io, io >= 1.6 && ch >= 4.5
     --filters.io({  io_lower = 0.6, io_upper = 1.6, ch_lower = -5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 

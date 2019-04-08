@@ -759,10 +759,10 @@ function M:go_stock_group_profile(opts)
 
 
     local  n_io_criteria = {
-        0, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2
+        0.5, 0.75, 1, 1.2, 1.5, 1.7
     }
     local n_ch_criteria = {
-        -11, -5, -2.5, 0, 2.5, 5, 7.5, 11
+        -5, -2.5, 0, 2.5, 5, 7.5
     }
     local n_io_criteria_len = #n_io_criteria
     local n_ch_criteria_len = #n_ch_criteria
@@ -835,7 +835,7 @@ function M:go_stock_group_profile(opts)
                 profile.avg_big_in = simple.numcon(profile.big_in / profile.count)
 
                 cal.array_div_mul(profile.n_io, profile.count, 100, simple.numcon)
-                cal.array_div_mul(profile.n_io, profile.count, 100, simple.numcon)
+                cal.array_div_mul(profile.n_ch, profile.count, 100, simple.numcon)
 
                 --print(profile.date, profile.name, profile.count, profile.avg_io, profile.avg_ch)
             end
@@ -844,7 +844,7 @@ function M:go_stock_group_profile(opts)
 
 
     local grouparray = simple.map_to_array(groups)
-    simple.table_sort(grouparray, { "profiles", daycount, "avg_io" })
+    simple.table_sort(grouparray, { "profiles", daycount, opts.sort_field })
 
 
     local profiles = {}
@@ -855,13 +855,15 @@ function M:go_stock_group_profile(opts)
 
     local headers = {
         "date", "count", "io", "ch", "big",
-        "2",
+        "io1.2", "io1.5", "io1.7",
+        "ch2.5", "ch5", "ch7.5",
         "name"
     }
 
     local fields = {
         "date", "count", "avg_io", "avg_ch", "avg_big_in",
-        { "n_io", n_io_criteria_len },
+        { "n_io", n_io_criteria_len - 2 }, { "n_io", n_io_criteria_len - 1 }, { "n_io", n_io_criteria_len },
+        { "n_ch", n_ch_criteria_len - 2 }, { "n_ch", n_ch_criteria_len - 1 }, { "n_ch", n_ch_criteria_len },
         "name"
     }
 

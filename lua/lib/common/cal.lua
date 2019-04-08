@@ -85,7 +85,7 @@ function cal.num_level_criteria_count(num, criteria, container)
     end
 
     local top = criteria[#criteria]
-    if num > top then
+    if num >= top then
         local t = #container
         container[t] = container[t] + 1
         return t

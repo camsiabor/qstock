@@ -56,7 +56,7 @@ function simple.numcon(num, limit)
     if limit == nil then
         limit = 5
     end
-    if num < 0.0001 then
+    if num >= -0.0001 and num <= 0.0001 then
         num = 0
     end
     num = num .. ""

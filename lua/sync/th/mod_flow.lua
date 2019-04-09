@@ -425,7 +425,7 @@ function M:filter(opts, data_curr, code_mapping, result)
     if data_curr_index == nil then
         data_curr_index = 0
     else
-        data_curr_index = -data_curr_index + 1
+        data_curr_index = -data_curr_index
     end
 
 

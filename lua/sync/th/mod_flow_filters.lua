@@ -26,6 +26,17 @@ function M.io(fopts)
     local msg = "[filter] [io] %f <= io <= %f, %f <= ch <= %f, date_offset = %d"
     print(string.format(msg, fopts.io_lower, fopts.io_upper, fopts.ch_lower, fopts.ch_upper, fopts.date_offset))
     return function(one, series, code, currindex, opts)
+
+        --[[
+        if code == "603721" then
+            for i = 1, #series do
+                local o = series[i]
+                print("?", i, o.change_rate)
+            end
+            print("-----------------------------", #series, currindex)
+        end
+        ]]--
+
         if date_offset ~= 0 then
             if series == nil then
                 return false
@@ -35,6 +46,7 @@ function M.io(fopts)
         if one == nil then
             return false
         end
+
         return one.flow_io_rate >= fopts.io_lower and one.flow_io_rate <= fopts.io_upper
                 and one.flow_big_in_rate >= fopts.big_in_lower and one.flow_big_in_rate <= fopts.big_in_upper
                 and one.turnover >= fopts.turnover

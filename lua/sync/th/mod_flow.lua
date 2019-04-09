@@ -382,7 +382,6 @@ function M:reloads(opts)
         for i = 1, data_curr_count do
             local one_curr = data_curr[i]
             local code = one_curr.code
-
             local mapping_array = { }
             code_mapping[code] = mapping_array
             for n = 1, data_maps_count do
@@ -391,6 +390,9 @@ function M:reloads(opts)
                 else
                     local map = data_maps[n]
                     local one_near = map[code]
+                    if one_near == nil then
+                        one_near = { code = code, name = one_curr.name, empty = true }
+                    end
                     mapping_array[#mapping_array + 1] = one_near
                 end
             end

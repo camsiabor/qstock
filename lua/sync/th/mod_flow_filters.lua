@@ -44,7 +44,7 @@ function M.io(fopts)
             end
             one = series[currindex + date_offset]
         end
-        if one == nil then
+        if one == nil or one.empty then
             return false
         end
 

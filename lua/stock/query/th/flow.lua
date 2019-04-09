@@ -25,7 +25,7 @@ opts.persist = true
 
 opts.date_show = 10
 
-opts.date_offset = -2
+opts.date_offset = 0
 opts.date_offset_to = 10
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
@@ -114,17 +114,18 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     -- 很高的 IO, 
-    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -3 }),
+    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- 高 IO, 高 CH
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
     --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- 高 IO, 低 CH
-    filters.io({  io_lower = 0, io_upper = 100, ch_lower = -0.5, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
+    filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
     filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1.5, ch_upper = 5, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------

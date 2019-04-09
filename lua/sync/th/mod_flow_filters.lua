@@ -28,14 +28,15 @@ function M.io(fopts)
     return function(one, series, code, currindex, opts)
 
         --[[
-        if code == "603721" then
+        if code == "600340" then
             for i = 1, #series do
                 local o = series[i]
                 print("?", i, o.change_rate)
             end
-            print("-----------------------------", #series, currindex)
         end
         ]]--
+        --print(one.name, "-----------------------------", #series, "curindex", currindex)
+
 
         if date_offset ~= 0 then
             if series == nil then

@@ -391,9 +391,7 @@ function M:reloads(opts)
                 else
                     local map = data_maps[n]
                     local one_near = map[code]
-                    if one_near ~= nil then
-                        mapping_array[#mapping_array + 1] = one_near
-                    end
+                    mapping_array[#mapping_array + 1] = one_near
                 end
             end
         end
@@ -425,7 +423,7 @@ function M:filter(opts, data_curr, code_mapping, result)
     if data_curr_index == nil then
         data_curr_index = 0
     else
-        data_curr_index = -data_curr_index
+        data_curr_index = -data_curr_index + 1
     end
 
 

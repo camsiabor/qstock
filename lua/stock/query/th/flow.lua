@@ -25,8 +25,9 @@ opts.persist = true
 
 opts.date_show = 10
 
-opts.date_offset = 0
+opts.date_offset = -3
 opts.date_offset_to = 10
+--opts.date_offset_from = -2
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
 opts.db = "flow"
@@ -37,8 +38,8 @@ opts.order = "desc"
 opts.link_stock_group = true
 opts.link_stock_snapshot = false
 
---opts.sort_field = "flow_io_rate"
-opts.sort_field = "flow_big_rate_cross_ex"
+opts.sort_field = "flow_io_rate"
+--opts.sort_field = "flow_big_rate_cross_ex"
 
 
 local names_target = {
@@ -62,10 +63,7 @@ local names_bought = {
 }
 
 local names_tobe = {
-    "沃尔核材",
-    "天目药业",
-    "华懋科技",
-    "亚太药业",
+    "嘉应制药"
 }
 
 opts.result_adapter2 = function(opts, result, mapping)
@@ -100,6 +98,8 @@ opts.filters = {
     
     --names
     --filters.names({  names = names_bought }),
+    --filters.names({  names = names_tobe }),
+    
     
     
     -------------------------------------------------------------------------------------------------------------
@@ -119,14 +119,20 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
 
     -- 高 IO, 高 CH
-    filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
+    filters.io({  io_lower = 1, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- 高 IO, 低 CH
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 1.5, ch_upper = 5, big_in_lower = 0, date_offset = 0 }),
+    --filters.io({  io_lower = 1.45, io_upper = 100, ch_lower = 0, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
+    
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- 反 IO, 高 CH
+    --filters.io({  io_lower = 0.7, io_upper = 1, ch_lower = 3, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
     

@@ -306,8 +306,8 @@ function M:reload(opts, data, as_array)
     local db = opts.db
     local dao = global.daom.Get("main")
 
-
     local total = 0
+    local emptystr = ""
     for page = opts.request_from, opts.request_to do
         local key = self:keygen(opts, page)
         local datastr, err = dao.Get(db, datestr, key, 0, nil)
@@ -315,7 +315,7 @@ function M:reload(opts, data, as_array)
             print("[reload] failure", datestr, key, err)
         end
         if datastr == nil or #datastr == 0 then
-            print("[reload] empty", datestr, key)
+            emptystr = string.format("[reload] empty %s %s", datestr, key)
         else
             local fragment = json.decode(datastr)
             local n = #fragment
@@ -334,6 +334,9 @@ function M:reload(opts, data, as_array)
             end
             total = total + n
         end
+    end
+    if #emptystr > 0 then
+        print(emptystr)
     end
     print("[reload]", datestr, total, "as array", as_array)
     return data

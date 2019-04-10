@@ -122,13 +122,13 @@ opts.filters = {
 
     -- 中高 IO, 高 CH
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- 中高 IO, 低 CH
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 0, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
+    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 1, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
     
     
     --------------------------------------------------------------------------------------------------------------

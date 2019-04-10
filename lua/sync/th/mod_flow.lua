@@ -505,6 +505,10 @@ function M:link_stock_group(opts, data)
     if self.mod_stock_group == nil then
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
+    if self.mod_ah_table == nil then
+        self.mod_ah_table = require("sync.th.mod_ah_table")
+    end
+    local ah_table = self.mod_ah_table:reload({ reload_as_map = true } )
 
     local mapping = self.mod_stock_group:code_group_mapping(opts.stock_group_types, false)
     local n = #data
@@ -512,6 +516,15 @@ function M:link_stock_group(opts, data)
         local one = data[i]
         local code = one.code
         one.group = mapping[code]
+        if one.group == nil then
+            one.group = {}
+        end
+        local ah = ah_table[code]
+        if ah ~= nil then
+            local code_h = ah.code_h
+            one.group["H股"] = ah
+            one.group["H."..code_h] = code_h
+        end
     end
     return data
 end

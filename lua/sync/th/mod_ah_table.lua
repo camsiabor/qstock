@@ -119,11 +119,6 @@ function M:parse_html(opts, reqopt)
     return data
 end
 
-
-local opts = {}
-opts.browser = "gorilla"
-M:request(opts)
-
 -------------------------------------------------------------------------------------------
 
 function M:persist(opts, data)
@@ -150,6 +145,10 @@ end
 
 function M:reload(opts, datestr)
 
+    if opts.db == nil then
+        opts.db = "group"
+    end
+
     if datestr == nil or #datestr == 0 then
         local dates = global.calendar.List(0, 0, 0, false)
         datestr = dates[1]
@@ -169,7 +168,7 @@ function M:reload(opts, datestr)
     end
     print("[reload]", db, self.TOKEN_PERSIST, datestr, #data)
 
-    if opts.reload_as_map ~= nil and asmap then
+    if opts.reload_as_map ~= nil and opts.reload_as_map then
        local map = {}
         for i = 1, #data do
             local one = data[i]

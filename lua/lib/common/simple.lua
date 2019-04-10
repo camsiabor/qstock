@@ -53,6 +53,7 @@ function simple.pathex(t, fields)
 end
 
 function simple.numcon(num, limit)
+    num = num + 0
     if limit == nil then
         limit = 5
     end

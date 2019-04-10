@@ -182,11 +182,21 @@
         "api" : "http://data.10jqka.com.cn",
         "browser" : "firefox",
         "concurrent" : 1,
-        "interval": 1800,
+        "interval": 3600,
         "dao" : "main",
         "db" : "flow",
         "handler" : "Lua_handler",
         "script" : "sync/th/work/stock_group.lua"
+      },
+      "ah.table" : {
+        "api" : "http://data.10jqka.com.cn",
+        "browser" : "gorilla",
+        "concurrent" : 1,
+        "interval": 7200,
+        "dao" : "main",
+        "db" : "group",
+        "handler" : "Lua_handler",
+        "script" : "sync/th/work/ah_table.lua"
       }
     }
   }

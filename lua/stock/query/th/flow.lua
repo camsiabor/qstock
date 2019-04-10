@@ -13,7 +13,6 @@ opts.debug = false
 opts.loglevel = 0
 opts.browser = "firefox"
 
-opts.request = false
 opts.request_from = 1
 opts.request_to = 71
 opts.request_each = 1
@@ -25,10 +24,6 @@ opts.persist = true
 
 opts.date_show = 10
 
-opts.date_offset = -3
-opts.date_offset_to = 10
---opts.date_offset_from = -2
-opts.date_offset_from = -opts.date_show - opts.date_offset
 
 opts.db = "flow"
 opts.datasrc = "th"
@@ -90,6 +85,13 @@ opts.result_adapter2 = function(opts, result, mapping)
     print("[up/down]", (up) / (up + down) * 100)
 end
 
+opts.request = false
+
+opts.date_offset = 0
+opts.date_offset_to = 12
+--opts.date_offset_from = -2
+opts.date_offset_from = -opts.date_show - opts.date_offset
+
 
 opts.filters = {
     
@@ -113,20 +115,20 @@ opts.filters = {
 
     --------------------------------------------------------------------------------------------------------------
     
-    -- 很高的 IO, 
+    -- 很高的 IO,
     --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
     
     --------------------------------------------------------------------------------------------------------------
 
-    -- 高 IO, 高 CH
+    -- 中高 IO, 高 CH
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
-    -- 高 IO, 低 CH
+    -- 中高 IO, 低 CH
     --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1.45, io_upper = 100, ch_lower = 0, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
+    --filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 0, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
     
     
     --------------------------------------------------------------------------------------------------------------

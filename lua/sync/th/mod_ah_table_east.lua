@@ -144,9 +144,10 @@ function M:reload(opts, datestr)
         local map = {}
         for i = 1, #data do
             local one = data[i]
-            map[one.name] = one
             map[one.code_a] = one
+            map[one.name_a] = one
             map[one.code_h] = one
+            map[one.name_h] = one
         end
         data = map
     end

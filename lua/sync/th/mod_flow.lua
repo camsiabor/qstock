@@ -506,7 +506,7 @@ function M:link_stock_group(opts, data)
         self.mod_stock_group = require("sync.th.mod_stock_group")
     end
     if self.mod_ah_table == nil then
-        self.mod_ah_table = require("sync.th.mod_ah_table")
+        self.mod_ah_table = require("sync.th.mod_ah_table_east")
     end
     local ah_table = self.mod_ah_table:reload({ reload_as_map = true } )
 

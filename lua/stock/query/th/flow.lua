@@ -91,7 +91,7 @@ opts.result_adapter = function(opts, result, mapping, currindex)
     print("[up/down]", (up) / (up + down) * 100)
 end
 
-opts.request = true
+opts.request = false
 
 opts.date_show = 12
 
@@ -109,20 +109,19 @@ opts.filters = {
     --names
     --filters.names({  names = names_bought }),
     --filters.names({  names = names_tobe }),
+    --filters.names({  names = { "拉夏贝尔"} }),
     
     
     
     -------------------------------------------------------------------------------------------------------------
     --codes
-    --filters.codes({ codes = codes_tobe })
+    --filters.codes({ codes = "603157" })
     
     --------------------------------------------------------------------------------------------------------------
     
     --groups
     --filters.groups( { groups = { "两桶油改革" } } ),
-    
-    --------------------------------------------------------------------------------------------------------------
-    
+
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -132,8 +131,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --H股
-    --filters.groups( { groups = { "H股" } } ),
-    --filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = 0 })
+    filters.groups( { groups = { "H股" } } ),
+    filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = -3 })
 
     --------------------------------------------------------------------------------------------------------------
 
@@ -154,8 +153,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     -- 非常低 IO, 正 CH, 蓄力股
-    filters.io({  io_lower = 0.5, io_upper = 1.2, ch_lower = -0.5, ch_upper = 5, big_in_lower = 0, date_offset = -4 }),
-    filters.io({  io_lower = 1, io_upper = 1.25, ch_lower = 5, ch_upper = 8, big_in_lower = 0, date_offset = -3 }),
+    --filters.io({  io_lower = 0.5, io_upper = 1.2, ch_lower = -0.5, ch_upper = 5, big_in_lower = 0, date_offset = -4 }),
+    --filters.io({  io_lower = 1, io_upper = 1.25, ch_lower = 5, ch_upper = 8, big_in_lower = 0, date_offset = -3 }),
     
 
     --------------------------------------------------------------------------------------------------------------

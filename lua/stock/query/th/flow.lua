@@ -1,6 +1,12 @@
--- http://data.10jqka.com.cn/funds/ggzjl/
--- http://data.10jqka.com.cn/funds/ggzjl/field/zjjlr/order/desc/page/1/ajax/1/
---http://news.10jqka.com.cn/20190322/c610418561.shtml#refCountId=pop_50ab41b8_259
+--[[
+
+    14:15 --> 
+        (1) 1.4 <= io <= 100, 4.5 <= ch <= 10
+        (2) 1.0 <= io <= 1.4, 1 <= ch <= 4.5
+        (3) H, 1.4 <= io <= 100
+
+]]--
+
 
 local th_mod_flow = require("sync.th.mod_flow")
 local filters = require("sync.th.mod_flow_filters")
@@ -22,7 +28,7 @@ opts.nice = 0
 
 opts.persist = true
 
-opts.date_show = 10
+
 
 
 opts.db = "flow"
@@ -61,18 +67,18 @@ local names_tobe = {
     "嘉应制药"
 }
 
-opts.result_adapter2 = function(opts, result, mapping)
+opts.result_adapter = function(opts, result, mapping, currindex)
     local up = 0
     local down = 0
+    local moderate = 0
     local n = #result
     for i = 1, n do 
         local one = result[i]
         local code = one.code
         local series = mapping[code]
-        local near = series[2]
         
-        if near ~= nil then
-            if near.change_rate > 0 then
+        if one ~= nil then
+            if one.change_rate >= 0 then
                 up = up + 1
             else
                 down = down + 1
@@ -85,11 +91,13 @@ opts.result_adapter2 = function(opts, result, mapping)
     print("[up/down]", (up) / (up + down) * 100)
 end
 
-opts.request = false
+opts.request = true
+
+opts.date_show = 12
 
 opts.date_offset = 0
-opts.date_offset_to = 12
---opts.date_offset_from = -2
+opts.date_offset_to = 10
+--opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
 
 
@@ -112,23 +120,30 @@ opts.filters = {
     
     --groups
     --filters.groups( { groups = { "两桶油改革" } } ),
-
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    
     --------------------------------------------------------------------------------------------------------------
     
     -- 很高的 IO,
     --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
     
     --------------------------------------------------------------------------------------------------------------
+    
+    --H股
+    --filters.groups( { groups = { "H股" } } ),
+    --filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = 0 })
+
+    --------------------------------------------------------------------------------------------------------------
 
     -- 中高 IO, 高 CH
-    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1.5, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
     --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     
     --------------------------------------------------------------------------------------------------------------
 
     -- 中高 IO, 低 CH
-    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = -1, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
-    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 1, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
+    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 1, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
     
     
     --------------------------------------------------------------------------------------------------------------
@@ -139,9 +154,10 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     -- 非常低 IO, 正 CH, 蓄力股
-    --filters.io({  io_lower = 0.5, io_upper = 1.2, ch_lower = -0.5, ch_upper = 5, big_in_lower = 0, date_offset = -1 }),
-    --filters.io({  io_lower = 1, io_upper = 1.5, ch_lower = 5, ch_upper = 8, big_in_lower = 0, date_offset = 0 }),
+    filters.io({  io_lower = 0.5, io_upper = 1.2, ch_lower = -0.5, ch_upper = 5, big_in_lower = 0, date_offset = -4 }),
+    filters.io({  io_lower = 1, io_upper = 1.25, ch_lower = 5, ch_upper = 8, big_in_lower = 0, date_offset = -3 }),
     
+
     --------------------------------------------------------------------------------------------------------------
     
     -- ch 0

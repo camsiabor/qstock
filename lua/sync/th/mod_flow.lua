@@ -714,7 +714,8 @@ function M:go(opts)
     local result_curr = self:filter(opts, data_curr, code_mapping)
 
     if opts.result_adapter ~= nil then
-        local adapted = simple.func_call(opts.result_adapter, opts, result_curr, code_mapping)
+        local currindex = -opts.date_offset_from + 1
+        local adapted = simple.func_call(opts.result_adapter, opts, result_curr, code_mapping, currindex)
         if adapted ~= nil then
             result_curr = adapted
         end

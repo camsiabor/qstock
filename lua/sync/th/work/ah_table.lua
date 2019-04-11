@@ -1,4 +1,4 @@
-local ah_table = require("sync.th.mod_ah_table")
+local ah_table = require("sync.th.mod_ah_table_east")
 local ah_table_inst = ah_table:new()
 
 local opts = { }

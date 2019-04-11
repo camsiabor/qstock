@@ -458,6 +458,13 @@ function simple.num_array_align(array, num)
     return nil
 end
 
+function simple.split(s, pattern )
+    local rt= {}
+    string.gsub(s, '[^' .. pattern ..']+', function(w)
+        table.insert(rt, w)
+    end)
+    return rt
+end
 
 
 return simple

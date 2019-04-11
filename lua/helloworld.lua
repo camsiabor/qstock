@@ -1,89 +1,31 @@
-local a = {}
-a[1] = 3
-a[10] = 6
-print(#a)
-for i = 1, #a do 
-    print(a[i])
-end
-
 if 1 == 1 then
+    local t = os.time()
+    print(t)
     return
 end
-
-
-local simple = require("common.simple")
-
-local t = os.time()
-
-
-
-local str = simple.now_hour_min()
-print(str)
-
-
-local strn = (str + 0)
-local m = strn % 100
-m = simple.intstr(m)
-print(m)
-
-local array = {"1800", "1815", "1830", "1845", "1900" }
-local r = simple.num_array_align(array, strn)
-print("r", r)
-if 1 == 1 then
-    return
-end
-
 
 local global = require("q.global")
-local json = require("common.json")
-local mod_snapshot = require("sync.th.mod_snapshot")
-
-local cache_code = global.cachem.Get("stock.code");
-local cache_khistory = global.cachem.Get("stock.khistory");
-local dates = global.calendar.List(3, 0, 0, true)
-local codes = cache_code.Get(false, "sz.sh");
-local map = {}
-for i = 1, #codes do
-    local code = codes[i];
-    local ks = mod_snapshot:snapshot(code, dates)
-    map[code] = ks
-end
-
-local str = json:encode(map)
-
-print(str)
 
 
 
+local reqopts = {}
+local url = "http://www.aastocks.com/sc/stocks/market/index/h-shares.aspx?t=1&hk=0"
+url = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery112409831336260877317_1554968702483&type=CT&token=4f1862fc3b5e77c150a2b985b12db0fd&sty=FCABHL&js=(%7Bdata%3A%5B(x)%5D%2CrecordsFiltered%3A(tot)%7D)&cmd=C._AHH&st=(AB%2FAH%2FHKD)&sr=-1&p=2&ps=20&_=1554968702501"
+local reqopt = {}
+reqopt["url"] = url
+reqopts[1] = reqopt
 
-if 1 == 1 then
+
+local err
+local browser = global["gorilla"]
+reqopts, err = browser.Get(reqopts, 0, 0, 1, 1)
+if err ~= nil then
+    print(err)
     return
 end
 
+reqopt = reqopts[1]
 
-local money = 80000
-for i = 1, 36 do 
-    print(money)
-    money = money * 1.1
-end
-print(money)
-    
+local html = reqopt["content"]
 
-
-
-
-
-
-if 1 == 1 then
-    return 
-end
-
-local simple = require("common.simple")
-local loggerm = require("q.logger")
-local logger = loggerm:newstdout()
-for i = 1, 3 do 
-    logger:info("hello?")
-end
-
---print(logger)
---simple.table_print_all(logger)
+print(html)

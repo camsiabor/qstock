@@ -39,35 +39,20 @@ opts.order = "desc"
 opts.link_stock_group = true
 opts.link_stock_snapshot = false
 
-opts.sort_field = "flow_io_rate"
---opts.sort_field = "flow_big_rate_cross_ex"
 
 
-local names_target = {
-    "福田汽车",
-}
+
 
 local names_bought = {
-    "中远海能", "中集集团", "中联重科", "中源家居",
-    "宁波海运", "宁波港",
-    "皖江物流", "天顺股份",
-    "中国武夷",
-    "石化机械",
-    "中国汽研", "长安汽车",
-    "柳药股份", "汉森制药",
-    "诺力股份",
-    "长江证券",
-    "山煤国际",
-    "科华恒盛",
-    "英联股份",
+    "长城电工"
     
 }
 
-local names_tobe = {
-    "嘉应制药"
-}
-
 opts.result_adapter = function(opts, result, mapping, currindex)
+    if mapping == nil then
+        print("no mapping")
+        return
+    end
     local up = 0
     local down = 0
     local moderate = 0
@@ -91,11 +76,15 @@ opts.result_adapter = function(opts, result, mapping, currindex)
     print("[up/down]", (up) / (up + down) * 100)
 end
 
+
+opts.sort_field = "flow_io_rate"
+--opts.sort_field = "flow_big_rate_cross_ex"
+
 opts.request = false
 
 opts.date_show = 12
 
-opts.date_offset = 0
+opts.date_offset = -3
 opts.date_offset_to = 10
 --opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
@@ -120,36 +109,55 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     --groups
-    --filters.groups( { groups = { "两桶油改革" } } ),
+    --filters.groups( { groups = { "电力改革" } } ),
 
+    
+    
+    --------------------------------------------------------------------------------------------------------------
+    -- 很高的 IO,
+    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = -3 }),
     
     --------------------------------------------------------------------------------------------------------------
     
-    -- 很高的 IO,
-    --filters.io({  io_lower = 1.75, io_upper = 100, ch_lower = 1, ch_upper = 11, big_in_lower = 0, date_offset = -1 }),
+    -- 高 IO, 高 CH
+    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = -1000, ma_diff_upper = 9000 }),
     
     --------------------------------------------------------------------------------------------------------------
     
     --H股
-    filters.groups( { groups = { "H股" } } ),
-    filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = -3 })
+    --filters.groups( { groups = { "H股" } } ),
+    --filters.io({  io_lower = 1.3, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = -11 })
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 })
+    
+    --------------------------------------------------------------------------------------------------------------
+    
+    -- ST
+    --filters.st({ }),
+    --filters.io({  io_lower = 1.5, io_upper = 100, ch_lower = 0, ch_upper = 11, big_in_lower = 0, date_offset = -3 }),
 
     --------------------------------------------------------------------------------------------------------------
+    
+    -- 低吸
+    --filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 2.5, ch_upper = 4.5, big_in_lower = 0, date_offset = 0 }),
+    
+    --------------------------------------------------------------------------------------------------------------
+    
 
     -- 中高 IO, 高 CH
-    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    --filters.io({  io_lower = 1.8, io_upper = 100, ch_lower = 3, ch_upper = 11, big_in_lower = 0, date_offset = -5 }),
+    --filters.io({  io_lower = 0, io_upper = 100, ch_lower = 8.5, ch_upper = 11, big_in_lower = 0, date_offset = -2 }),
     
     --------------------------------------------------------------------------------------------------------------
 
-    -- 中高 IO, 低 CH
-    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 1, ch_upper = 5, big_in_lower = 0, date_offset = 0}),
+    -- narrow io
+    --filters.io({  io_lower = 1.2, io_upper = 1.3, ch_lower = 5, ch_upper = 8.5, big_in_lower = 0, date_offset = -5}),
+    
+    --filters.io({  io_lower = 0, io_upper = 5, ch_lower = 5, ch_upper = 11, big_in_lower = 0, date_offset = -1}),
     
     
-    --------------------------------------------------------------------------------------------------------------
     
-    -- 反 IO, 高 CH
-    --filters.io({  io_lower = 0.7, io_upper = 1, ch_lower = 3, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
-    
+  
     --------------------------------------------------------------------------------------------------------------
     
     -- 非常低 IO, 正 CH, 蓄力股

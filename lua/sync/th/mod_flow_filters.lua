@@ -282,4 +282,56 @@ function M.no3(fopts)
     end
 end
 -----------------------------------------------------------------------------------------------------------
+
+function M.st(fopts)
+    return function(one, series, code, currindex, opts)
+        local index = string.find(one.name, "ST")
+        return index ~= nil
+    end
+end
+
+
+
+-----------------------------------------------------------------------------------------------------------
+
+function M.ma_diff(fopts)
+    simple.def(fopts, "ma_short_cycle", 5)
+    simple.def(fopts, "ma_long_cycle", 10)
+    simple.def(fopts, "ma_diff_lower", 0)
+    simple.def(fopts, "ma_diff_upper", 100)
+    return function(one, series, code, currindex, opts)
+        local from = currindex - fopts.ma_long_cycle + 1
+        local to = currindex
+        if currindex < 0 then
+            currindex = 1
+        end
+        local ma_short = 0
+        local ma_short_count = 0
+        local ma_long = 0
+        local ma_long_count = 0
+        for i = from, to do
+            local serie = series[i]
+            if serie ~= nil and not serie.empty then
+                if ma_short_count <= fopts.ma_short_cycle then
+                    ma_short = ma_short + serie.change_rate
+                    ma_short_count = ma_short_count + 1
+                end
+                ma_long = ma_long + serie.change_rate
+                ma_long_count = ma_long_count + 1
+            end
+        end
+        if ma_short_count == 0 then
+            return false
+        end
+        local ma_short_avg = ma_short / ma_short_count
+        local ma_long_avg = ma_long / ma_long_count
+        local rate = ma_short_avg / ma_long_avg * 100
+        --print(one.name, one.code, ma_short_avg, ma_long_avg, rate)
+        one.custom = rate
+        return rate >= fopts.ma_diff_lower and rate <= fopts.ma_diff_upper
+    end
+end
+
+-----------------------------------------------------------------------------------------------------------
+
 return M

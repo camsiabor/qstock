@@ -598,18 +598,22 @@ function M:print_data(opts, data)
 
     local fields =
         {
-            "index", "code", "name", "change_rate", "turnover",
+            "code", "name", "change_rate", "turnover",
             "flow_io_rate", "flow_in_rate",
-            "flow_big_in_rate", "flow_big_rate",
-            "flow_big_rate_cross", "flow_big_rate_cross_ex", "flow_big", "group"
+            "flow_big_in_rate",
+            "flow_big_rate_cross_ex",
+            "custom",
+            "group"
         }
 
     local headers =
         {
-            "i", "code", "name", "ch", "turn",
+            "code", "name", "ch", "turn",
             "io", "in",
-            "big_in", "big_r",
-            "cross", "crossex", "big", "group"
+            "big_in",
+            "crossex",
+            "cus",
+            "group"
         }
 
     local formatters = {

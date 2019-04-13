@@ -71,13 +71,17 @@ opts.result_adapter = function(opts, result, mapping, currindex)
             else
                 down = down + 1
             end
-            one.customex = sums_up .. "/" .. sums_down
+            local last = sums[#sums]
+            if last == nil then
+                last = "nil"
+            end
+            one.customex = sums_up .. "/" .. sums_down .. "/" .. last
         end
         
     end
     print("[up]", up)
     print("[down]", down)
-    print("[up/down]", (up) / (up + down) * 100)
+    print("[rate]", simple.numcon((up) / (up + down) * 100), "%")
 end
 
 
@@ -88,7 +92,7 @@ opts.request = false
 
 opts.date_show = 12
 
-opts.date_offset = -3
+opts.date_offset = -5
 opts.date_offset_to = 10
 --opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
@@ -124,8 +128,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     -- 高 IO, 高 CH
-    filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
-    filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = 25, ma_diff_upper = 150 }),
+    --filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
+    --filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = 50, ma_diff_upper = 150 }),
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -143,7 +147,8 @@ opts.filters = {
     --------------------------------------------------------------------------------------------------------------
     
     -- 低吸
-    --filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 2.5, ch_upper = 4.5, big_in_lower = 0, date_offset = 0 }),
+    filters.io({  io_lower = 1.35, io_upper = 100, ch_lower = 1.5, ch_upper = 4.5, big_in_lower = 0, date_offset = 0 }),
+    filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = 0, ma_diff_upper = 150 }),
     
     --------------------------------------------------------------------------------------------------------------
     

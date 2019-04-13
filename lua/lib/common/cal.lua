@@ -1,7 +1,5 @@
 local cal = {}
 
-local simple = require("common.simple")
-
 function cal.str2num(str, keep)
     if keep == nil then
         keep = 5
@@ -102,6 +100,44 @@ function cal.num_level_criteria_count(num, criteria, container)
     end
 
     return 0
+end
+
+
+function cal.array_step_sum(array, from, to)
+    if from == nil then
+        from = 1
+    end
+    if to == nil then
+        to = #array
+    end
+    local result = { }
+    local index = 2
+    result[1] = array[from]
+    for i = from + 1, to do
+        local one = array[i]
+        if one ~= nil then
+            result[index] = result[index - 1] + one
+            index = index + 1
+        end
+    end
+    return result
+end
+
+function cal.array_up_down_count(array, limit)
+    local up = 0
+    local down = 0
+    local n = #array
+    for i = 1, n do
+        local one = array[i]
+        if one ~= nil then
+            if one >= limit then
+                up = up + 1
+            else
+                down = down + 1
+            end
+        end
+    end
+    return up, down
 end
 
 

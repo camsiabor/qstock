@@ -602,7 +602,7 @@ function M:print_data(opts, data)
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate",
             "flow_big_rate_cross_ex",
-            "custom",
+            "custom", "customex",
             "group"
         }
 
@@ -612,7 +612,7 @@ function M:print_data(opts, data)
             "io", "in",
             "big_in",
             "crossex",
-            "cus",
+            "cus", "cusex",
             "group"
         }
 

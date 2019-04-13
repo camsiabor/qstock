@@ -153,6 +153,25 @@ function simple.table_count(obj)
     return n
 end
 
+function simple.table_field_to_array(tables, field, from, to)
+    local result = {}
+    if from == nil then
+        from = 1
+    end
+    if to == nil then
+        to = #tables
+    end
+    for i = from, to do
+        local t = tables[i]
+        if t ~= nil then
+            local v = t[field]
+            if v ~= nil then
+                result[#result + 1] = v
+            end
+        end
+    end
+    return result
+end
 
 function simple.table_print(obj, fields, suffix)
     local n = #fields

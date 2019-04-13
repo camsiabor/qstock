@@ -327,8 +327,12 @@ function M.ma_diff(fopts)
         local ma_long_avg = ma_long / ma_long_count
         local rate = ma_short_avg / ma_long_avg * 100
         --print(one.name, one.code, ma_short_avg, ma_long_avg, rate)
-        one.custom = rate
-        return rate >= fopts.ma_diff_lower and rate <= fopts.ma_diff_upper
+        local include = rate >= fopts.ma_diff_lower and rate <= fopts.ma_diff_upper
+        if include then
+            rate = simple.numcon(rate)
+            one.custom = rate
+        end
+        return include
     end
 end
 

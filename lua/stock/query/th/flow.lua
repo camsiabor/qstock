@@ -7,7 +7,8 @@
 
 ]]--
 
-
+local cal = require("common.cal")
+local simple = require("common.simple")
 local th_mod_flow = require("sync.th.mod_flow")
 local filters = require("sync.th.mod_flow_filters")
 
@@ -61,13 +62,16 @@ opts.result_adapter = function(opts, result, mapping, currindex)
         local one = result[i]
         local code = one.code
         local series = mapping[code]
-        
-        if one ~= nil then
-            if one.change_rate >= 0 then
+        if series ~= nil then
+            local series_chs = simple.table_field_to_array(series, "change_rate", currindex + 1, #series)
+            local sums = cal.array_step_sum(series_chs)
+            local sums_up, sums_down = cal.array_up_down_count(sums, 0)
+            if sums_up > 0 then
                 up = up + 1
             else
                 down = down + 1
             end
+            one.customex = sums_up .. "/" .. sums_down
         end
         
     end
@@ -121,7 +125,7 @@ opts.filters = {
     
     -- 高 IO, 高 CH
     filters.io({  io_lower = 1.4, io_upper = 100, ch_lower = 4.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
-    filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = -1000, ma_diff_upper = 9000 }),
+    filters.ma_diff({  ma_short_cycle = 3, ma_long_cycle = 6, ma_diff_lower = 25, ma_diff_upper = 150 }),
     
     --------------------------------------------------------------------------------------------------------------
     

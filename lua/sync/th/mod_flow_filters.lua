@@ -252,6 +252,24 @@ function M.names(fopts)
         return names_map[name] ~= nil
     end
 end
+
+
+-----------------------------------------------------------------------------------------------------------
+function M.names_contain(fopts)
+    local names = fopts.names
+    local n = #names
+    return function(one, series, code, currindex, opts)
+        local name = one.name
+        for i = 1, n do
+            if string.find(name, names[n]) ~= nil then
+                return true
+            end
+        end
+        return false
+    end
+end
+
+
 -----------------------------------------------------------------------------------------------------------
 function M.groups(fopts)
     local groups = fopts.groups
@@ -294,43 +312,51 @@ end
 
 -----------------------------------------------------------------------------------------------------------
 
-function M.ma_diff(fopts)
-    simple.def(fopts, "ma_short_cycle", 5)
-    simple.def(fopts, "ma_long_cycle", 10)
-    simple.def(fopts, "ma_diff_lower", 0)
-    simple.def(fopts, "ma_diff_upper", 100)
+function M.avg_diff(fopts)
+    simple.def(fopts, "field", "change_rate")
+    simple.def(fopts, "short_cycle", 5)
+    simple.def(fopts, "long_cycle", 10)
+    simple.def(fopts, "diff_lower", 0)
+    simple.def(fopts, "diff_upper", 100)
+    simple.def(fopts, "set", "custom")
     return function(one, series, code, currindex, opts)
-        local from = currindex - fopts.ma_long_cycle + 1
+        local from = currindex - fopts.long_cycle + 1
         local to = currindex
         if currindex < 0 then
             currindex = 1
         end
-        local ma_short = 0
-        local ma_short_count = 0
-        local ma_long = 0
-        local ma_long_count = 0
+        local set = fopts.set
+        local field = fopts.field
+        local short_sum = 0
+        local short_count = 0
+        local short_cycle = fopts.short_cycle
+        local long_sum = 0
+        local long_count = 0
         for i = from, to do
             local serie = series[i]
             if serie ~= nil and not serie.empty then
-                if ma_short_count <= fopts.ma_short_cycle then
-                    ma_short = ma_short + serie.change_rate
-                    ma_short_count = ma_short_count + 1
+                local v = serie[field]
+                if short_count < short_cycle then
+                    short_sum = short_sum + v
+                    short_count = short_count + 1
                 end
-                ma_long = ma_long + serie.change_rate
-                ma_long_count = ma_long_count + 1
+                long_sum = long_sum + v
+                long_count = long_count + 1
             end
         end
-        if ma_short_count == 0 then
+        if short_count == 0 then
             return false
         end
-        local ma_short_avg = ma_short / ma_short_count
-        local ma_long_avg = ma_long / ma_long_count
-        local rate = ma_short_avg / ma_long_avg * 100
+        local short_avg = short_sum / short_count
+        local long_avg = long_sum / long_count
+        local rate = short_avg / long_avg * 100
+
+        --print(one.name, short_avg, long_avg, short_count, long_count, from, to)
         --print(one.name, one.code, ma_short_avg, ma_long_avg, rate)
-        local include = rate >= fopts.ma_diff_lower and rate <= fopts.ma_diff_upper
+        local include = rate >= fopts.diff_lower and rate <= fopts.diff_upper
         if include then
             rate = simple.numcon(rate)
-            one.custom = rate
+            one[set] = rate
         end
         return include
     end

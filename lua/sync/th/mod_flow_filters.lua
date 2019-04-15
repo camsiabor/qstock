@@ -106,6 +106,9 @@ function M.io_increase(fopts)
 end
 
 -----------------------------------------------------------------------------------------------------------
+---
+---
+---
 function M.io_any(fopts)
 
     simple.def(fopts, "io_lower", 1)
@@ -162,12 +165,51 @@ function M.io_any(fopts)
                 local avg = sum / count
                 include = avg >= fopts.ch_avg_lower and avg <= fopts.ch_avg_upper
             end
-
         end
 
         return include
     end
 end
+
+-----------------------------------------------------------------------------------------------------------
+function M.io_any_simple(fopts)
+
+    simple.def(fopts, "io_lower", 1)
+    simple.def(fopts, "io_upper", 100)
+
+    simple.def(fopts, "date_offset_to", 0)
+    simple.def(fopts, "date_offset_from", -100)
+
+    local io_lower = fopts.io_lower
+    local io_upper = fopts.io_upper
+    local date_offset_to = fopts.date_offset_to
+    local date_offset_from = fopts.date_offset_from
+    return function(one, series, code, currindex, opts)
+        local limit = #series
+        local to = currindex + date_offset_to
+        local from = currindex + date_offset_from
+        if to > limit then
+            to = limit
+        end
+        if from < 1 then
+            from = 1
+        end
+        if series == nil then
+            return false
+        end
+        for i = from, to do
+            local one = series[i]
+            if one ~= nil and not one.empty then
+                local io = one.flow_io_rate
+                if  io >= io_lower and io <= io_upper then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+end
+
 
 -----------------------------------------------------------------------------------------------------------
 function M.io_all(fopts)
@@ -345,7 +387,7 @@ function M.avg_diff(fopts)
             end
         end
         if short_count == 0 then
-            return false
+            return true
         end
         --print(one.name, one.code, short_sum, long_sum, short_count, long_count)
         local short_avg = short_sum / short_count
@@ -372,23 +414,33 @@ function M.ratio(fopts)
     local ratio_upper = fopts.ratio_upper
 
     simple.def(fopts, "date_offset", 0)
+    simple.def(fopts, "absolute", false)
+    local absolute = fopts.absolute
     local date_offset = fopts.date_offset
     return function(one, series, code, currindex, opts)
         if date_offset ~= 0 then
             if series == nil then
-                return false
+                return true
             end
             one = series[currindex + date_offset]
         end
         if one == nil or one.empty then
-            return false
+            return true
         end
         local v1 = one[field1]
         local v2 = one[field2]
         if v2 == nil then
-            return false
+            return true
         end
-        local ratio = v1 / v2 * 100
+        local ratio
+        if v2 == 0 then
+            v2 = 0.01
+        end
+        ratio = v1 / v2
+        if ratio < 0 and absolute then
+            --print("abs", ratio)
+            ratio = -ratio
+        end
         if set ~= nil then
             one[set] = simple.numcon(ratio)
         end

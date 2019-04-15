@@ -332,7 +332,7 @@ function M.avg_diff(fopts)
         local short_cycle = fopts.short_cycle
         local long_sum = 0
         local long_count = 0
-        for i = from, to do
+        for i = to, from, -1 do
             local serie = series[i]
             if serie ~= nil and not serie.empty then
                 local v = serie[field]
@@ -347,14 +347,15 @@ function M.avg_diff(fopts)
         if short_count == 0 then
             return false
         end
+        --print(one.name, one.code, short_sum, long_sum, short_count, long_count)
         local short_avg = short_sum / short_count
         local long_avg = long_sum / long_count
-        local rate = short_avg / long_avg * 100
+        local rate = (short_avg - long_avg) / long_avg * 100
 
         --print(one.name, short_avg, long_avg, short_count, long_count, from, to)
-        --print(one.name, one.code, ma_short_avg, ma_long_avg, rate)
+        --print(one.name, one.code, short_avg, long_avg)
         local include = rate >= fopts.diff_lower and rate <= fopts.diff_upper
-        if include then
+        if include and set ~= nil then
             rate = simple.numcon(rate)
             one[set] = rate
         end
@@ -362,6 +363,39 @@ function M.avg_diff(fopts)
     end
 end
 
+-----------------------------------------------------------------------------------------------------------
+function M.ratio(fopts)
+    local set = fopts.set
+    local field1 = fopts.field1
+    local field2 = fopts.field2
+    local ratio_lower = fopts.ratio_lower
+    local ratio_upper = fopts.ratio_upper
+
+    simple.def(fopts, "date_offset", 0)
+    local date_offset = fopts.date_offset
+    return function(one, series, code, currindex, opts)
+        if date_offset ~= 0 then
+            if series == nil then
+                return false
+            end
+            one = series[currindex + date_offset]
+        end
+        if one == nil or one.empty then
+            return false
+        end
+        local v1 = one[field1]
+        local v2 = one[field2]
+        if v2 == nil then
+            return false
+        end
+        local ratio = v1 / v2 * 100
+        if set ~= nil then
+            one[set] = simple.numcon(ratio)
+        end
+        --print(one.name, ratio)
+        return ratio >= ratio_lower and ratio <= ratio_upper
+    end
+end
 -----------------------------------------------------------------------------------------------------------
 
 return M

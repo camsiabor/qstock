@@ -142,6 +142,8 @@ function M:group_parse(opts, html)
     index = string.find(html, tag_end)
     html = string.sub(html, 1, index - 1)
 
+    -- <a href="http://q.10jqka.com.cn/gn/detail/code/300843/" target="_blank">5G</a> --
+    --[[
     local groups = {}
     local request_type_ch = self.TOKENS.MAPPING_ENG_TO_CH[opts.request_type]
     local pattern = '<a href="http://q.10jqka.com.cn/' .. request_type_ch .. '/detail/code/(%d+)/" target="_blank">(%W+)</a>'
@@ -152,6 +154,27 @@ function M:group_parse(opts, html)
         groups[code] = group
         count = count + 1
     end
+    ]]--
+    --print(html)
+
+    if self.htmlparser == nil then
+        self.htmlparser = require("common.htmlparser.htmlparser")
+    end
+
+    local count = 0
+    local groups = {}
+    local root = self.htmlparser.parse(html)
+    local all = root:select("a")
+    local all_count = #all
+    for i = 1, all_count do
+        count = count + 1
+        local a = all[i]
+        local name = a:getcontent()
+        local href = a.attributes["href"]
+        local code = string.sub(href, #href - 6, #href - 1)
+        local group = { name = name, code = code, list = { } }
+        groups[code] = group
+    end -- for tr end
     self:get_logger():info("[parse] group count", count)
     return groups, count
 end
@@ -323,6 +346,7 @@ function M:list_parse(opts, reqopt, group)
     logger:info("-------------------------------------------------------")
     ]]--
 
+
     if self.htmlparser == nil then
         self.htmlparser = require("common.htmlparser.htmlparser")
     end
@@ -339,6 +363,9 @@ function M:list_parse(opts, reqopt, group)
             group.list[code] = name
         end
     end -- for tr end
+
+
+
 
     return group
 end

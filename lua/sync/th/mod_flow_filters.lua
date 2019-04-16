@@ -77,7 +77,10 @@ function M.io_increase(fopts)
             local prev = series[i]
             local curr = series[i + 1]
 
-            if prev == nil or curr == nil then
+            if curr == nil or curr.empty then
+                return false
+            end
+            if prev == nil or prev.empty then
                 return false
             end
 
@@ -321,15 +324,13 @@ function M.groups(fopts)
         if one_groups == nil then
             return false
         end
-        local include = false
         for i = 1, ngroups do
             local group = groups[i]
             if one_groups[group] ~= nil then
-                include = true
-                break
+                return true
             end
         end
-        return include
+        return false
     end
 end
 -----------------------------------------------------------------------------------------------------------

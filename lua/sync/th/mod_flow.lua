@@ -413,15 +413,10 @@ end
 
 -------------------------------------------------------------------------------------------
 
-function M:filter(opts, data_curr, code_mapping, result)
+function M:filter(opts, input, code_mapping, filters)
 
-    if result == nil then
-        result = { }
-    end
-
-    local filters = opts.filters
     if filters == nil or #filters == 0 then
-        return data_curr
+        return input
     end
 
     local data_curr_index = opts.date_offset_from
@@ -432,8 +427,9 @@ function M:filter(opts, data_curr, code_mapping, result)
     end
 
 
+
     local includes
-    local scans = data_curr
+    local scans = input
     local filters_count = #filters
     for f = 1, filters_count do
         includes = {}
@@ -453,6 +449,7 @@ function M:filter(opts, data_curr, code_mapping, result)
         scans = includes
     end
 
+    local result = { }
     local n = #includes
     for i = 1, n do
         result[#result + 1] = includes[i]
@@ -460,6 +457,25 @@ function M:filter(opts, data_curr, code_mapping, result)
 
     return result
 
+end
+
+function M:adapt(opts, input, code_mapping, currindex, adapters)
+    if adapters == nil then
+        return input
+    end
+    local n = #input
+    for i = 1, #adapters do
+        local adapter = adapters[i]
+        if adapter ~= nil then
+            for i = 1, n do
+                local one = input[i]
+                if one ~= nil and not one.empty then
+                    adapter(opts, one, code_mapping, currindex)
+                end
+            end
+        end
+    end
+    return input
 end
 
 -------------------------------------------------------------------------------------------
@@ -715,15 +731,14 @@ function M:go(opts)
         --self:link_stock_snapshot(opts, data_curr, code_mapping)
     end
 
-    local result_curr = self:filter(opts, data_curr, code_mapping)
-
-    if opts.result_adapter ~= nil then
-        local currindex = -opts.date_offset_from + 1
-        local adapted = simple.func_call(opts.result_adapter, opts, result_curr, code_mapping, currindex)
-        if adapted ~= nil then
-            result_curr = adapted
-        end
+    local currindex = -opts.date_offset_from + 1
+    local result_curr = self:filter(opts, data_curr, code_mapping, opts.filters)
+    local adapted = self:adapt(opts, result_curr, code_mapping, currindex, opts.adapters)
+    if adapted ~= nil then
+        result_curr = adapted
     end
+    result_curr = self:filter(opts, result_curr, code_mapping, opts.filters_ex)
+
 
     local group_profiles = self:profile_result_stock_group(opts, result_curr, code_mapping)
     group_profiles = simple.map_to_array(group_profiles)

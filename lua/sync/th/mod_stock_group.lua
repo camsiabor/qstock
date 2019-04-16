@@ -174,6 +174,7 @@ function M:group_parse(opts, html)
         local code = string.sub(href, #href - 6, #href - 1)
         local group = { name = name, code = code, list = { } }
         groups[code] = group
+        print(code, name)
     end -- for tr end
     self:get_logger():info("[parse] group count", count)
     return groups, count

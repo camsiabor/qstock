@@ -40,9 +40,6 @@ opts.persist = true
 opts.concurrent = simple.get(profile, "concurrent", 1)
 
 
-
-
-
 opts.db = "group"
 opts.datasrc = "th"
 

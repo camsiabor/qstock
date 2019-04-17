@@ -463,16 +463,10 @@ function M:adapt(opts, input, code_mapping, currindex, adapters)
     if adapters == nil then
         return input
     end
-    local n = #input
     for i = 1, #adapters do
         local adapter = adapters[i]
         if adapter ~= nil then
-            for i = 1, n do
-                local one = input[i]
-                if one ~= nil and not one.empty then
-                    adapter(opts, one, code_mapping, currindex)
-                end
-            end
+            adapter(opts, input, code_mapping, currindex)
         end
     end
     return input

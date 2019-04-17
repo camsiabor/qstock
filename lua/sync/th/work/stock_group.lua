@@ -25,7 +25,7 @@ opts.loglevel = 0
 opts.browser = "firefox"
 --opts.browser = "gorilla"
 
-opts.request = true
+opts.request = false
 opts.request_from = 1
 opts.request_to   = 5
 opts.request_types = { "concept", "industry" }

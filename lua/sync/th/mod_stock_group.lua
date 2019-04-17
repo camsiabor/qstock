@@ -174,7 +174,7 @@ function M:group_parse(opts, html)
         local code = string.sub(href, #href - 6, #href - 1)
         local group = { name = name, code = code, list = { } }
         groups[code] = group
-        print(code, name)
+        --print(code, name)
     end -- for tr end
     self:get_logger():info("[parse] group count", count)
     return groups, count
@@ -214,6 +214,15 @@ function M:group_reload(opts)
         self:get_logger():info("[reload] failure", token, "", err)
     end
     local groups = json.decode(datastr)
+    local c = 0
+    --[[
+    for k, group in pairs(groups) do
+        print(k, group.name)
+        c = c + 1
+    end
+    print("[group] count", c)
+    ]]--
+
     return groups
 end
 
@@ -228,6 +237,7 @@ function M:list_request(opts, groups)
     simple.def(opts, "request_from", 1)
     simple.def(opts, "request_to", 1000)
     for code, group in pairs(groups) do
+
         if n >= opts.request_from and n <= opts.request_to then
 
             local page = group.page
@@ -253,7 +263,6 @@ function M:list_request(opts, groups)
                 else
                     url = string.format("http://q.10jqka.com.cn/gn/detail/field/3475914/order/desc/page/%d/ajax/1/code/%d", p, code)
                 end
-
                 local reqopt = {}
                 reqopt["url"] = url
                 reqopt["page"] = p
@@ -440,9 +449,10 @@ function M:list_reload_non_complete(opts)
     for code, igroup in pairs(index) do
         local key = code
         local group = groups[key]
+
         local noncomplete = group == nil
         if noncomplete then
-            self:get_logger():info("[noncomplete] group nil", code)
+            print("[noncomplete] group nil", code)
         else
             if group.page == nil then
                 group.page = 0
@@ -451,11 +461,11 @@ function M:list_reload_non_complete(opts)
             end
             noncomplete = group.page <= 0
             if noncomplete then
-                self:get_logger():info("[noncomplete] group page zero", code, group.name, group.page)
+                print("[noncomplete] group page zero", code, group.name, group.page)
             else
                 noncomplete = simple.table_count(group.list) <= 0
                 if noncomplete then
-                    self:get_logger():info("[noncomplete] group list zero", code, group.name, group.page)
+                    print("[noncomplete] group list zero", code, group.name, group.page)
                 end
             end
         end
@@ -465,7 +475,10 @@ function M:list_reload_non_complete(opts)
             local currcount = simple.table_count(group.list)
             noncomplete = currcount < suppose
             if noncomplete then
-                self:get_logger():info("[noncomplete] group list not full", code, group.name, suppose, currcount)
+                --self:get_logger():info
+                print("[noncomplete] group list not full", code, group.name, suppose, currcount)
+            else
+                --print("[noncomplete] group complete", code, group.name, suppose, currcount)
             end
         end
         if noncomplete then

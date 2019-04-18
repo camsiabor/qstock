@@ -205,6 +205,7 @@ function M.io_any_simple(fopts)
             if one ~= nil and not one.empty then
                 local io = one.flow_io_rate
                 if  io >= io_lower and io <= io_upper then
+                    one.star = "*"
                     return true
                 end
             end
@@ -421,17 +422,17 @@ function M.ratio(fopts)
     return function(one, series, code, currindex, opts)
         if date_offset ~= 0 then
             if series == nil then
-                return true
+                return false
             end
             one = series[currindex + date_offset]
         end
         if one == nil or one.empty then
-            return true
+            return false
         end
         local v1 = one[field1]
         local v2 = one[field2]
         if v2 == nil then
-            return true
+            return false
         end
         local ratio
         if v2 == 0 then
@@ -450,5 +451,26 @@ function M.ratio(fopts)
     end
 end
 -----------------------------------------------------------------------------------------------------------
+
+function M.field(fopts)
+    local field = fopts.field
+    local lower = fopts.lower
+    local upper = fopts.upper
+    simple.def(fopts, "date_offset", 0)
+    local date_offset = fopts.date_offset
+    return function(one, series, code, currindex, opts)
+        if date_offset ~= 0 then
+            if series == nil then
+                return true
+            end
+            one = series[currindex + date_offset]
+        end
+        if one == nil or one.empty then
+            return true
+        end
+        local v = one[field]
+        return lower <= v and v <= upper
+    end
+end
 
 return M

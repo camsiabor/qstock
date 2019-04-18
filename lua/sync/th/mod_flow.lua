@@ -319,16 +319,18 @@ function M:reload(opts, data, as_array)
         else
             local fragment = json.decode(datastr)
             local n = #fragment
-
+            local datestrsub = string.sub(datestr, 5)
             if as_array then
                 for i = 1, n do
                     local one = fragment[i]
+                    one["date"] = datestrsub
                     data[#data + 1] = one
                 end
             else
                 for i = 1, n do
                     local one = fragment[i]
                     local code = one.code
+                    one["date"] = datestrsub
                     data[code] = one
                 end
             end
@@ -608,21 +610,26 @@ function M:print_data(opts, data)
 
     local fields =
         {
+            "date",
             "code", "name", "change_rate", "turnover",
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate",
             "flow_big_rate_cross_ex",
+            "star",
             "custom", "custom2", "custom3", "custom4",
+            "custom5", "custom6", "custom7",
             "group"
         }
 
     local headers =
         {
+            "date",
             "code", "name", "ch", "turn",
             "io", "in",
             "big_in",
-            "crossex",
+            "star",
             "c", "c2", "c3", "c4",
+            "c5", "c6", "c7",
             "group"
         }
 

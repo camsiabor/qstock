@@ -200,17 +200,18 @@ function M.io_any_simple(fopts)
         if series == nil then
             return false
         end
+        local include = false
         for i = from, to do
             local one = series[i]
             if one ~= nil and not one.empty then
                 local io = one.flow_io_rate
                 if  io >= io_lower and io <= io_upper then
                     one.star = "*"
-                    return true
+                    include = true
                 end
             end
         end
-        return false
+        return include
     end
 end
 

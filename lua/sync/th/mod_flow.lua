@@ -323,6 +323,7 @@ function M:reload(opts, data, as_array)
             if as_array then
                 for i = 1, n do
                     local one = fragment[i]
+                    one["star"] = "<"
                     one["date"] = datestrsub
                     data[#data + 1] = one
                 end
@@ -618,7 +619,6 @@ function M:print_data(opts, data)
             "star",
             "custom", "custom2", "custom3", "custom4",
             "custom5", "custom6", "custom7",
-            "group"
         }
 
     local headers =
@@ -630,7 +630,6 @@ function M:print_data(opts, data)
             "star",
             "c", "c2", "c3", "c4",
             "c5", "c6", "c7",
-            "group"
         }
 
     local formatters = {
@@ -642,12 +641,10 @@ function M:print_data(opts, data)
             return string.sub(v, 5)
         end,
         ]]--
-        group = function(one, field, v, ikey)
-            if ikey > 1 then
-               return ""
-            end
+        escape = function(one, field, v, ikey)
+            local groups = one.group
             local r = ""
-            for groupname in pairs(v) do
+            for groupname in pairs(groups) do
                 r = r .. groupname .. " "
             end
             return r

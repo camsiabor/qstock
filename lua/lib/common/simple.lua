@@ -257,6 +257,10 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
     local nfields = #fields
     local key_value_previous = ""
     local header_interval_original = header_interval
+    local escape_formatter = nil
+    if formatters ~= nil then
+        escape_formatter = formatters["escape"]
+    end
     for a = from, to do
 
         local obj = array[a]
@@ -276,9 +280,14 @@ function simple.table_array_print_with_header(array, from, to, fields, headers, 
         end
 
         if print_header then
+            if escape_formatter ~= nil then
+                printex(delimiter)
+                local escape = escape_formatter(obj, "escape", nil, ikey)
+                printex(escape)
+            end
             printex(delimiter)
-            printex(headstr)
-            printex(delimiter)
+            printex(headstr, delimiter)
+
             ikey = 1
         end
 

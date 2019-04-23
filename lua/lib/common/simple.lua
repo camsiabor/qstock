@@ -6,22 +6,23 @@ function simple.is(b)
         return false
     end
     if t == "boolean" then
-        return t
+        return b
     end
     if t == "number" then
-        return t ~= 0
+        return b ~= 0
     end
     if t == "string" then
-        if t == "" or t == "0" or t == "false" then
+        if b == "" or b == "0" or b == "false" then
             return false
         end
-        if t == "true" then
+        if b == "true" then
             return true
         end
         return false
     end
     if t == "function" then
-        return t()
+        local r = b()
+        return simple.is(r)
     end
     return false
 end

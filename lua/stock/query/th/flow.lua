@@ -7,6 +7,10 @@
 
 ]]--
 
+
+
+
+
 local cal = require("common.cal")
 local simple = require("common.simple")
 local th_mod_flow = require("sync.th.mod_flow")
@@ -88,11 +92,11 @@ end
 opts.sort_field = "flow_io_rate"
 --opts.sort_field = "flow_big_rate_cross_ex"
 
-opts.request = false
+opts.request = 0
 
 opts.date_show = 15
 
-opts.date_offset = -2
+opts.date_offset = -1
 opts.date_offset_to = 10
 --opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset

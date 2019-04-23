@@ -712,7 +712,7 @@ function M:go(opts)
     end
 
     local data_curr, code_mapping
-    if opts.request then
+    if simple.is(opts.request) then
         data_curr = self:request(opts)
         if opts.persist then
             self:persist(opts, data_curr)

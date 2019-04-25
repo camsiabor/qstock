@@ -123,6 +123,7 @@ function M:parse_html(opts, data, reqopt)
         local index = tr.td[1][1]
         local code = tr.td[2].a[1]
         local name = tr.td[3].a[1]
+        local close = tr.td[4]
         local change_rate = tr.td[5][1]
         local turnover = tr.td[6][1]
         local flow_in = tr.td[7][1]
@@ -183,6 +184,7 @@ function M:parse_html(opts, data, reqopt)
         one.index = index
         one.code = code
         one.name = name
+        one.close = close + 0
         one.flow = flow
         one.flow_in = flow_in
         one.flow_out = flow_out
@@ -222,8 +224,6 @@ end
 -------------------------------------------------------------------------------------------
 
 function M:persist(opts, data)
-
-
 
     local dates = global.calendar.List(0, 0, 0, true)
 
@@ -683,12 +683,12 @@ function M:print_stock_group_profile(opts, data)
 
     local fields =
     {
-        "count", "avg_io", "avg_ch", "avg_big_in", "name"
+        "count", "avg_io", "avg_ch", "avg_big_in", "name",
     }
 
     local headers =
     {
-        "count", "avg_io", "avg_ch", "avg_big", "name"
+        "count", "avg_io", "avg_ch", "avg_big", "name",
     }
 
     if opts.print_fields ~= nil then

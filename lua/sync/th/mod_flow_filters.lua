@@ -183,11 +183,19 @@ function M.io_any_simple(fopts)
     simple.def(fopts, "date_offset_to", 0)
     simple.def(fopts, "date_offset_from", -100)
 
+    simple.def(fopts, "count", 1)
+    simple.def(fopts, "tag", false)
+
+    local tag = fopts.tag
+    local count = fopts.count
     local io_lower = fopts.io_lower
     local io_upper = fopts.io_upper
     local date_offset_to = fopts.date_offset_to
     local date_offset_from = fopts.date_offset_from
     return function(one, series, code, currindex, opts)
+        if series == nil then
+            return true
+        end
         local limit = #series
         local to = currindex + date_offset_to
         local from = currindex + date_offset_from
@@ -200,18 +208,21 @@ function M.io_any_simple(fopts)
         if series == nil then
             return false
         end
-        local include = false
+        local num = 0
         for i = from, to do
             local one = series[i]
             if one ~= nil and not one.empty then
                 local io = one.flow_io_rate
                 if  io >= io_lower and io <= io_upper then
                     one.star = "*"
-                    include = true
+                    num = num + 1
                 end
             end
         end
-        return include
+        if tag then
+            return true
+        end
+        return num >= count
     end
 end
 
@@ -365,6 +376,9 @@ function M.avg_diff(fopts)
     simple.def(fopts, "diff_upper", 100)
     simple.def(fopts, "set", "custom")
     return function(one, series, code, currindex, opts)
+        if series == nil then
+            return true
+        end
         local from = currindex - fopts.long_cycle + 1
         local to = currindex
         if currindex < 0 then

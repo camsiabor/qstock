@@ -12,13 +12,8 @@ function simple.is(b)
         return b ~= 0
     end
     if t == "string" then
-        if b == "" or b == "0" or b == "false" then
-            return false
-        end
-        if b == "true" then
-            return true
-        end
-        return false
+        b = string.lower(b)
+        return b == "true" or b == "t"
     end
     if t == "function" then
         local r = b()

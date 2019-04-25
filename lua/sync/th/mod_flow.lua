@@ -612,7 +612,7 @@ function M:print_data(opts, data)
     local fields =
         {
             "date",
-            "code", "name", "change_rate", "turnover",
+            "code", "name", "change_rate", "turnover", "close",
             "flow_io_rate", "flow_in_rate",
             "flow_big_in_rate",
             "flow_big_rate_cross_ex",
@@ -624,7 +624,7 @@ function M:print_data(opts, data)
     local headers =
         {
             "date",
-            "code", "name", "ch", "turn",
+            "code", "name", "ch", "turn", "close",
             "io", "in",
             "big_in",
             "star",

@@ -374,7 +374,11 @@ function M.avg_diff(fopts)
     simple.def(fopts, "long_cycle", 10)
     simple.def(fopts, "diff_lower", 0)
     simple.def(fopts, "diff_upper", 100)
+    simple.def(fopts, "deduce", "")
     simple.def(fopts, "set", "custom")
+
+    local deduce = fopts.deduce
+    local dodeduce = deduce ~= nil and #deduce > 0
     return function(one, series, code, currindex, opts)
         if series == nil then
             return true
@@ -391,10 +395,26 @@ function M.avg_diff(fopts)
         local short_cycle = fopts.short_cycle
         local long_sum = 0
         local long_count = 0
+
+        local v_prev = 0
+        local deduce_init = false
+        local deduce_value = 100
         for i = to, from, -1 do
             local serie = series[i]
             if serie ~= nil and not serie.empty then
+
                 local v = serie[field]
+                if dodeduce then
+                    if deduce_init then
+                        deduce_value = deduce_value / (100 + v_prev) * 100
+                    else
+                        deduce_init = true
+                    end
+                    v_prev = v
+                    v = deduce_value
+                    serie[deduce] = deduce_value
+                end
+
                 if short_count < short_cycle then
                     short_sum = short_sum + v
                     short_count = short_count + 1

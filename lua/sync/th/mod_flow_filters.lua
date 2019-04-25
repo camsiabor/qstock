@@ -377,6 +377,10 @@ function M.avg_diff(fopts)
     simple.def(fopts, "deduce", "")
     simple.def(fopts, "set", "custom")
 
+    simple.def(fopts, "per", 0)
+
+    local per = fopts.per
+
     local deduce = fopts.deduce
     local dodeduce = deduce ~= nil and #deduce > 0
     return function(one, series, code, currindex, opts)
@@ -429,7 +433,14 @@ function M.avg_diff(fopts)
         --print(one.name, one.code, short_sum, long_sum, short_count, long_count)
         local short_avg = short_sum / short_count
         local long_avg = long_sum / long_count
-        local rate = (short_avg - long_avg) / long_avg * 100
+
+        local rate
+        if per <= 0 then
+            rate = (short_avg - long_avg) / long_avg * 100
+        else
+            rate = short_avg / long_avg * per
+        end
+
 
         --print(one.name, short_avg, long_avg, short_count, long_count, from, to)
         --print(one.name, one.code, short_avg, long_avg)

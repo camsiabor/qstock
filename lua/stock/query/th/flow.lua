@@ -76,9 +76,9 @@ local adapt_ch_sum = function(opts, result, mapping, currindex)
             end
             one.custom7 = sums_up .. "/" .. sums_down .. "/" .. last
             if sums_up > 0 then
-                one.custom7 = one.custom7 .. "@"
+                one.custom7 = one.custom7 .. " @"
             else
-                one.custom7 = one.custom7 .. "FFF"
+                one.custom7 = one.custom7 .. " FFF"
             end
         end
         
@@ -98,7 +98,7 @@ opts.request = 0
 
 opts.date_show = 15
 
-opts.date_offset = -3
+opts.date_offset = -2
 opts.date_offset_to = 10
 --opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
@@ -162,8 +162,10 @@ opts.filters = {
     filters.io({  io_lower = 1.4, io_upper = 10, ch_lower = 3.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
     filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false }),
     
-    filters.avg_diff({  field = "change_rate", set = "custom", short_cycle = 4, long_cycle = 8, diff_lower = -5000, diff_upper = 5000, deduce = "close" }),
-    filters.avg_diff({  field = "turnover", set = "custom2", short_cycle = 4, long_cycle = 8 , diff_lower = -5000, diff_upper = 5000 }),
+
+    
+    filters.avg_diff({  field = "turnover", set = "custom", short_cycle = 4, long_cycle = 8 , diff_lower = -5000, diff_upper = 5000 }),
+    filters.avg_diff({  field = "change_rate", set = "custom2", short_cycle = 4, long_cycle = 8, diff_lower = -5000, diff_upper = 5000, deduce = "close" }),
     filters.ratio({  field1 = "custom", field2 = "custom2", set = "custom3", absolute = true, ratio_lower = 0, ratio_upper = 5000, date_offset = 0 }),
     
     

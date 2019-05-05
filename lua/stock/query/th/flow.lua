@@ -98,7 +98,7 @@ opts.request = 0
 
 opts.date_show = 15
 
-opts.date_offset = -3
+opts.date_offset = -2
 opts.date_offset_to = 10
 --opts.date_offset_from = 0
 opts.date_offset_from = -opts.date_show - opts.date_offset
@@ -106,6 +106,8 @@ opts.date_offset_from = -opts.date_show - opts.date_offset
 opts.adapters = {
     adapt_ch_sum
 }
+
+local TROLL = 0
 
 opts.filters = {
     
@@ -157,52 +159,34 @@ opts.filters = {
     
     --------------------------------------------------------------------------------------------------------------
     
+        
+    --filters.io({  io_lower = 0, io_upper = 10, ch_lower = 0, ch_upper = 2.5, big_in_lower = 0, date_offset = -1 }),
+    --filters.io({  io_lower = 0, io_upper = 10, ch_lower = 0, ch_upper = 2.5, big_in_lower = 0, date_offset = 0 }),
+    
     -- (A) 高 IO, 高 CH
-  
+   
     filters.io({  io_lower = 1.4, io_upper = 10, ch_lower = 3.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
-    filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false }),
+    --filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false }),
     
     filters.avg_diff({  field = "turnover", set = "custom", 
-        short_cycle = 2, long_cycle = 4 , per = 1, diff_lower = 0.9, diff_upper = 10 }),
+        short_cycle = 2, long_cycle = 4 , per = 1, diff_lower = TROLL, diff_upper = 10 }),
     filters.avg_diff({  field = "change_rate", set = "custom2", 
         short_cycle = 2, long_cycle = 4, per = 1, diff_lower = 0, diff_upper = 10, deduce = "close" }),
     filters.ratio({  field1 = "custom", field2 = "custom2", set = "custom3", 
-        absolute = true, ratio_lower = 0, ratio_upper = 5000, date_offset = 0 }),
+        absolute = true, ratio_lower = 0, ratio_upper = 1000, date_offset = 0 }),
     
     filters.avg_diff({  field = "turnover", set = "custom4", 
-        short_cycle = 4, long_cycle = 8 , per = 1, diff_lower = 0.9, diff_upper = 10 }),
+        short_cycle = 4, long_cycle = 8 , per = 1, diff_lower = TROLL, diff_upper = 10 }),
     filters.avg_diff({  field = "change_rate", set = "custom5", 
         short_cycle = 4, long_cycle = 8, per = 1, diff_lower = 0, diff_upper = 10, deduce = "close" }),
     filters.ratio({  field1 = "custom4", field2 = "custom5", set = "custom6", 
-        absolute = true, ratio_lower = 0, ratio_upper = 5000, date_offset = 0 }),
+        absolute = true, ratio_lower = 0, ratio_upper = 1000, date_offset = 0 }),
     
     filters.ratio({  field1 = "custom3", field2 = "custom6", set = "custom7", 
-        absolute = true, ratio_lower = 0.9, ratio_upper = 5000, date_offset = 0 }),
-    
-    
-    -- 正向
-    --[[ 
-     filters.io({  io_lower = 1.4, io_upper = 10, ch_lower = 3.5, ch_upper = 11, big_in_lower = 0, date_offset = 0 }),
-    filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false }),
-    filters.avg_diff({  field = "turnover", set = "custom", short_cycle = 2, long_cycle = 4 , diff_lower = -15, diff_upper = 60 }),
-    filters.avg_diff({  field = "change_rate", set = "custom2", short_cycle = 2, long_cycle = 4, diff_lower = 75, diff_upper = 750 }),
-    filters.ratio({  field1 = "custom2", field2 = "custom", set = "custom3", absolute = true, ratio_lower = 1.6, ratio_upper = 1000, date_offset = 0 }),
-    
-    filters.avg_diff({  field = "turnover", set = "custom4", short_cycle = 3, long_cycle = 6 , diff_lower = -5000, diff_upper = 5000 }),
-    filters.avg_diff({  field = "change_rate", set = "custom5", short_cycle = 3, long_cycle = 6, diff_lower = -5000, diff_upper = 5000 }),
-    filters.ratio({  field1 = "custom5", field2 = "custom4", set = "custom6", absolute = true, ratio_lower = 0, ratio_upper = 5000, date_offset = 0 }),
-         
+        absolute = true, ratio_lower = TROLL, ratio_upper = 1000, date_offset = 0 }),
+     --[[
     ]]--
     
-    -- 反向
-    --filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -5, date_offset_to = -1 }),
-    --[[
-    filters.avg_diff({  field = "turnover", set = "custom", short_cycle = 2, long_cycle = 4 , diff_lower = 0, diff_upper = 600 }),
-    filters.avg_diff({  field = "change_rate", set = "custom2", short_cycle = 2, long_cycle = 4, diff_lower = -500, diff_upper = 0 }),
-    filters.ratio({  field1 = "custom2", field2 = "custom", set = "custom3", absolute = true, ratio_lower = -500, ratio_upper = 500, date_offset = 0 }),
-    ]]--
-
-
     
     --------------------------------------------------------------------------------------------------------------
     
@@ -217,14 +201,27 @@ opts.filters = {
     
     -- (C)低吸
     --[[
-    filters.io({  io_lower = 1.6, io_upper = 100, ch_lower = 1, ch_upper = 4.5, big_in_lower = 0, date_offset = 0 }),
-    filters.io_any_simple({  io_lower = 1.4, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false, count = 1 }),
     
-    --filters.io_any_simple({  io_lower = 1.2, io_upper = 10, date_offset_from = -5, date_offset_to = -1 }),
-    filters.avg_diff({  field = "turnover", set = "custom", short_cycle = 2, long_cycle = 4 , diff_lower = -100, diff_upper = 100 }),
-    filters.avg_diff({  field = "change_rate", set = "custom2", short_cycle = 2, long_cycle = 4, diff_lower = -200, diff_upper = 200 }),
-    filters.ratio({  field1 = "custom2", field2 = "custom", set = "custom3", absolute = true, ratio_lower = 3, ratio_upper = 500, date_offset = 0 }),
-    ]]--
+    filters.io({  io_lower = 1.3, io_upper = 10, ch_lower = 1, ch_upper = 3.5, big_in_lower = 0, date_offset = 0 }),
+    --filters.io_any_simple({  io_lower = 1.3, io_upper = 10, date_offset_from = -12, date_offset_to = -1, tag = false }),
+    
+    filters.avg_diff({  field = "turnover", set = "custom", 
+        short_cycle = 2, long_cycle = 4 , per = 1, diff_lower = 0, diff_upper = 10 }),
+    filters.avg_diff({  field = "change_rate", set = "custom2", 
+        short_cycle = 2, long_cycle = 4, per = 1, diff_lower = 0, diff_upper = 10, deduce = "close" }),
+    filters.ratio({  field1 = "custom", field2 = "custom2", set = "custom3", 
+        absolute = true, ratio_lower = 0, ratio_upper = 10, date_offset = 0 }),
+    
+    filters.avg_diff({  field = "turnover", set = "custom4", 
+        short_cycle = 4, long_cycle = 8 , per = 1, diff_lower = 0, diff_upper = 10 }),
+    filters.avg_diff({  field = "change_rate", set = "custom5", 
+        short_cycle = 4, long_cycle = 8, per = 1, diff_lower = 0, diff_upper = 10, deduce = "close" }),
+    filters.ratio({  field1 = "custom4", field2 = "custom5", set = "custom6", 
+        absolute = true, ratio_lower = 0, ratio_upper = 10, date_offset = 0 }),
+    
+    filters.ratio({  field1 = "custom3", field2 = "custom6", set = "custom7", 
+        absolute = true, ratio_lower = 0.9, ratio_upper = 10, date_offset = 0 }),
+    --]]
 
     --------------------------------------------------------------------------------------------------------------
     

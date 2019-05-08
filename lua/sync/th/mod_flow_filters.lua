@@ -1,5 +1,3 @@
-
-
 local simple = require("common.simple")
 
 local M = {}
@@ -245,7 +243,7 @@ function M.io_all(fopts)
 
     simple.def(fopts, "ch_avg_lower", 0)
     simple.def(fopts, "ch_avg_upper", 0)
-    
+
     simple.def(fopts, "date_offset", 0)
 
     local cal_avg = fopts.ch_avg_lower < fopts.ch_avg_upper
@@ -314,12 +312,20 @@ end
 
 -----------------------------------------------------------------------------------------------------------
 function M.names_contain(fopts)
+    simple.def(fopts, "to", 0);
+    simple.def(fopts, "from", 1);
+    local to = fopts.to
+    local from = fopts.from
     local names = fopts.names
     local n = #names
     return function(one, series, code, currindex, opts)
         local name = one.name
         for i = 1, n do
-            if string.find(name, names[n]) ~= nil then
+            local index = string.find(name, names[n])
+            if index ~= nil and index >= from then
+                if to >= 1 and index > to then
+                    return false
+                end
                 return true
             end
         end
@@ -347,14 +353,29 @@ function M.groups(fopts)
     end
 end
 -----------------------------------------------------------------------------------------------------------
-function M.no3(fopts)
+function M.code_head(fopts)
+    local head = fopts.head
+    local include = fopts.include
     return function(one, series, code, currindex, opts)
-        if code:sub(1, 1) == "3" then
-            return false
+        if code:sub(1, 1) == head then
+            return include
         end
-        return true
+        return not include
     end
 end
+
+-----------------------------------------------------------------------------------------------------------
+function M.name_head(fopts)
+    local head = fopts.head
+    local include = fopts.include
+    return function(one, series, code, currindex, opts)
+        if one.name:sub(1, 1) == head then
+            return include
+        end
+        return not include
+    end
+end
+
 -----------------------------------------------------------------------------------------------------------
 
 function M.st(fopts)

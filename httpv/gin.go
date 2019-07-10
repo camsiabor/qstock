@@ -336,18 +336,18 @@ func (o *HttpServer) Run() error {
 	gin.SetMode(mode)
 	qlog.Log(qlog.INFO, "http", "mode", mode)
 
-	var cache_timestamp = scache.GetManager().Get(dict.CACHE_TIMESTAMP)
+	var cacheTimestamp = scache.GetManager().Get(dict.CACHE_TIMESTAMP)
 	o.engine = gin.Default()
 	o.engine.Use(func(c *gin.Context) {
 		if c.Request.Method == "GET" {
 			var path = c.Request.URL.Path
 			if path[len(path)-1] == 'l' { // html, last char is l
-				var v, _ = cache_timestamp.Get(true, "js")
+				var v, _ = cacheTimestamp.Get(true, "js")
 				c.SetCookie("_u_js", v.(string), 0, "/", "/", false, false)
 			}
 		}
 	})
-	o.engine.Use(Recovery(func(c *gin.Context, err interface{}) {
+	o.engine.Use(QRecovery(func(c *gin.Context, err interface{}) {
 		var info = qref.StackInfo(2)
 		info["err"] = err
 		o.RespJson(500, info, c)

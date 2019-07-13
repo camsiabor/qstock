@@ -25,21 +25,21 @@ var htmlContentTypes = []string{"text/html charset=utf-8"}
 var htmlCache = make(map[string]*HtmlInfo)
 var cacheMutex = sync.RWMutex{}
 
-func (r CustomHTMLRenderer) WriteContentType(w http.ResponseWriter) {
+func (r *CustomHTMLRenderer) WriteContentType(w http.ResponseWriter) {
 	header := w.Header()
 	if val := header["Content-Type"]; len(val) == 0 {
 		header["Content-Type"] = htmlContentTypes
 	}
 }
 
-func (r CustomHTMLRenderer) Instance(name string, data interface{}) render.Render {
-	return CustomHTMLRenderer{
+func (r *CustomHTMLRenderer) Instance(name string, data interface{}) render.Render {
+	return &CustomHTMLRenderer{
 		Name: name,
 		Data: data,
 	}
 }
 
-func (r CustomHTMLRenderer) Render(w http.ResponseWriter) error {
+func (r *CustomHTMLRenderer) Render(w http.ResponseWriter) error {
 	r.WriteContentType(w)
 
 	var err error
@@ -78,6 +78,7 @@ func GinRefreshPage(refreshInterval int) {
 	for {
 		time.Sleep(time.Duration(refreshInterval) * time.Second)
 		cacheMutex.RLock()
+
 		for _, one := range htmlCache {
 			stat, err := os.Stat(one.Path)
 			if err == nil {

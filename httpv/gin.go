@@ -282,7 +282,7 @@ func (o *HttpServer) routeStatic() {
 	router.Static("/tmp", rootabs+"/tmp")
 	router.Static("/h", rootabs+"/page")
 
-	router.HTMLRender = CustomHTMLRenderer{}
+	router.HTMLRender = &CustomHTMLRenderer{}
 
 	router.GET("/v", func(c *gin.Context) {
 		var page = c.Query("p")

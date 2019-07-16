@@ -333,6 +333,28 @@ function M.names_contain(fopts)
     end
 end
 
+function M.codes_char(fopts)
+    local last = fopts.last
+    local first = fopts.first
+
+    local last_byte = 0
+    if last ~= nil then
+        last_byte = string.byte(last, 1)
+    end
+    local first_byte = 0
+    if first ~= nil then
+        string.byte(first, 1)
+    end
+
+    return function(one, series, code, currindex, opts)
+        if first_byte > 0 and string.byte(code, 1) == first_byte then
+            return true
+        end
+        if last_byte > 0 and string.byte(code, 6) == last_byte then
+            return true
+        end
+    end
+end
 
 -----------------------------------------------------------------------------------------------------------
 function M.groups(fopts)

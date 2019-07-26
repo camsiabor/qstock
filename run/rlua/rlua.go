@@ -276,7 +276,7 @@ func DefaultErrHandler(L *lua.State, pan interface{}) {
 	var ok bool
 	L.Notice, ok = pan.(*lua.Interrupt)
 	if !ok {
-		var stackinfo = qref.StackInfo(5)
+		var stackinfo = qerr.StackInfo(5)
 		var stackstr = util.AsStr(stackinfo["stack"], "")
 		stackstr = strings.Replace(stackstr, "\t", "  ", -1)
 		stackinfo["stack"] = strings.Split(stackstr, "\n")

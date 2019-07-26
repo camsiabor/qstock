@@ -164,7 +164,7 @@ func (o *HttpServer) handleLuaCmd(cmd string, m map[string]interface{}, c *gin.C
 		var ok bool
 		L.Notice, ok = pan.(*lua.Interrupt)
 		if !ok {
-			goStackInfo = qref.StackInfo(5)
+			goStackInfo = qerr.StackInfo(5)
 			var stackstr = util.AsStr(goStackInfo["stack"], "")
 			stackstr = strings.Replace(stackstr, "\t", "  ", -1)
 			goStackInfo["stack"] = strings.Split(stackstr, "\n")

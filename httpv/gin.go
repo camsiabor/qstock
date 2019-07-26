@@ -187,7 +187,7 @@ func (o *HttpServer) handlePanicCmd(c *gin.Context, cmdtype string, cmd string, 
 		panic(err)
 		return
 	}
-	var info = qref.StackInfo(3)
+	var info = qerr.StackCuttingMap(3, 32)
 	info["err"] = err.Error()
 	info["a.cmdtype"] = cmdtype
 	info["a.cmd"] = cmd
@@ -348,7 +348,7 @@ func (o *HttpServer) Run() error {
 		}
 	})
 	o.engine.Use(QRecovery(func(c *gin.Context, err interface{}) {
-		var info = qref.StackInfo(2)
+		var info = qerr.StackCuttingMap(2, 32)
 		info["err"] = err
 		o.RespJson(500, info, c)
 	}))

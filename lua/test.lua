@@ -1,3 +1,5 @@
+-- test
+
 local opts = {}
 local result = {}
 opts.debug = false

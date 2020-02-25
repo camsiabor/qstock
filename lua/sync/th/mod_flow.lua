@@ -641,6 +641,9 @@ function M:print_data(opts, data)
         end,
         ]]--
         escape = function(one, field, v, ikey)
+            if one.group == nil then
+                return ""
+            end
             local groups = one.group
             local r = ""
             for groupname in pairs(groups) do

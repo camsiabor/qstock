@@ -302,8 +302,8 @@ func (o *HttpServer) Run() error {
 	o.data = make(map[string]interface{})
 
 	var g = global.GetInstance()
-	var config_http = util.GetMap(g.Config, true, "http")
-	var active = util.GetBool(config_http, true, "active")
+	var configHttp = util.GetMap(g.Config, true, "http")
+	var active = util.GetBool(configHttp, true, "active")
 	if !active {
 		qlog.Log(qlog.INFO, "http", "not active")
 		return nil
@@ -311,8 +311,8 @@ func (o *HttpServer) Run() error {
 
 	var err error
 
-	var port = util.GetStr(config_http, "8080", "port")
-	o.Root = util.GetStr(config_http, "../web", "root")
+	var port = util.GetStr(configHttp, "8080", "port")
+	o.Root = util.GetStr(configHttp, "../web", "root")
 	o.Rootabs, err = filepath.Abs(o.Root)
 	if err != nil {
 		qlog.Log(qlog.ERROR, "http", "root", err)
@@ -320,7 +320,7 @@ func (o *HttpServer) Run() error {
 	}
 	qlog.Log(qlog.INFO, "http", "port", port, "root", o.Root)
 
-	var logfilepath = util.GetStr(config_http, "log/http.log", "log", "file")
+	var logfilepath = util.GetStr(configHttp, "log/http.log", "log", "file")
 	if !strings.Contains(logfilepath, "console") {
 		var logfile, err = os.OpenFile(logfilepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 		if err == nil {
@@ -331,12 +331,13 @@ func (o *HttpServer) Run() error {
 		gin.DefaultWriter = io.MultiWriter(logfile)
 		gin.DefaultErrorWriter = io.MultiWriter(logfile)
 	}
-	var mode = util.GetStr(config_http, gin.ReleaseMode, "mode")
+	var mode = util.GetStr(configHttp, gin.ReleaseMode, "mode")
 	mode = strings.ToLower(mode)
 	gin.SetMode(mode)
 	qlog.Log(qlog.INFO, "http", "mode", mode)
 
 	var cacheTimestamp = scache.GetManager().Get(dict.CACHE_TIMESTAMP)
+
 	o.engine = gin.Default()
 	o.engine.Use(func(c *gin.Context) {
 		if c.Request.Method == "GET" {
